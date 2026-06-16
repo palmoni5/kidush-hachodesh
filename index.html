@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>קידוש החודש — איורי גרמי השמיים</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <span class="brand"><img id="brandIcon" alt="" /> קידוש החודש</span>
+      <nav class="tabs" id="tabs">
+        <button data-view="moon" class="active">מופעי הירח</button>
+        <button data-view="year">מהלך השמש (שנת חמה)</button>
+        <button data-view="planets">כוכבי הלכת</button>
+      </nav>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="bgBtn">☀ רקע בהיר</button>
+      <button class="icon-btn" id="aboutBtn">אודות</button>
+    </header>
+
+    <main>
+      <!-- ═══ מופעי הירח ═══ -->
+      <section class="view active" id="view-moon">
+        <div class="stage"><canvas id="moonCanvas"></canvas>
+          <div class="hud">
+            <div class="row"><span>יום בחודש</span><b id="m_day">1</b></div>
+            <div class="row"><span>אחוז הירח הנראה</span><b id="m_pct">0%</b></div>
+            <div class="big" id="m_phase">מולד</div>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="card">
+            <h2>בקרה</h2>
+            <div class="ctrls">
+              <button class="btn-primary" id="m_play">⏸ השהה</button>
+              <button class="btn-secondary" id="m_today">🗓 הירח היום</button>
+              <button class="btn-secondary" id="m_reset">↺ מולד</button>
+            </div>
+            <label class="field">מהירות: <b id="m_spdL">2.0</b> ימים/שנייה</label>
+            <input type="range" id="m_speed" min="0.2" max="20" step="0.1" value="2" />
+            <label class="field">יום בחודש (גרירה)</label>
+            <input type="range" id="m_scrub" min="0" max="29.53" step="0.01" value="0" />
+          </div>
+          <div class="card">
+            <h2>מקרא</h2>
+            <div class="htxt">
+              <span class="seasondot" style="background:var(--ill-sun)"></span> שמש — מקור האור<br>
+              <span class="seasondot" style="background:var(--ill-blue)"></span> כדור הארץ<br>
+              <span class="seasondot" style="background:var(--color-outline)"></span> ירח — מקיף את הארץ<br><br>
+              חודש הלבנה (סינודי) = 29.53 יום. הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- ═══ מהלך השמש — שנת חמה ═══ -->
+      <section class="view" id="view-year">
+        <div class="stage"><canvas id="yearCanvas"></canvas>
+          <div class="hud">
+            <div class="clock" id="y_clock">12:00</div>
+            <div class="st" id="y_updown">השמש מעל האופק</div>
+            <div class="row" style="margin-top:8px"><span>גובה השמש</span><b id="y_alt">58°</b></div>
+            <div class="row"><span>עונה / תקופה</span><b id="y_season">אביב</b></div>
+            <div class="row"><span>אורך היום</span><b id="y_daylen">12:00</b></div>
+            <div class="row"><span>עומק בחצות הלילה</span><b id="y_mid">-58°</b></div>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="card">
+            <h2>בקרת זמן</h2>
+            <div class="ctrls">
+              <button class="btn-primary" id="y_play">⏸ השהה</button>
+              <button class="btn-secondary" id="y_today">🗓 עכשיו</button>
+              <button class="btn-secondary" id="y_noon">☀ חצות היום</button>
+              <button class="btn-secondary" id="y_midnight">🌙 חצות הלילה</button>
+            </div>
+            <label class="field">מהירות: <b id="y_spdL">2</b> שעות/שנייה</label>
+            <input type="range" id="y_speed" min="0.5" max="24" step="0.5" value="2" />
+            <label class="field">שעה ביממה: <b id="y_hourL">12:00</b></label>
+            <input type="range" id="y_hour" min="0" max="24" step="0.05" value="12" />
+            <div class="chk"><input type="checkbox" id="y_auto" checked />
+              <label for="y_auto">קדם יום אחד בכל סיבוב</label></div>
+            <label class="field">סיבוב המבט (אזימוט): <b id="y_azL">דרום</b></label>
+            <div class="ctrls">
+              <button class="btn-secondary" id="y_rotR">↻ ‎+10°‎</button>
+              <button class="btn-secondary" id="y_rotL">↺ ‎−10°‎</button>
+              <button class="btn-secondary" id="y_rot0">איפוס</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>יום בשנה / עונה</h2>
+            <div class="seg">
+              <button data-d="0">ניסן</button><button data-d="91.31">תמוז</button>
+              <button data-d="182.62">תשרי</button><button data-d="273.94">טבת</button>
+            </div>
+            <label class="field">יום מתקופת ניסן: <b id="y_dayL">0</b></label>
+            <input type="range" id="y_dayY" min="0" max="365.25" step="0.5" value="0" />
+            <label class="field">קו רוחב במעלות (ירושלים=31.78)</label>
+            <input type="number" id="y_lat" step="0.1" value="31.78" />
+          </div>
+          <div class="card">
+            <h2>שנת החמה — הלכה</h2>
+            <table>
+              <tr><td>תקופת שמואל</td><td>365 ימים 6 שעות</td></tr>
+              <tr><td>תקופת רב אדא</td><td>365י' 5ש' 997ח' 48ר'</td></tr>
+              <tr><td>כל תקופה</td><td>91 ימים 7.5 שעות</td></tr>
+            </table>
+            <div class="htxt" style="margin-top:8px">ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז (היום הארוך), טבת (הלילה הארוך).</div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- ═══ מיקום כוכבי הלכת ═══ -->
+      <section class="view" id="view-planets">
+        <div class="stage"><canvas id="planetsCanvas"></canvas></div>
+        <aside class="panel">
+          <div class="card">
+            <h2>הכנס תאריך ושעה</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+              <label class="field">יום<input type="number" id="p_day" min="1" max="31" /></label>
+              <label class="field">חודש<input type="number" id="p_month" min="1" max="12" /></label>
+              <label class="field">שנה<input type="number" id="p_year" /></label>
+              <label class="field">שעה<input type="number" id="p_hour" min="0" max="23" /></label>
+              <label class="field">דקות<input type="number" id="p_min" min="0" max="59" /></label>
+            </div>
+            <div class="chk"><input type="checkbox" id="p_dst" /><label for="p_dst">שעון קיץ (+3)</label></div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-primary" id="p_go">הצג מיקום</button>
+              <button class="btn-secondary" id="p_now">↻ עכשיו</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>מיקום הצופה</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+              <label class="field">קו רוחב °<input type="number" id="p_lat" step="0.01" /></label>
+              <label class="field">קו אורך °<input type="number" id="p_lon" step="0.01" /></label>
+            </div>
+            <div class="htxt" style="margin-top:6px">ברירת מחדל: ירושלים</div>
+          </div>
+          <div class="card">
+            <h2>מקרא — גובה / אזימוט</h2>
+            <div id="p_legend"></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <footer id="footer">איורים אינטראקטיביים להבנת מהלך גרמי השמיים · פועל אופליין</footer>
+  </div>
+
+  <!-- אודות -->
+  <div class="scrim" id="scrim"></div>
+  <div class="about" id="about">
+    <h2>קידוש החודש</h2>
+    <p>תוסף אוצריא המביא איורים אינטראקטיביים להבנת מהלך גרמי השמיים: מופעי הירח, מהלך השמש היומי לאורך שנת החמה, ומיקום כוכבי הלכת לפי תאריך.</p>
+    <div class="ctrls" id="aboutActions"></div>
+    <div class="ctrls" style="margin-top:14px"><button class="btn-secondary" id="aboutClose">סגור</button></div>
+  </div>
+
+  <script src="js/assets.js"></script>
+  <script src="js/astro.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/sims.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

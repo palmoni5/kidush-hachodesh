@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "com.otzaria.kidush-hachodesh",
+  "name": "קידוש החודש",
+  "version": "0.5.0",
+  "description": "איורים אינטראקטיביים להבנת מהלך גרמי השמיים: מופעי הירח, מהלך השמש היומי לאורך שנת החמה, ומיקום כוכבי הלכת לפי תאריך.",
+  "author": "אוצריא",
+  "stability": "beta",
+  "entrypoint": "index.html",
+  "icon": "icon/icon.png",
+  "minAppVersion": "0.9.89",
+  "sdkVersion": "1.x",
+  "permissions": [
+    "app.info.read",
+    "events.subscribe:theme.changed",
+    "ui.feedback",
+    "plugin.storage.read",
+    "plugin.storage.write",
+    "ui.create_shortcut"
+  ],
+  "network": {
+    "enabled": false,
+    "allowlist": []
+  },
+  "contributes": {
+    "toolTab": {
+      "title": "קידוש החודש",
+      "order": 300,
+      "allowOrderBeforeBuiltIns": false,
+      "defaultPinned": true,
+      "iconName": "weather_moon_24_regular"
+    },
+    "publishedDataTypes": []
+  }
+}

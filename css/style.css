@@ -1,0 +1,262 @@
+/* ============================================================
+   קידוש החודש — עיצוב תואם אוצריא (Material 3)
+   כל הצבעים מוגדרים כאן ב-:root בלבד; הרכיבים משתמשים ב-var().
+   ============================================================ */
+:root {
+  /* --- Color roles (מוחלפים ע"י applyTheme מתוך ה-theme) --- */
+  --color-primary:            #1565C0;
+  --color-on-primary:         #FFFFFF;
+  --color-secondary:          #6750A4;
+  --color-on-secondary:       #FFFFFF;
+  --color-secondary-container:    #E8DEF8;
+  --color-on-secondary-container: #1D192B;
+  --color-surface:            #F8F9FB;
+  --color-on-surface:         #1A1A2E;
+  --color-surface-container-high:    #ECE6F0;
+  --color-surface-container-highest: #E0E0E6;
+  --color-error:              #B3261E;
+  --color-on-error:           #FFFFFF;
+  --color-outline:            #C3C8D2;
+  --color-primary-subtle:     rgba(21, 101, 192, 0.12);
+  --color-secondary-subtle:   rgba(103, 80, 164, 0.12);
+
+  /* --- Typography --- */
+  --font-main:      'FrankRuhlCLM', 'David', serif;
+  --font-size-base: 18px;
+  --line-height:    1.5;
+
+  /* --- Shape (M3) --- */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-pill: 999px;
+
+  /* --- פלטת האיור (כיפת שמיים / חלל) — קבועה כי תוכן האיור דורש רקע כהה --- */
+  --ill-sky-top:    #0a1838;
+  --ill-sky-bottom: #05070f;
+  --ill-panel:      rgba(8, 12, 22, 0.74);
+  --ill-line:       rgba(150, 180, 255, 0.30);
+  --ill-grid:       rgba(120, 150, 210, 0.22);
+  --ill-horizon:    rgba(150, 180, 255, 0.55);
+  --ill-text:       #e8eefc;
+  --ill-muted:      #9fb0d0;
+  --ill-sun:        #ffcf5a;
+  --ill-sun-glow:   rgba(255, 200, 110, 0.45);
+  --ill-blue:       #5fb0ff;
+  --ill-ray:        rgba(255, 207, 90, 0.30);
+  --ill-night:      rgba(16, 20, 30, 0.92);
+  --ill-spring:     #5fd08a;
+  --ill-summer:     #ffb24d;
+  --ill-autumn:     #e07a4d;
+  --ill-winter:     #5fa8ff;
+
+  /* --- פלטת איור בהירה (ערכים; מוחלים ע"י body.ill-light) --- */
+  --ill-sky-top-l:    #d7e6ff;
+  --ill-sky-bottom-l: #f3f8ff;
+  --ill-panel-l:      rgba(255, 255, 255, 0.82);
+  --ill-line-l:       rgba(40, 70, 130, 0.35);
+  --ill-grid-l:       rgba(60, 90, 150, 0.22);
+  --ill-horizon-l:    rgba(40, 70, 130, 0.60);
+  --ill-text-l:       #16233f;
+  --ill-muted-l:      #4a5a7a;
+  --ill-night-l:      rgba(38, 48, 72, 0.62);
+  --ill-sun-glow-l:   rgba(255, 170, 40, 0.50);
+  --ill-ray-l:        rgba(210, 150, 30, 0.40);
+
+  /* --- חוצצים וצללים --- */
+  --scrim:          rgba(0, 0, 0, 0.40);
+  --shadow-strong:  rgba(0, 0, 0, 0.25);
+}
+
+/* רקע איור בהיר — דורס רק את משתני האיור (ללא צבעים גולמיים) */
+body.ill-light {
+  --ill-sky-top:    var(--ill-sky-top-l);
+  --ill-sky-bottom: var(--ill-sky-bottom-l);
+  --ill-panel:      var(--ill-panel-l);
+  --ill-line:       var(--ill-line-l);
+  --ill-grid:       var(--ill-grid-l);
+  --ill-horizon:    var(--ill-horizon-l);
+  --ill-text:       var(--ill-text-l);
+  --ill-muted:      var(--ill-muted-l);
+  --ill-night:      var(--ill-night-l);
+  --ill-sun-glow:   var(--ill-sun-glow-l);
+  --ill-ray:        var(--ill-ray-l);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+body {
+  font-family: var(--font-main);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  font-weight: 400;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  direction: rtl;
+  overflow: hidden;
+}
+/* הגופן הראשי (סריף) נראה כבד בגדלים קטנים — ממתנים את ההדגשות */
+b, strong { font-weight: 600; }
+
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+/* ── סרגל עליון + ניווט ───────────────────────────── */
+header.topbar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 16px;
+  background: var(--color-surface-container-high);
+  border-bottom: 1px solid var(--color-outline);
+  flex-wrap: wrap;
+}
+header.topbar .brand {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 1.05em; font-weight: 600; color: var(--color-primary);
+}
+header.topbar .brand img { width: 26px; height: 26px; }
+nav.tabs { display: flex; gap: 7px; flex-wrap: wrap; }
+nav.tabs button {
+  background: transparent; color: var(--color-on-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-pill);
+  padding: 6px 15px; font-size: 0.82em; font-weight: 500;
+  font-family: var(--font-main); cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+nav.tabs button:hover { background: var(--color-secondary-subtle); }
+nav.tabs button.active {
+  background: var(--color-primary); color: var(--color-on-primary);
+  border-color: var(--color-primary);
+}
+.spacer { margin-inline-start: auto; }
+.icon-btn {
+  background: transparent; color: var(--color-on-surface);
+  border: 1px solid var(--color-outline); border-radius: var(--radius-sm);
+  padding: 6px 12px; font-size: 0.8em; font-weight: 500;
+  cursor: pointer; font-family: var(--font-main);
+}
+.icon-btn:hover { background: var(--color-secondary-subtle); }
+
+/* ── מבנה תצוגה ───────────────────────────────────── */
+main { flex: 1; min-height: 0; position: relative; }
+.view { display: none; height: 100%; }
+.view.active { display: flex; }
+@media (max-width: 760px) { .view.active { flex-direction: column; } }
+
+#stage, .stage {
+  flex: 1; min-width: 0; min-height: 0; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 38%, var(--ill-sky-top), var(--ill-sky-bottom) 78%);
+}
+canvas { display: block; }
+
+aside.panel {
+  width: 312px; flex-shrink: 0; overflow: auto;
+  background: var(--color-surface);
+  border-inline-start: 1px solid var(--color-outline);
+  padding: 14px; display: flex; flex-direction: column; gap: 13px;
+}
+@media (max-width: 760px) {
+  aside.panel { width: 100%; border-inline-start: none;
+    border-top: 1px solid var(--color-outline); max-height: 44%; }
+}
+
+/* ── כרטיסים ───────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+.card h2 {
+  font-size: 0.82em; font-weight: 600; color: var(--color-primary);
+  margin-bottom: 10px;
+}
+
+/* ── כפתורים ───────────────────────────────────────── */
+.ctrls { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-primary, .btn-secondary {
+  border-radius: var(--radius-sm); padding: 8px 14px;
+  font-family: var(--font-main); font-size: 0.8em; font-weight: 500; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary { background: var(--color-primary); color: var(--color-on-primary); border: none; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary {
+  background: var(--color-secondary-subtle); color: var(--color-on-surface);
+  border: 1px solid var(--color-outline);
+}
+.btn-secondary:hover { opacity: 0.85; }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.seg button {
+  background: var(--color-secondary-subtle); color: var(--color-on-surface);
+  border: 1px solid var(--color-outline); border-radius: var(--radius-sm);
+  padding: 7px 3px; font-size: 0.72em; font-weight: 500; cursor: pointer; font-family: var(--font-main);
+}
+.seg button:hover { background: var(--color-primary-subtle); }
+
+/* ── שדות ───────────────────────────────────────────── */
+label.field { display: block; font-size: 0.74em; color: var(--color-on-surface);
+  opacity: 0.85; margin-top: 9px; }
+label.field b { color: var(--color-primary); }
+input[type=range] { width: 100%; accent-color: var(--color-primary); margin-top: 3px; }
+input[type=number] {
+  width: 100%; min-width: 0; padding: 6px 9px; border: 1.5px solid var(--color-outline);
+  border-radius: var(--radius-sm); font-family: var(--font-main); font-size: 0.82em;
+  color: var(--color-on-surface); background: var(--color-surface);
+  text-align: center; outline: none;
+}
+input[type=number]:focus { border-color: var(--color-primary); }
+.chk { display: flex; align-items: center; gap: 8px; font-size: 0.74em;
+  color: var(--color-on-surface); opacity: 0.9; margin-top: 9px; }
+.chk input { accent-color: var(--color-primary); }
+
+/* ── טבלאות נתונים ─────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: 0.72em; }
+table td { padding: 4px 5px; border-bottom: 1px solid var(--color-outline); }
+table td:first-child { opacity: 0.7; }
+.htxt { font-size: 0.72em; opacity: 0.82; line-height: 1.7; }
+.htxt b { opacity: 1; font-weight: 600; }
+.htxt .hl { color: var(--color-primary); font-weight: 600; }
+.seasondot { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin-inline-start: 5px; vertical-align: middle; }
+
+/* ── HUD מעל הקנבס (פלטת איור) ─────────────────────── */
+.hud {
+  position: absolute; inset-block-start: 12px; inset-inline-start: 12px;
+  background: var(--ill-panel); border: 1px solid var(--ill-line);
+  border-radius: var(--radius-md); padding: 10px 14px; min-width: 210px;
+  color: var(--ill-text);
+}
+.hud .row { display: flex; justify-content: space-between; gap: 16px; margin: 3px 0; font-size: 0.62em; }
+.hud .row b { color: var(--ill-sun); }
+.hud .big { font-size: 0.9em; font-weight: 600; color: var(--ill-blue); margin-top: 4px; }
+.hud .clock { font-size: 1.1em; font-weight: 600; color: var(--ill-blue); text-align: center; direction: ltr; }
+.hud .st { text-align: center; font-size: 0.6em; margin-top: 2px; color: var(--ill-text); }
+
+/* ── מסך אודות ─────────────────────────────────────── */
+.scrim {
+  position: fixed; inset: 0; background: var(--scrim);
+  opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 100;
+}
+.scrim.open { opacity: 1; pointer-events: auto; }
+.about {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.97);
+  width: min(440px, 92vw); max-height: 88vh; overflow: auto;
+  background: var(--color-surface-container-highest);
+  border: 1px solid var(--color-outline); border-radius: var(--radius-lg);
+  box-shadow: 0 8px 30px var(--shadow-strong); padding: 22px; z-index: 101;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+}
+.about.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+.about h2 { color: var(--color-primary); font-size: 1.15em; margin-bottom: 4px; }
+.about p { font-size: 0.8em; margin: 6px 0; opacity: 0.9; }
+.about .meta { font-size: 0.7em; opacity: 0.7; direction: ltr; text-align: start; }
+.about .ctrls { margin-top: 14px; }
+
+footer {
+  padding: 6px 16px; font-size: 0.62em; opacity: 0.7;
+  border-top: 1px solid var(--color-outline); text-align: center;
+  background: var(--color-surface-container-high);
+}
