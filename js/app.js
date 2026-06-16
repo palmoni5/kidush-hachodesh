@@ -3,7 +3,7 @@
 (function () {
   const $ = id => document.getElementById(id);
   const SIMS = window.Sims;
-  let active = 'moon', pluginId = 'com.otzaria.kidush-hachodesh', version = '1.0.0', platform = 'dev';
+  let active = 'moon';
   let last = performance.now();
 
   function setView(name) {
@@ -29,29 +29,9 @@
     return 'moon';
   }
 
-  // ── אודות + קיצור דרך ──
-  function isDesktop() { return ['windows', 'macos', 'linux'].includes(platform); }
+  // ── אודות ──
   function openAbout() { $('scrim').classList.add('open'); $('about').classList.add('open'); }
   function closeAbout() { $('scrim').classList.remove('open'); $('about').classList.remove('open'); }
-  async function makeShortcut(location) {
-    try {
-      const res = await Otzaria.call('shortcut.create', { label: 'קידוש החודש', location });
-      if (res && res.success && res.data && res.data.created)
-        await Otzaria.call('ui.showSuccess', { message: 'קיצור הדרך נוצר בהצלחה!' });
-      else if (!res || !res.success)
-        await Otzaria.call('ui.showError', { message: 'לא ניתן ליצור קיצור דרך' });
-    } catch (e) {}
-  }
-  function renderAbout() {
-    const box = $('aboutActions'); box.innerHTML = '';
-    if (!isDesktop()) return;
-    const b1 = document.createElement('button'); b1.className = 'btn-secondary'; b1.textContent = 'צור קיצור דרך בשולחן העבודה';
-    b1.onclick = () => makeShortcut('desktop'); box.appendChild(b1);
-    if (platform === 'windows') {
-      const b2 = document.createElement('button'); b2.className = 'btn-secondary'; b2.textContent = 'הוסף לתפריט ההתחל';
-      b2.onclick = () => makeShortcut('startMenu'); box.appendChild(b2);
-    }
-  }
 
   // ── רקע איור בהיר/כהה ──
   function applyBg(light) {
@@ -82,10 +62,7 @@
 
   Otzaria.on('theme.changed', applyTheme);
   Otzaria.on('plugin.boot', async (payload) => {
-    if (payload.plugin) { pluginId = payload.plugin.id || pluginId; version = payload.plugin.version || version; }
-    if (payload.app) platform = payload.app.platform || platform;
     applyTheme(payload.theme);
-    renderAbout();
     applyBg(await loadBg());
     const start = await loadLastView();
     setView(['moon', 'year', 'planets'].includes(start) ? start : 'moon');
