@@ -65,6 +65,37 @@
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
   $('bgBtn').onclick = toggleBg;
 
+  // ── חצי הגדלה/הקטנה מותאמים לכל שדות המספר ──
+  // (ה-spinner המובנה זעיר ונחתך ב-RTL; כאן עוטפים כל שדה בחצים ברורים)
+  function enhanceNumberInputs() {
+    document.querySelectorAll('input[type=number]').forEach(inp => {
+      if (inp.parentElement && inp.parentElement.classList.contains('numfield')) return;
+      const wrap = document.createElement('span');
+      wrap.className = 'numfield';
+      inp.parentNode.insertBefore(wrap, inp);
+      wrap.appendChild(inp);
+      const steps = document.createElement('span');
+      steps.className = 'numstep';
+      const mk = (cls, glyph, label) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.tabIndex = -1; b.className = cls; b.textContent = glyph;
+        b.setAttribute('aria-label', label);
+        return b;
+      };
+      const up = mk('num-up', '▲', 'הגדל'), down = mk('num-down', '▼', 'הקטן');
+      const bump = dir => {
+        if (inp.value === '') inp.value = inp.min || 0;
+        if (dir > 0) inp.stepUp(); else inp.stepDown();
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        inp.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      up.onclick = () => bump(1); down.onclick = () => bump(-1);
+      steps.appendChild(up); steps.appendChild(down);
+      wrap.appendChild(steps);
+    });
+  }
+  enhanceNumberInputs();
+
   // ערכת נושא משתנה בזמן אמת → ניקוי מטמון הצבעים וציור מחדש של הנוף הפעיל
   window.__onThemeApplied = () => { if (window.Sims.clearColorCache) window.Sims.clearColorCache(); invalidate(); };
 

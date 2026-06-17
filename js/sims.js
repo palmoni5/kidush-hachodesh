@@ -14,14 +14,25 @@ window.Sims = (function () {
   function clearColorCache() { for (const k in _cvCache) delete _cvCache[k]; }
   const $ = id => document.getElementById(id);
   function mkImg(src) { const i = new Image(); i.src = src; return i; }
-  const IMG = { sun: mkImg(AS.moon_sun), earth: mkImg(AS.moon_earth), moon: mkImg(AS.moon_moon), planets: {} };
+  const IMG = { sun: mkImg(AS.moon_sun), earth: mkImg(AS.moon_earth), moon: mkImg(AS.moon_moon), moonReal: mkImg(AS.moon_real), planets: {} };
   for (const k of ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune'])
     IMG.planets[k] = mkImg(AS['planet_' + k]);
 
   // מטמון מידות הקנבס — getBoundingClientRect מכריח layout, ולכן נמדד רק
   // פעם אחת לכל קנבס. מתאפס על שינוי גודל בלבד (clearFitCache מ-ResizeObserver).
   const _fitCache = new Map();
-  function clearFitCache() { _fitCache.clear(); }
+  // מטמון פריסה: במסכים צרים ה-HUD נערם מעל הקנבס, ולכן שומרים מקום אנכי בראשו
+  // כדי שהאיור (המרכזי) יצויר מתחתיו ולא יוסתר. מתאפס על שינוי גודל בלבד.
+  const _layout = { yearTop: null, moonTop: null };
+  function clearFitCache() { _fitCache.clear(); _layout.yearTop = null; _layout.moonTop = null; }
+  // גובה ה-HUD ביחס לראש הבמה (במסכים צרים בלבד); אחרת מחזיר את ברירת המחדל.
+  function hudInset(canvas, W, fallback) {
+    if (W >= 760) return fallback;   // דסקטופ/טאבלט רחב — פריסה מקורית
+    const stage = canvas.parentElement, hud = stage.querySelector('.hud');
+    if (!hud) return fallback;
+    const sr = stage.getBoundingClientRect();
+    return Math.max(fallback, hud.getBoundingClientRect().bottom - sr.top + 8);
+  }
   function fit(canvas) {
     let c = _fitCache.get(canvas);
     if (!c) {
@@ -67,8 +78,11 @@ window.Sims = (function () {
     draw() {
       const { ctx, W, H } = fit($('moonCanvas'));
       ctx.clearRect(0, 0, W, H);
-      const earthX = W * 0.60, earthY = H * 0.56, sunX = W * 0.13, sunY = earthY;
-      const orbitR = Math.min(W, H) * 0.19;
+      // במסך צר מורידים את כל ההרכב מתחת ל-HUD (top=0 בדסקטופ → פריסה מקורית)
+      if (_layout.moonTop === null) _layout.moonTop = hudInset($('moonCanvas'), W, 0);
+      const top = _layout.moonTop;
+      const earthX = W * 0.60, earthY = top + (H - top) * 0.56, sunX = W * 0.13, sunY = earthY;
+      const orbitR = Math.min(W, H - top) * 0.19;
       const ang = Math.PI + 2 * Math.PI * (this.day / A.SYNODIC);
       const mx = earthX + Math.cos(ang) * orbitR, my = earthY + Math.sin(ang) * orbitR;
       // קרני שמש (עד אזור הארץ/הירח בלבד) + מסלול
@@ -116,9 +130,35 @@ window.Sims = (function () {
     ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.clip();
     ctx.fillStyle = cv('--ill-night'); ctx.beginPath(); ctx.arc(cx, cy, r, a - Math.PI / 2, a + Math.PI / 2); ctx.fill(); ctx.restore();
   }
+  // גוף הירח מצויר וקטורית — חד בכל קנה מידה (במקום תמונה זעירה מוגדלת ומטושטשת)
+  // מראה סלעי: בסיס מוצלל, "ימות" (maria) כהים, ומכתשים עם שפה מוארת לתחושת עומק.
+  function drawMoonDisc(ctx, cx, cy, R) {
+    const g = ctx.createRadialGradient(cx - R * 0.32, cy - R * 0.32, R * 0.08, cx, cy, R);
+    g.addColorStop(0, '#f3f1ea'); g.addColorStop(0.6, '#d3d1c7'); g.addColorStop(1, '#aeaca2');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.fill();
+    // "ימות" — כתמים כהים גדולים ורכים
+    ctx.fillStyle = 'rgba(118,116,106,0.30)';
+    for (const [dx, dy, r] of [[-.22,-.18,.34],[.28,.10,.28],[-.05,.40,.26],[.34,-.34,.18]]) {
+      ctx.beginPath(); ctx.arc(cx + dx * R, cy + dy * R, r * R, 0, 2 * Math.PI); ctx.fill();
+    }
+    // מכתשים — צל פנימי + שפה מוארת בצד שמאל-עליון
+    for (const [dx, dy, r] of [[-.30,-.10,.13],[.22,.20,.11],[.06,-.40,.085],[-.20,.34,.10],
+        [.40,-.18,.07],[.14,-.06,.055],[-.40,.12,.06],[.02,.16,.075],[.30,.40,.05],[-.12,-.34,.045]]) {
+      const x = cx + dx * R, y = cy + dy * R, cr = r * R;
+      ctx.fillStyle = 'rgba(94,92,84,0.34)';
+      ctx.beginPath(); ctx.arc(x, y, cr, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,253,245,0.32)'; ctx.lineWidth = Math.max(0.6, cr * 0.18);
+      ctx.beginPath(); ctx.arc(x, y, cr * 0.92, Math.PI * 1.05, Math.PI * 1.75); ctx.stroke();
+    }
+  }
   function drawPhase(ctx, cx, cy, R, day) {
     ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.clip();
-    sprite(ctx, IMG.moon, cx, cy, 2 * R, 2 * R);
+    // תצלום אמיתי של הירח (LRO/NASA, נחלת הכלל); נפילה לציור וקטורי עד שייטען
+    if (IMG.moonReal.complete && IMG.moonReal.naturalWidth) {
+      ctx.filter = 'brightness(1.5) contrast(0.9)';   // הבהרה — ירח לבן יותר
+      ctx.drawImage(IMG.moonReal, cx - R, cy - R, 2 * R, 2 * R);
+      ctx.filter = 'none';
+    } else drawMoonDisc(ctx, cx, cy, R);
     const theta = 2 * Math.PI * (day % A.SYNODIC) / A.SYNODIC, a = R * Math.cos(theta);
     const waning = A.moonWaning(day), limb = waning ? -1 : 1, term = waning ? 1 : -1, N = 72;
     ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
@@ -154,8 +194,17 @@ window.Sims = (function () {
     draw() {
       const { ctx, W, H } = fit($('yearCanvas'));
       ctx.clearRect(0, 0, W, H);
-      // cy מוסט מעט מטה ו-R מוקטן כדי לפנות מקום לשורת ההסבר בראש (פסגת המסלול במרכז-עליון)
-      const cx = W / 2, cy = H / 2 + 12, R = Math.min(W * 0.40, (H - 54) / 2), yR = R * Math.sin(BETA * Math.PI / 180);
+      // cy מוסט מעט מטה ו-R מוקטן כדי לפנות מקום לשורת ההסבר בראש (פסגת המסלול במרכז-עליון).
+      // במסכים צרים מורידים את מרכז המסלול מתחת ל-HUD כדי שלא יכסה את האיור.
+      const cx = W / 2;
+      let cy, R;
+      if (W >= 760) { cy = H / 2 + 12; R = Math.min(W * 0.40, (H - 54) / 2); }
+      else {
+        if (_layout.yearTop === null) _layout.yearTop = hudInset($('yearCanvas'), W, 54);
+        const usableH = H - _layout.yearTop - 10;
+        cy = _layout.yearTop + usableH / 2; R = Math.min(W * 0.40, usableH / 2);
+      }
+      const yR = R * Math.sin(BETA * Math.PI / 180);
       const dec = A.solarDecl(this.dayY);
       ctx.strokeStyle = cv('--ill-horizon'); ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(cx, cy, R, yR, 0, 0, 2 * Math.PI); ctx.stroke();
