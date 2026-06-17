@@ -29,6 +29,12 @@ window.Sims = (function () {
     const refNew = Date.UTC(2000, 0, 6, 18, 14, 0);
     return ((((Date.now() - refNew) / 86400000) % A.SYNODIC) + A.SYNODIC) % A.SYNODIC;
   }
+  // שורת הסבר עדינה (ללא רקע) למעלה — מוצגת בזמן השהיה
+  function drawHint(ctx, W) {
+    ctx.fillStyle = cv('--ill-muted'); ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('לחצו ▶ הפעל כדי להניע את הסיבוב', W / 2, 8);
+  }
   // יום בשנת החמה (מתקופת ניסן) ושעה נוכחית — שוויון אביב ~20.3
   function solarToday() {
     const springRef = Date.UTC(2000, 2, 20, 7, 35, 0), now = new Date();
@@ -38,7 +44,7 @@ window.Sims = (function () {
 
   // ════════════════ מופעי הירח ════════════════
   const moon = {
-    day: 0, speed: 2, playing: true, _bound: false,
+    day: 0, speed: 2, playing: false, hintDone: false, _bound: false,
     step(dt) { if (this.playing) this.day = (this.day + this.speed * dt) % A.SYNODIC; },
     draw() {
       const { ctx, W, H } = fit($('moonCanvas'));
@@ -69,6 +75,7 @@ window.Sims = (function () {
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('הירח מכדור הארץ', vx, vy - vR - 9);
       drawPhase(ctx, vx, vy, vR, this.day);
+      if (!this.hintDone) drawHint(ctx, W);
       // HUD
       const pct = Math.round(A.moonIllum(this.day) * 100);
       $('m_day').textContent = Math.floor(this.day % A.SYNODIC) + 1;
@@ -77,7 +84,8 @@ window.Sims = (function () {
     },
     bind() {
       if (this._bound) return; this._bound = true;
-      $('m_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
+      this.day = moonAgeToday();   // ברירת מחדל: מצב הירח היום
+      $('m_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
       $('m_reset').onclick = () => { this.day = 0; };
       $('m_today').onclick = () => { this.day = moonAgeToday(); this.playing = false; $('m_play').textContent = '▶ הפעל'; };
       $('m_speed').oninput = e => { this.speed = +e.target.value; $('m_spdL').textContent = this.speed.toFixed(1); };
@@ -105,7 +113,7 @@ window.Sims = (function () {
   // ════════════════ מהלך השמש — שנת חמה ════════════════
   const BETA = 24;
   const year = {
-    hour: 12, dayY: 0, lat: 31.78, speed: 2, playing: true, auto: true, viewAz: 0, _bound: false,
+    hour: 12, dayY: 0, lat: 31.78, speed: 2, playing: false, auto: true, viewAz: 0, hintDone: false, _bound: false,
     step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % A.SOLAR_YEAR; } } },
     proj(v, cx, cy, R) {
       const a = this.viewAz * Math.PI / 180, b = BETA * Math.PI / 180;
@@ -128,7 +136,8 @@ window.Sims = (function () {
     draw() {
       const { ctx, W, H } = fit($('yearCanvas'));
       ctx.clearRect(0, 0, W, H);
-      const cx = W / 2, cy = H / 2, R = Math.min(W * 0.40, (H - 30) / 2), yR = R * Math.sin(BETA * Math.PI / 180);
+      // cy מוסט מעט מטה ו-R מוקטן כדי לפנות מקום לשורת ההסבר בראש (פסגת המסלול במרכז-עליון)
+      const cx = W / 2, cy = H / 2 + 12, R = Math.min(W * 0.40, (H - 54) / 2), yR = R * Math.sin(BETA * Math.PI / 180);
       const dec = A.solarDecl(this.dayY);
       ctx.strokeStyle = cv('--ill-horizon'); ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(cx, cy, R, yR, 0, 0, 2 * Math.PI); ctx.stroke();
@@ -158,6 +167,7 @@ window.Sims = (function () {
       if (up) { const g = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, sR * 2.4); g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, sR * 2.4, 0, 2 * Math.PI); ctx.fill(); }
       ctx.globalAlpha = up ? 1 : 0.5; sprite(ctx, IMG.sun, p.x, p.y, 2 * sR, 2 * sR); ctx.globalAlpha = 1;
       ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, 3, 0, 2 * Math.PI); ctx.fill();
+      if (!this.hintDone) drawHint(ctx, W);
       this.hud(v.U);
     },
     season() {
@@ -193,7 +203,8 @@ window.Sims = (function () {
     },
     bind() {
       if (this._bound) return; this._bound = true;
-      $('y_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
+      { const t = solarToday(); this.dayY = t.dayY; this.hour = t.hour; }   // ברירת מחדל: היום והשעה הנוכחיים
+      $('y_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
       $('y_today').onclick = () => { const t = solarToday(); this.dayY = t.dayY; this.hour = t.hour; this.playing = false; $('y_play').textContent = '▶ הפעל'; };
       $('y_noon').onclick = () => { this.hour = 12; };
       $('y_midnight').onclick = () => { this.hour = 0; };

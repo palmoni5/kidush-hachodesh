@@ -29,10 +29,6 @@
     return 'moon';
   }
 
-  // ── אודות ──
-  function openAbout() { $('scrim').classList.add('open'); $('about').classList.add('open'); }
-  function closeAbout() { $('scrim').classList.remove('open'); $('about').classList.remove('open'); }
-
   // ── רקע איור בהיר/כהה ──
   function applyBg(light) {
     document.body.classList.toggle('ill-light', light);
@@ -52,9 +48,6 @@
   // ── חיווט ראשוני (לא תלוי boot) ──
   $('brandIcon').src = window.ASSETS.moon_icon;
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
-  $('aboutBtn').onclick = openAbout;
-  $('aboutClose').onclick = closeAbout;
-  $('scrim').onclick = closeAbout;
   $('bgBtn').onclick = toggleBg;
 
   // ערכת נושא משתנה בזמן אמת → ציור מחדש של הנוף הפעיל
