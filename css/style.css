@@ -101,7 +101,7 @@ body {
 /* הגופן הראשי (סריף) נראה כבד בגדלים קטנים — ממתנים את ההדגשות */
 b, strong { font-weight: 600; }
 
-#app { display: flex; flex-direction: column; height: 100vh; }
+#app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
 /* ── סרגל עליון + ניווט ───────────────────────────── */
 header.topbar {
@@ -143,7 +143,6 @@ nav.tabs button.active {
 main { flex: 1; min-height: 0; position: relative; }
 .view { display: none; height: 100%; }
 .view.active { display: flex; }
-@media (max-width: 760px) { .view.active { flex-direction: column; } }
 
 #stage, .stage {
   flex: 1; min-width: 0; min-height: 0; position: relative;
@@ -158,10 +157,6 @@ aside.panel {
   background: var(--color-surface);
   border-inline-start: 1px solid var(--color-outline);
   padding: 14px; display: flex; flex-direction: column; gap: 13px;
-}
-@media (max-width: 760px) {
-  aside.panel { width: 100%; border-inline-start: none;
-    border-top: 1px solid var(--color-outline); max-height: 44%; }
 }
 
 /* ── כרטיסים ───────────────────────────────────────── */
@@ -210,6 +205,30 @@ input[type=number] {
   text-align: center; outline: none;
 }
 input[type=number]:focus { border-color: var(--color-primary); }
+/* הסתרת ה-spinner המובנה (זעיר ונחתך) — מוחלף בחצים מותאמים (.numstep) */
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ── חצי הגדלה/הקטנה מותאמים לשדות מספר ─────────────────── */
+.numfield { position: relative; display: block; margin-top: 3px; }
+.numfield input[type=number] { display: block; margin-top: 0; padding-left: 28px; padding-right: 9px; }
+.numstep {
+  position: absolute; top: 2px; bottom: 2px; left: 2px; width: 24px;
+  display: flex; flex-direction: column; overflow: hidden;
+  border-right: 1.5px solid var(--color-outline);
+  border-radius: calc(var(--radius-sm) - 2px) 0 0 calc(var(--radius-sm) - 2px);
+}
+.numstep button {
+  flex: 1; width: 100%; padding: 0; margin: 0; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6em; line-height: 1; color: var(--color-on-surface);
+  background: var(--color-surface-container-high); opacity: 0.8;
+  transition: background 0.12s, opacity 0.12s;
+}
+.numstep button:hover { background: var(--color-primary); color: var(--color-on-primary); opacity: 1; }
+.numstep button:active { background: var(--color-primary); color: var(--color-on-primary); }
+.numstep .num-up { border-bottom: 1px solid var(--color-outline); }
 .chk { display: flex; align-items: center; gap: 8px; font-size: 0.74em;
   color: var(--color-on-surface); opacity: 0.9; margin-top: 9px; }
 .chk input { accent-color: var(--color-primary); }
@@ -262,4 +281,58 @@ footer {
   padding: 6px 16px; font-size: 0.62em; opacity: 0.7;
   border-top: 1px solid var(--color-outline); text-align: center;
   background: var(--color-surface-container-high);
+}
+
+/* ============================================================
+   התאמה למסכים צרים ולמובייל
+   ============================================================ */
+@media (max-width: 760px) {
+  /* סרגל עליון: שורה ראשונה = מותג + כפתור רקע; הלשוניות יורדות לשורה
+     מלאה משלהן (order) ועוטפות בלי להיחתך, במקום גלילה אופקית שמסתירה טקסט */
+  header.topbar { gap: 8px 10px; padding: 6px 10px; }
+  header.topbar .brand { font-size: 0.95em; flex-shrink: 0; }
+  .icon-btn { flex: 0 0 auto; white-space: nowrap; }
+  nav.tabs {
+    order: 5; flex-basis: 100%; flex-wrap: wrap; gap: 6px;
+  }
+  nav.tabs button { white-space: nowrap; }
+
+  /* פריסה אנכית: איור למעלה, פקדים נגללים מתחת */
+  .view.active { flex-direction: column; }
+  .stage { overflow: hidden; }   /* מונע גלישת הקנבס כשהגובה קטן מהמינימום */
+  aside.panel {
+    width: 100%; max-height: 46%;
+    border-inline-start: none; border-top: 1px solid var(--color-outline);
+    padding: 12px;
+  }
+
+  /* HUD צמוד אך מתרחב לתוכן (בלי חיתוך/גלישת שורות לשתי שורות) */
+  .hud { min-width: 0; max-width: calc(100% - 16px); padding: 8px 11px;
+    inset-block-start: 8px; inset-inline-start: 8px; }
+  .hud .row { gap: 14px; }
+  .hud .row span, .hud .row b { white-space: nowrap; }
+}
+
+/* טלפון לרוחב (רחב אך נמוך) — שמירה על פריסה צמודה כדי שהאיור לא יתגמד */
+@media (max-width: 760px) and (max-height: 480px) and (orientation: landscape) {
+  .view.active { flex-direction: row; }
+  aside.panel {
+    width: 46%; max-width: 300px; max-height: none;
+    border-top: none; border-inline-start: 1px solid var(--color-outline);
+  }
+}
+
+/* טלפונים צרים — הקטנת גופן בסיס והגדלת יעדי מגע */
+@media (max-width: 460px) {
+  :root { --font-size-base: 14px; }
+  header.topbar .brand img { width: 22px; height: 22px; }
+  .btn-primary, .btn-secondary { padding: 10px 13px; }
+  nav.tabs button { padding: 8px 13px; }
+  .seg button { padding: 9px 2px; }
+  .card { padding: 10px 12px; }
+  aside.panel { max-height: 50%; gap: 10px; }
+  /* HUD קומפקטי — תופס פחות מקום אנכי, כך שהאיור (המצויר מתחתיו) גדול יותר */
+  .hud { padding: 7px 10px; }
+  .hud .row { font-size: 0.58em; margin: 2px 0; }
+  .hud .clock { font-size: 1em; }
 }
