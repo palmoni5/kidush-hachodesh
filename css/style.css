@@ -21,8 +21,10 @@
   --color-secondary-subtle:   rgba(103, 80, 164, 0.12);
 
   /* --- Typography --- */
-  --font-main:      'FrankRuhlCLM', 'David', serif;
-  --font-size-base: 18px;
+  /* גופן ה-UI תואם לסרגל הכלים של אוצריא (ThemeData fontFamily: 'Roboto'),
+     שעבור עברית נופל ל-sans-serif של המערכת. אין זה גופן הקריאה (סריף). */
+  --font-main:      'Roboto', 'Segoe UI', system-ui, -apple-system, 'Heebo', 'Arial', sans-serif;
+  --font-size-base: 15px;
   --line-height:    1.5;
 
   /* --- Shape (M3) --- */

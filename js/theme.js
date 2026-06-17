@@ -23,8 +23,8 @@ function applyTheme(theme) {
   document.body.classList.toggle('dark-mode', theme.mode === 'dark');
   if (theme.typography) {
     const t = theme.typography;
-    if (t.fontFamily) set('--font-main', `'${t.fontFamily}', 'David', serif`);
-    if (t.fontSize)   set('--font-size-base', `${t.fontSize}px`);
+    // לא דורסים את --font-main ו---font-size-base: typography הוא גופן/גודל
+    // הקריאה (סריף, ~25px). ה-UI של התוסף נשאר sans-serif קומפקטי כמו סרגל הכלים.
     if (t.lineHeight) set('--line-height', String(t.lineHeight));
   }
   if (window.__onThemeApplied) window.__onThemeApplied();
