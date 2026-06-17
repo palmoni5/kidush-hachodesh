@@ -3,22 +3,40 @@
 "use strict";
 window.Sims = (function () {
   const A = window.Astro, AS = window.ASSETS;
-  const cv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  // מטמון לערכי משתני CSS — getComputedStyle יקר (מכריח חישוב-סגנון).
+  // מתאפס רק כשערכת הנושא/הרקע משתנים (clearColorCache).
+  const _cvCache = Object.create(null);
+  const cv = n => {
+    let v = _cvCache[n];
+    if (v === undefined) v = _cvCache[n] = getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    return v;
+  };
+  function clearColorCache() { for (const k in _cvCache) delete _cvCache[k]; }
   const $ = id => document.getElementById(id);
   function mkImg(src) { const i = new Image(); i.src = src; return i; }
   const IMG = { sun: mkImg(AS.moon_sun), earth: mkImg(AS.moon_earth), moon: mkImg(AS.moon_moon), planets: {} };
   for (const k of ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune'])
     IMG.planets[k] = mkImg(AS['planet_' + k]);
 
+  // מטמון מידות הקנבס — getBoundingClientRect מכריח layout, ולכן נמדד רק
+  // פעם אחת לכל קנבס. מתאפס על שינוי גודל בלבד (clearFitCache מ-ResizeObserver).
+  const _fitCache = new Map();
+  function clearFitCache() { _fitCache.clear(); }
   function fit(canvas) {
-    const r = canvas.parentElement.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const W = Math.max(280, r.width), H = Math.max(240, r.height);
-    if (canvas.width !== Math.round(W * dpr)) canvas.width = Math.round(W * dpr);
-    if (canvas.height !== Math.round(H * dpr)) canvas.height = Math.round(H * dpr);
-    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-    const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return { ctx, W, H };
+    let c = _fitCache.get(canvas);
+    if (!c) {
+      const r = canvas.parentElement.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const W = Math.max(280, r.width), H = Math.max(240, r.height);
+      const ctx = canvas.getContext('2d');
+      if (canvas.width !== Math.round(W * dpr)) canvas.width = Math.round(W * dpr);
+      if (canvas.height !== Math.round(H * dpr)) canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);   // נשמר על הקונטקסט בין פריימים
+      c = { ctx, W, H };
+      _fitCache.set(canvas, c);
+    }
+    return c;
   }
   function sprite(ctx, im, cx, cy, w, h) {
     if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h);
@@ -287,5 +305,5 @@ window.Sims = (function () {
     },
   };
 
-  return { moon, year, planets };
+  return { moon, year, planets, clearColorCache, clearFitCache };
 })();
