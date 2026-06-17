@@ -4,3 +4,4 @@
 # קבצי מערכת
 .DS_Store
 Thumbs.db
+.gstack/

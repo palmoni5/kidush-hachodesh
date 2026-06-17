@@ -149,6 +149,7 @@ main { flex: 1; min-height: 0; position: relative; }
   background: radial-gradient(circle at 50% 38%, var(--ill-sky-top), var(--ill-sky-bottom) 78%);
 }
 canvas { display: block; }
+#yearCanvas { touch-action: none; }
 
 aside.panel {
   width: 312px; flex-shrink: 0; overflow: auto;

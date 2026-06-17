@@ -48,10 +48,10 @@ window.Sims = (function () {
     return ((((Date.now() - refNew) / 86400000) % A.SYNODIC) + A.SYNODIC) % A.SYNODIC;
   }
   // שורת הסבר עדינה (ללא רקע) למעלה — מוצגת בזמן השהיה
-  function drawHint(ctx, W) {
+  function drawHint(ctx, W, txt = 'לחצו ▶ הפעל כדי להניע את הסיבוב') {
     ctx.fillStyle = cv('--ill-muted'); ctx.font = '12px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('לחצו ▶ הפעל כדי להניע את הסיבוב', W / 2, 8);
+    ctx.fillText(txt, W / 2, 8);
   }
   // יום בשנת החמה (מתקופת ניסן) ושעה נוכחית — שוויון אביב ~20.3
   function solarToday() {
@@ -131,7 +131,7 @@ window.Sims = (function () {
   // ════════════════ מהלך השמש — שנת חמה ════════════════
   const BETA = 24;
   const year = {
-    hour: 12, dayY: 0, lat: 31.78, speed: 2, playing: false, auto: true, viewAz: 0, hintDone: false, _bound: false,
+    hour: 12, dayY: 0, lat: 31.78, speed: 2, playing: false, auto: true, viewAz: 90, hintDone: false, _bound: false,
     step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % A.SOLAR_YEAR; } } },
     proj(v, cx, cy, R) {
       const a = this.viewAz * Math.PI / 180, b = BETA * Math.PI / 180;
@@ -185,7 +185,7 @@ window.Sims = (function () {
       if (up) { const g = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, sR * 2.4); g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, sR * 2.4, 0, 2 * Math.PI); ctx.fill(); }
       ctx.globalAlpha = up ? 1 : 0.5; sprite(ctx, IMG.sun, p.x, p.y, 2 * sR, 2 * sR); ctx.globalAlpha = 1;
       ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, 3, 0, 2 * Math.PI); ctx.fill();
-      if (!this.hintDone) drawHint(ctx, W);
+      if (!this.hintDone) drawHint(ctx, W, 'גררו לסיבוב · ▶ הפעל להנעה');
       this.hud(v.U);
     },
     season() {
@@ -233,8 +233,13 @@ window.Sims = (function () {
       $('y_auto').onchange = e => this.auto = e.target.checked;
       $('y_rotR').onclick = () => { this.viewAz = (this.viewAz + 10) % 360; };
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };
-      $('y_rot0').onclick = () => { this.viewAz = 0; };
+      $('y_rot0').onclick = () => { this.viewAz = 90; };
       document.querySelectorAll('#view-year .seg button').forEach(b => b.onclick = () => this.dayY = +b.dataset.d);
+      // גרירת העכבר/מגע לסיבוב התצוגה (~0.5° לכל פיקסל)
+      { const cnv = $('yearCanvas'); let dragX = 0, dragAz = 0, dragging = false; cnv.style.cursor = 'grab';
+        cnv.onpointerdown = e => { dragging = true; this.hintDone = true; dragX = e.clientX; dragAz = this.viewAz; cnv.setPointerCapture(e.pointerId); cnv.style.cursor = 'grabbing'; };
+        cnv.onpointermove = e => { if (!dragging) return; this.viewAz = (((dragAz + (e.clientX - dragX) * 0.5) % 360) + 360) % 360; window.__invalidate && window.__invalidate(); };
+        cnv.onpointerup = cnv.onpointercancel = () => { dragging = false; cnv.style.cursor = 'grab'; }; }
     },
   };
   function withA(col, a) { // הוספת אלפא לצבע hex/rgb שנקרא מ-CSS
