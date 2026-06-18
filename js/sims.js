@@ -105,7 +105,7 @@ window.Sims = (function () {
       // תצוגת הירח כפי שנראה מהארץ (אינסט בפינה ימנית-תחתונה, הרחק מה-HUD)
       const vR = Math.min(W, H) * 0.15, vx = W - vR - 20, vy = H - vR - 22;
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('הירח מכדור הארץ', vx, vy - vR - 9);
+      ctx.fillText('הירח מכדור הארץ', vx, vy - vR - 14);
       drawPhase(ctx, vx, vy, vR, this.day);
       if (!this.hintDone) drawHint(ctx, W);
       // HUD
