@@ -99,7 +99,11 @@ window.Sims = (function () {
       sprite(ctx, IMG.sun, sunX, sunY, 66, 66);
       // ארץ + ירח עם חצי מוצל
       sprite(ctx, IMG.earth, earthX, earthY, 42, 42); shade(ctx, earthX, earthY, 21, sunX, sunY);
-      sprite(ctx, IMG.moon, mx, my, 22, 22); shade(ctx, mx, my, 11, sunX, sunY);
+      // ירח מצויר פשוט — יציב ברינדור (במקום תמונה זעירה שמרצדת בהקטנה)
+      const mg = ctx.createRadialGradient(mx - 3, my - 3, 1, mx, my, 11);
+      mg.addColorStop(0, '#f3f1ea'); mg.addColorStop(1, '#bdbbb1');
+      ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(mx, my, 11, 0, 2 * Math.PI); ctx.fill();
+      shade(ctx, mx, my, 11, sunX, sunY);
       ctx.fillStyle = cv('--ill-text'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('הארץ', earthX, earthY + 30); ctx.fillText('הירח', mx, my - 16);
       // תצוגת הירח כפי שנראה מהארץ (אינסט בפינה ימנית-תחתונה, הרחק מה-HUD)
@@ -128,7 +132,7 @@ window.Sims = (function () {
   function shade(ctx, cx, cy, r, sunX, sunY) {
     const a = Math.atan2(cy - sunY, cx - sunX);
     ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.clip();
-    ctx.fillStyle = cv('--ill-night'); ctx.beginPath(); ctx.arc(cx, cy, r, a - Math.PI / 2, a + Math.PI / 2); ctx.fill(); ctx.restore();
+    ctx.fillStyle = cv('--ill-night'); ctx.beginPath(); ctx.arc(cx, cy, r + 1, a - Math.PI / 2, a + Math.PI / 2); ctx.fill(); ctx.restore();
   }
   // גוף הירח מצויר וקטורית — חד בכל קנה מידה (במקום תמונה זעירה מוגדלת ומטושטשת)
   // מראה סלעי: בסיס מוצלל, "ימות" (maria) כהים, ומכתשים עם שפה מוארת לתחושת עומק.
