@@ -83,7 +83,7 @@ window.Sims = (function () {
       const top = _layout.moonTop;
       const earthX = W * 0.60, earthY = top + (H - top) * 0.56, sunX = W * 0.13, sunY = earthY;
       const orbitR = Math.min(W, H - top) * 0.19;
-      const ang = Math.PI + 2 * Math.PI * (this.day / A.SYNODIC);
+      const ang = Math.PI - 2 * Math.PI * (this.day / A.SYNODIC);
       const mx = earthX + Math.cos(ang) * orbitR, my = earthY + Math.sin(ang) * orbitR;
       // קרני שמש (עד אזור הארץ/הירח בלבד) + מסלול
       const rayEnd = earthX + orbitR + 26;
@@ -164,7 +164,7 @@ window.Sims = (function () {
       ctx.filter = 'none';
     } else drawMoonDisc(ctx, cx, cy, R);
     const theta = 2 * Math.PI * (day % A.SYNODIC) / A.SYNODIC, a = R * Math.cos(theta);
-    const waning = A.moonWaning(day), limb = waning ? -1 : 1, term = waning ? 1 : -1, N = 72;
+    const waning = A.moonWaning(day), limb = waning ? 1 : -1, term = waning ? -1 : 1, N = 72;
     ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
     for (let i = 0; i <= N; i++) { const u = Math.PI * i / N; ctx.lineTo(cx + limb * R * Math.sin(u), cy - R * Math.cos(u)); }
     for (let i = N; i >= 0; i--) { const u = Math.PI * i / N; ctx.lineTo(cx + term * a * Math.sin(u), cy - R * Math.cos(u)); }

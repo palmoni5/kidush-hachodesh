@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "com.otzaria.kidush-hachodesh",
   "name": "קידוש החודש",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "איורים אינטראקטיביים להבנת מהלך גרמי השמיים: מופעי הירח, מהלך השמש היומי לאורך שנת החמה, ומיקום כוכבי הלכת לפי תאריך.",
   "author": "פלמנמוני",
   "stability": "beta",
