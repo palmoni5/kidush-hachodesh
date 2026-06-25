@@ -150,6 +150,14 @@ main { flex: 1; min-height: 0; position: relative; }
   background: radial-gradient(circle at 50% 38%, var(--ill-sky-top), var(--ill-sky-bottom) 78%);
 }
 canvas { display: block; }
+/* קידום הקנבס לשכבת compositor נפרדת: ב-webview של אנדרואיד קנבס שמצויר
+   ברצף בתוך עמוד נגלל (מאז פריסת המובייל הנגללת ב-0.6.5) עלול לגרום
+   ל-repaint של כל העמוד בכל פריים → קרטוע. הבידוד מצמצם את הציור לקנבס בלבד. */
+#moonCanvas, #yearCanvas, #planetsCanvas {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: paint;
+}
 #yearCanvas { touch-action: none; }
 
 aside.panel {
