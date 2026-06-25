@@ -17,9 +17,11 @@ window.Sims = (function () {
   function clearColorCache() { for (const k in _cvCache) delete _cvCache[k]; }
   const $ = id => document.getElementById(id);
   function mkImg(src) { const i = new Image(); i.src = src; return i; }
-  const IMG = { sun: mkImg(AS.moon_sun), earth: mkImg(AS.moon_earth), moon: mkImg(AS.moon_moon), moonReal: mkImg(AS.moon_real), planets: {} };
+  const IMG = { sun: mkImg(AS.moon_sun), earth: mkImg(AS.moon_earth), moon: mkImg(AS.moon_moon), moonReal: mkImg(AS.moon_real), globe: mkImg(AS.globe_earth), planets: {} };
   for (const k of ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune'])
     IMG.planets[k] = mkImg(AS['planet_' + k]);
+  // טקסטורת כדור הארץ נטענת אסינכרונית — מבקשים ציור מחדש בסיום הטעינה כדי שלא יישאר הכדור בנפילה
+  IMG.globe.onload = () => { try { window.__invalidate && window.__invalidate(); } catch (e) {} };
 
   // מטמון מידות הקנבס — getBoundingClientRect מכריח layout, ולכן נמדד רק
   // פעם אחת לכל קנבס. מתאפס על שינוי גודל בלבד (clearFitCache מ-ResizeObserver).
@@ -240,7 +242,8 @@ window.Sims = (function () {
       const Hh = (this.hour - 12) * 15, v = A.sunHorizon(Hh, dec, this.lat), p = this.proj(v, cx, cy, R), up = v.U > 0, sR = up ? 17 : 13;
       if (up) { const g = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, sR * 2.4); g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, sR * 2.4, 0, 2 * Math.PI); ctx.fill(); }
       ctx.globalAlpha = up ? 1 : 0.5; sprite(ctx, IMG.sun, p.x, p.y, 2 * sR, 2 * sR); ctx.globalAlpha = 1;
-      ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, 3, 0, 2 * Math.PI); ctx.fill();
+      // כדור הארץ במרכז — חצי מואר (יום) הפונה לשמש, חצי מוצל (לילה), עם רשת קווי אורך/רוחב
+      drawGlobe(ctx, cx, cy, Math.max(26, R * 0.2), v, this.viewAz, this.lat);
       if (!this.hintDone) drawHint(ctx, W, 'גררו לסיבוב · ▶ הפעל להנעה');
       this.hud(v.U);
     },
@@ -303,6 +306,110 @@ window.Sims = (function () {
     const m = col.match(/\d+(\.\d+)?/g); return m ? `rgba(${m[0]},${m[1]},${m[2]},${a})` : col;
   }
   function fmtH(h) { const m = Math.round((((h % 24) + 24) % 24) * 60); return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+
+  // טקסטורת כדור הארץ נדגמת פעם אחת מהתמונה (equirectangular) למערך פיקסלים, ומשם דוגמים לכל פיקסל בכדור.
+  let _earthTex = null, _globeBuf = null;
+  function earthTexture() {
+    if (_earthTex) return _earthTex;
+    const im = IMG.globe;
+    if (!(im.complete && im.naturalWidth)) return null;
+    const w = im.naturalWidth, h = im.naturalHeight;
+    const oc = document.createElement('canvas'); oc.width = w; oc.height = h;
+    const octx = oc.getContext('2d'); octx.drawImage(im, 0, 0);
+    _earthTex = { data: octx.getImageData(0, 0, w, h).data, w, h };
+    return _earthTex;
+  }
+
+  // כדור הארץ הקטן במרכז כיפת השמיים. ציר הקטבים מוטה כקו הרוחב של הצופה (זהה ל"ציר העולם" המצויר).
+  // הכדור מרונדר פיקסל-אחר-פיקסל: היטל אורתוגרפי של הספֵרה, דגימת מפת עולם (equirectangular) והצללת יום/לילה
+  // לפי כיוון השמש. סיבוב התצוגה (viewAz) מסובב את הספֵרה ממש, כך שהיבשות מסתובבות יחד עם הרשת.
+  function drawGlobe(ctx, cx, cy, r, sun, viewAz, lat) {
+    const a = viewAz * Math.PI / 180, b = BETA * Math.PI / 180;
+    // שלושה צירים אורתונורמליים במערכת (E,N,U): ex→ציר-x במסך, eup→ציר-y במסך, ev→לכיוון הצופה (עומק)
+    const ex  = [Math.cos(a), -Math.sin(a), 0];
+    const eup = [-Math.sin(a) * Math.sin(b), -Math.cos(a) * Math.sin(b), Math.cos(b)];
+    const ev  = [Math.sin(a) * Math.cos(b),  Math.cos(a) * Math.cos(b),  Math.sin(b)];
+    const dot = (p, q) => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
+    const sx = P => cx - r * dot(P, ex);
+    const sy = P => cy - r * dot(P, eup);
+    // צירי כדור הארץ: k=ציר הקטבים לכיוון קוטב השמים, i=מזרח, j=k×i
+    const ph = lat * Math.PI / 180;
+    const k = [0, Math.cos(ph), Math.sin(ph)], jj = [0, Math.sin(ph), -Math.cos(ph)];
+    const surf = (la, lo) => {
+      const cl = Math.cos(la), sl = Math.sin(la), co = Math.cos(lo), so = Math.sin(lo);
+      return [cl*co + sl*k[0], cl*(so*jj[1]) + sl*k[1], cl*(so*jj[2]) + sl*k[2]];
+    };
+    // כיוון השמש כווקטור יחידה (פני שטח מוארים כאשר P·sN > 0)
+    const m0 = Math.hypot(sun.E, sun.N, sun.U) || 1, sN = [sun.E/m0, sun.N/m0, sun.U/m0];
+
+    // ── גוף הכדור: טקסטורה ממופה לספֵרה + הצללת יום/לילה (לחוצץ חוץ-מסך, ואז מצוירת מעל הכיפה) ──
+    const tex = earthTexture();
+    const dpr = (ctx.getTransform ? ctx.getTransform().a : (window.devicePixelRatio || 1)) || 1;
+    if (tex) {
+      const px = Math.max(2, Math.round(2 * r * dpr)), C = px / 2, half = px / 2;
+      if (!_globeBuf) _globeBuf = document.createElement('canvas');
+      if (_globeBuf.width !== px) { _globeBuf.width = px; _globeBuf.height = px; }
+      const gctx = _globeBuf.getContext('2d');
+      const img = gctx.createImageData(px, px), out = img.data;
+      const td = tex.data, tw = tex.w, th = tex.h, T2 = Math.PI * 2;
+      const e0=ex[0],e1=ex[1],e2=ex[2], u0=eup[0],u1=eup[1],u2=eup[2], v0=ev[0],v1=ev[1],v2=ev[2];
+      const k0=k[0],k1=k[1],k2=k[2], j1=jj[1],j2=jj[2], s0=sN[0],s1=sN[1],s2=sN[2];
+      for (let yy = 0; yy < px; yy++) {
+        const bb = (C - yy - 0.5) / half;
+        for (let xx = 0; xx < px; xx++) {
+          const aa = (C - xx - 0.5) / half, rr = aa*aa + bb*bb, o = (yy*px + xx) << 2;
+          if (rr > 1) { out[o+3] = 0; continue; }
+          const zz = Math.sqrt(1 - rr);
+          const Px = aa*e0 + bb*u0 + zz*v0, Py = aa*e1 + bb*u1 + zz*v1, Pz = aa*e2 + bb*u2 + zz*v2;
+          const latP = Math.asin(Math.max(-1, Math.min(1, Px*k0 + Py*k1 + Pz*k2)));
+          const lonP = Math.atan2(Px*0 + Py*j1 + Pz*j2, Px);    // P·j , P·i(=Px)
+          let uu = lonP / T2 + 0.5; uu -= Math.floor(uu);
+          let vv = 0.5 - latP / Math.PI; vv = vv < 0 ? 0 : (vv > 0.999999 ? 0.999999 : vv);
+          const ti = ((Math.floor(vv*th)*tw) + Math.floor(uu*tw)) << 2;
+          const d = Px*s0 + Py*s1 + Pz*s2;            // קוסינוס הזווית לשמש → יום/לילה
+          // התמונה כהה יחסית, לכן מבהירים את צד היום (מקדם>1) ומחשיכים יותר את הלילה — להגברת הניגודיות
+          const t = d <= -0.06 ? 0 : d >= 0.06 ? 1 : (d + 0.06) / 0.12;
+          const shf = 0.16 + 1.19 * t;                // לילה ~0.16, יום ~1.35 (Uint8ClampedArray גוזר אוטומטית)
+          out[o] = td[ti]*shf; out[o+1] = td[ti+1]*shf; out[o+2] = td[ti+2]*shf; out[o+3] = 255;
+        }
+      }
+      gctx.putImageData(img, 0, 0);
+      ctx.drawImage(_globeBuf, cx - r, cy - r, 2*r, 2*r);
+    } else {                                           // נפילה עד שהטקסטורה תיטען
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.clip();
+      ctx.fillStyle = '#2f6fb0'; ctx.fillRect(cx - r, cy - r, 2*r, 2*r); ctx.restore();
+    }
+
+    // ── רשת קווי אורך/רוחב (עדינה) + סמנים — מצוירים כקווים וקטוריים מעל הכדור, גזורים למעגלו ──
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.clip();
+    const seg = (P0, P1, emph) => {
+      if (dot(P0, ev) < -0.04 && dot(P1, ev) < -0.04) return;       // אחורי לגמרי — דלג
+      const lit = dot(P0, sN) + dot(P1, sN) > 0;
+      ctx.strokeStyle = emph ? (lit ? 'rgba(255,226,140,0.90)' : 'rgba(255,226,140,0.34)')
+                             : (lit ? 'rgba(232,243,255,0.45)' : 'rgba(200,220,250,0.18)');
+      ctx.lineWidth = emph ? 1.3 : 0.8;
+      ctx.beginPath(); ctx.moveTo(sx(P0), sy(P0)); ctx.lineTo(sx(P1), sy(P1)); ctx.stroke();
+    };
+    for (const la of [-60, -30, 0, 30, 60]) {                        // קווי רוחב (המשווה מודגש)
+      const L = la * Math.PI / 180; let prev = surf(L, 0);
+      for (let lo = 8; lo <= 360; lo += 8) { const cur = surf(L, lo*Math.PI/180); seg(prev, cur, la === 0); prev = cur; }
+    }
+    for (let lo = 0; lo < 360; lo += 30) {                           // קווי אורך
+      const O = lo * Math.PI / 180; let prev = surf(-Math.PI/2, O);
+      for (let la = -78; la <= 78; la += 8) { const cur = surf(la*Math.PI/180, O); seg(prev, cur, false); prev = cur; }
+    }
+    { const L = ph; let prev = surf(L, 0);                           // קו הרוחב של הצופה — מודגש
+      for (let lo = 8; lo <= 360; lo += 8) { const cur = surf(L, lo*Math.PI/180); seg(prev, cur, true); prev = cur; } }
+    ctx.restore();
+    // קו מתאר הכדור
+    ctx.strokeStyle = cv('--ill-line'); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.stroke();
+    // סמן הצופה (זנית) — תמיד פונה לצופה
+    ctx.fillStyle = '#ff5a4d'; ctx.beginPath(); ctx.arc(sx([0,0,1]), sy([0,0,1]), 2.6, 0, 2*Math.PI); ctx.fill();
+    // קוטב צפון של הכדור (אם פונה לצופה)
+    if (dot(k, ev) > 0) { ctx.fillStyle = cv('--ill-text'); ctx.beginPath(); ctx.arc(sx(k), sy(k), 1.8, 0, 2*Math.PI); ctx.fill(); }
+  }
 
   // ════════════════ מיקום כוכבי הלכת ════════════════
   const BODIES = [
