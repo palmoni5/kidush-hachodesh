@@ -5,10 +5,13 @@ window.Sims = (function () {
   const A = window.Astro, AS = window.ASSETS;
   // מטמון לערכי משתני CSS — getComputedStyle יקר (מכריח חישוב-סגנון).
   // מתאפס רק כשערכת הנושא/הרקע משתנים (clearColorCache).
+  // נקרא מ-document.body (ולא מ-documentElement): דריסת פלטת האיור הבהירה
+  // מוגדרת על body.ill-light, ו-<html> שמעליו אינו יורש אותה — קריאה מ-<html>
+  // הייתה מחזירה תמיד את צבעי הכהה (טקסט לבן) וכך הכיתובים נעלמו ברקע בהיר.
   const _cvCache = Object.create(null);
   const cv = n => {
     let v = _cvCache[n];
-    if (v === undefined) v = _cvCache[n] = getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    if (v === undefined) v = _cvCache[n] = getComputedStyle(document.body).getPropertyValue(n).trim();
     return v;
   };
   function clearColorCache() { for (const k in _cvCache) delete _cvCache[k]; }

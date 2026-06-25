@@ -36,9 +36,10 @@ function hexToRgba(hex, a) {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }
 
-// קריאת ערך משתנה CSS (לציור על קנבס)
+// קריאת ערך משתנה CSS (לציור על קנבס) — מ-body, כדי לתפוס גם את דריסת
+// פלטת האיור הבהירה המוגדרת על body.ill-light (ראו ההערה ב-sims.js)
 function cssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
 }
 
 // ── Stub לפיתוח עצמאי בדפדפן (מופעל רק אם אוצריא אינה נוכחת) ──
