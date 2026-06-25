@@ -187,16 +187,16 @@ window.Sims = (function () {
       const E = v.E * Math.cos(a) - v.N * Math.sin(a), N = v.E * Math.sin(a) + v.N * Math.cos(a);
       return { x: cx - R * E, y: cy - R * (v.U * Math.cos(b) - N * Math.sin(b)) };
     },
-    circle(ctx, dec, cx, cy, R, upCol, w) {
+    circle(ctx, dec, cx, cy, R, upCol, w, occ) {
       let prev = null;
       for (let H = 0; H <= 360.001; H += 3) {
-        const v = A.sunHorizon(H, dec, this.lat), p = this.proj(v, cx, cy, R);
-        if (prev) {
+        const v = A.sunHorizon(H, dec, this.lat), p = this.proj(v, cx, cy, R), oc = occ ? occ(v, p) : false;
+        if (prev && !(prev.oc && oc)) {       // דלג על קטע שכולו מאחורי כדור הארץ (מוסתר)
           const above = prev.U > 0 && v.U > 0;
           ctx.strokeStyle = above ? upCol : withA(upCol, 0.22); ctx.lineWidth = w;
           ctx.setLineDash(above ? [] : [4, 5]); ctx.beginPath(); ctx.moveTo(prev.p.x, prev.p.y); ctx.lineTo(p.x, p.y); ctx.stroke();
         }
-        prev = { p, U: v.U };
+        prev = { p, U: v.U, oc };
       }
       ctx.setLineDash([]);
     },
@@ -227,23 +227,31 @@ window.Sims = (function () {
       ctx.strokeStyle = cv('--ill-grid'); ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(pole.x, pole.y); ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.fillText('ציר העולם', pole.x, pole.y - 10);
+      // השמש (כיוון) + כדור הארץ. מציירים את הכדור תחילה, ואז את מסלולי השמיים והשמש מעליו עם
+      // הסתרה (occlusion): מה שמאחורי הכדור (בצד הרחוק מהצופה) מוסתר על־ידו, ומה שלפניו מצויר מעליו.
+      const s = this.season();
+      const Hh = (this.hour - 12) * 15, v = A.sunHorizon(Hh, dec, this.lat), p = this.proj(v, cx, cy, R), up = v.U > 0, sR = up ? 17 : 13;
+      const gR = Math.max(26, R * 0.2);
+      const va = this.viewAz * Math.PI / 180, vb = BETA * Math.PI / 180;
+      const ev = [Math.sin(va) * Math.cos(vb), Math.cos(va) * Math.cos(vb), Math.sin(vb)];   // כיוון הצופה (עומק)
+      // נקודה מוסתרת אם היא נופלת בתוך דיסקת הכדור וגם בצדו הרחוק (רכיב עומק שלילי)
+      const occ = (vd, pt) => { const dx = pt.x - cx, dy = pt.y - cy; return dx*dx + dy*dy < gR*gR && (vd.E*ev[0] + vd.N*ev[1] + vd.U*ev[2]) < 0; };
+      drawGlobe(ctx, cx, cy, gR, v, this.viewAz, this.lat);
       // מסלולי ייחוס + תוויות
-      this.circle(ctx, 23.44, cx, cy, R, cv('--ill-summer'), 1.2);
-      this.circle(ctx, 0, cx, cy, R, cv('--ill-text'), 1.2);
-      this.circle(ctx, -23.44, cx, cy, R, cv('--ill-winter'), 1.2);
+      this.circle(ctx, 23.44, cx, cy, R, cv('--ill-summer'), 1.2, occ);
+      this.circle(ctx, 0, cx, cy, R, cv('--ill-text'), 1.2, occ);
+      this.circle(ctx, -23.44, cx, cy, R, cv('--ill-winter'), 1.2, occ);
       for (const [dc, lbl, col] of [[23.44, 'קיץ', cv('--ill-summer')], [0, 'שוויון', cv('--ill-text')], [-23.44, 'חורף', cv('--ill-winter')]]) {
         const tp = this.proj(A.sunHorizon(0, dc, this.lat), cx, cy, R);
         ctx.fillStyle = col; ctx.font = '11px sans-serif'; ctx.fillText(lbl, tp.x + 24, tp.y - 2);
       }
       // המסלול הנוכחי
-      const s = this.season();
-      this.circle(ctx, dec, cx, cy, R, cv(s.c), 2.6);
-      // השמש
-      const Hh = (this.hour - 12) * 15, v = A.sunHorizon(Hh, dec, this.lat), p = this.proj(v, cx, cy, R), up = v.U > 0, sR = up ? 17 : 13;
-      if (up) { const g = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, sR * 2.4); g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, sR * 2.4, 0, 2 * Math.PI); ctx.fill(); }
-      ctx.globalAlpha = up ? 1 : 0.5; sprite(ctx, IMG.sun, p.x, p.y, 2 * sR, 2 * sR); ctx.globalAlpha = 1;
-      // כדור הארץ במרכז — חצי מואר (יום) הפונה לשמש, חצי מוצל (לילה), עם רשת קווי אורך/רוחב
-      drawGlobe(ctx, cx, cy, Math.max(26, R * 0.2), v, this.viewAz, this.lat);
+      this.circle(ctx, dec, cx, cy, R, cv(s.c), 2.6, occ);
+      // השמש — מצוירת מעל הכדור כשהיא לפניו, ומוסתרת רק כשהיא ממש מאחוריו
+      if (!occ(v, p)) {
+        if (up) { const g = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, sR * 2.4); g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, sR * 2.4, 0, 2 * Math.PI); ctx.fill(); }
+        ctx.globalAlpha = up ? 1 : 0.5; sprite(ctx, IMG.sun, p.x, p.y, 2 * sR, 2 * sR); ctx.globalAlpha = 1;
+      }
       if (!this.hintDone) drawHint(ctx, W, 'גררו לסיבוב · ▶ הפעל להנעה');
       this.hud(v.U);
     },
