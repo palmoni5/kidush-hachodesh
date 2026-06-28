@@ -118,6 +118,6 @@
     applyTheme(payload.theme);
     applyBg(await loadBg());
     const start = await loadLastView();
-    setView(['moon', 'year', 'planets', 'zodiac'].includes(start) ? start : 'moon');
+    setView(['moon', 'year', 'planets', 'zodiac', 'system3d'].includes(start) ? start : 'moon');
   });
 })();

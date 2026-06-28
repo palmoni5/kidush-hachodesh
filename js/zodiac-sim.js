@@ -313,6 +313,9 @@
     },
   };
 
+  // חשיפת מעצב התאריך העברי (גימטריה + מטמון + נפילה ל-Intl) לשימוש משותף
+  window.HebrewDate = fetchHebrewDate;
+
   // ══ הרשמה ב-window.Sims ════════════════════════════════════════════════
   window.Sims.zodiac = zodiac;
   const _ccc = window.Sims.clearColorCache;

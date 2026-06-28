@@ -5,3 +5,6 @@
 .DS_Store
 Thumbs.db
 .gstack/
+
+# כלי פיתוח
+.claude/

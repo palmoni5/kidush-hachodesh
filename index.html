@@ -15,6 +15,7 @@
         <button data-view="year">מהלך השמש (שנת חמה)</button>
         <button data-view="planets">כוכבי הלכת</button>
         <button data-view="zodiac">גלגל המלקה</button>
+        <button data-view="system3d">מערכת תלת-מימד</button>
       </nav>
       <span class="spacer"></span>
       <button class="icon-btn" id="bgBtn">☀ רקע בהיר</button>
@@ -181,15 +182,87 @@
           </div>
         </aside>
       </section>
+      <!-- ═══ מערכת תלת-מימד — שמש · ארץ · ירח ═══ -->
+      <section class="view" id="view-system3d">
+        <div class="stage"><canvas id="sys3dCanvas"></canvas>
+          <div class="hud">
+            <div class="big" id="s_view">מבט הליוצנטרי</div>
+            <div class="row"><span>תאריך</span><b id="s_date">—</b></div>
+            <div class="row"><span>עברי</span><b id="s_date_he">—</b></div>
+            <div class="row"><span>מופע הירח</span><b id="s_phase">—</b></div>
+            <div class="row"><span>אחוז מואר</span><b id="s_pct">—</b></div>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="card">
+            <h2>נקודת מבט</h2>
+            <div class="segmented" id="s_camseg">
+              <button data-cam="helio" class="active">
+                <span class="seg-title">הליוצנטרי</span><span class="seg-sub">השמש במרכז</span>
+              </button>
+              <button data-cam="geo">
+                <span class="seg-title">גאוצנטרי</span><span class="seg-sub">הארץ במרכז</span>
+              </button>
+            </div>
+            <div class="htxt" style="margin-top:8px">גררו עם העכבר לסיבוב המבט · גלגלת לזום.</div>
+          </div>
+          <div class="card">
+            <h2>בקרת זמן</h2>
+            <div class="ctrls">
+              <button class="btn-primary" id="s_play">▶ הפעל</button>
+              <button class="btn-secondary" id="s_today">🗓 עכשיו</button>
+            </div>
+            <label class="field">מהירות: <b id="s_spdL">1.0</b> ימים/שנייה</label>
+            <input type="range" id="s_speed" min="0.1" max="30" step="0.1" value="1" />
+            <label class="field">הכנס תאריך</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+              <label class="field">יום<input type="number" id="s_day" min="1" max="31" /></label>
+              <label class="field">חודש<input type="number" id="s_month" min="1" max="12" /></label>
+              <label class="field">שנה<input type="number" id="s_year" /></label>
+            </div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-primary" id="s_go">הצג</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>כוכבי לכת</h2>
+            <div class="chk"><input type="checkbox" id="s_planets" />
+              <label for="s_planets">הצג כוכבי לכת</label></div>
+            <div class="htxt" style="margin-top:6px">המרחקים דחוסים (√) לתצוגה; הכיוון מדויק. במבט הגאוצנטרי הכוכבים ממוקמים לפי מרחקם מהארץ — כך נראית צמידוּתם לשמש ולירח.</div>
+          </div>
+          <div class="card">
+            <h2>ליקויים</h2>
+            <div class="row"><span>ליקוי לבנה הבא</span><b id="s_eclLun">—</b></div>
+            <div class="row"><span>ליקוי חמה הבא</span><b id="s_eclSol">—</b></div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-secondary" id="s_jumpLun">⏭ ליקוי לבנה</button>
+              <button class="btn-secondary" id="s_jumpSol">⏭ ליקוי חמה</button>
+            </div>
+            <div class="htxt" style="margin-top:6px">חרוט הצל של הארץ מוצג במבט הגאוצנטרי. ירח מלא הנכנס אליו = ליקוי לבנה.</div>
+          </div>
+          <div class="card">
+            <h2>מקרא</h2>
+            <div class="htxt">
+              <span class="seasondot" style="background:var(--ill-sun)"></span> שמש — מקור האור<br>
+              <span class="seasondot" style="background:var(--ill-blue)"></span> כדור הארץ<br>
+              <span class="seasondot" style="background:var(--color-outline)"></span> ירח<br><br>
+              המיקומים והכיוונים מחושבים במדויק (Astronomy Engine, וקטורי J2000). המרחק ארץ–ירח מוגדל לצורך תצוגה. הצד המואר של הירח והארץ פונה תמיד אל השמש — כך המופע נוצר פיזיקלית נכון.
+            </div>
+          </div>
+        </aside>
+      </section>
     </main>
   </div>
 
   <script src="vendor/astronomy.browser.min.js"></script>
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/OrbitControls.js"></script>
   <script src="js/assets.js"></script>
   <script src="js/astronomy-adapter.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/sims.js"></script>
   <script src="js/zodiac-sim.js"></script>
+  <script src="js/system3d.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
