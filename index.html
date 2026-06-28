@@ -14,6 +14,7 @@
         <button data-view="moon" class="active">מופעי הירח</button>
         <button data-view="year">מהלך השמש (שנת חמה)</button>
         <button data-view="planets">כוכבי הלכת</button>
+        <button data-view="zodiac">גלגל המלקה</button>
       </nav>
       <span class="spacer"></span>
       <button class="icon-btn" id="bgBtn">☀ רקע בהיר</button>
@@ -111,6 +112,42 @@
         </aside>
       </section>
 
+      <!-- ═══ גלגל המלקה והמזלות ═══ -->
+      <section class="view" id="view-zodiac">
+        <div class="stage"><canvas id="zodiacCanvas"></canvas>
+          <div class="hud">
+            <div class="row"><span>תאריך</span><b id="z_date">—</b></div>
+            <div class="row"><span>עברי</span><b id="z_date_he">—</b></div>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="card">
+            <h2>בקרת זמן</h2>
+            <div class="ctrls">
+              <button class="btn-primary" id="z_play">▶ הפעל</button>
+              <button class="btn-secondary" id="z_today">🗓 היום</button>
+            </div>
+            <label class="field">מהירות: <b id="z_spdL">1.0</b> ימים/שנייה</label>
+            <input type="range" id="z_speed" min="0.1" max="30" step="0.1" value="1" />
+          </div>
+          <div class="card">
+            <h2>הכנס תאריך</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+              <label class="field">יום<input type="number" id="z_day" min="1" max="31" /></label>
+              <label class="field">חודש<input type="number" id="z_month" min="1" max="12" /></label>
+              <label class="field">שנה<input type="number" id="z_year" /></label>
+            </div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-primary" id="z_go">הצג</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>מיקומים נוכחיים</h2>
+            <div id="z_legend"></div>
+          </div>
+        </aside>
+      </section>
+
       <!-- ═══ מיקום כוכבי הלכת ═══ -->
       <section class="view" id="view-planets">
         <div class="stage"><canvas id="planetsCanvas"></canvas></div>
@@ -147,10 +184,12 @@
     </main>
   </div>
 
+  <script src="vendor/astronomy.browser.min.js"></script>
   <script src="js/assets.js"></script>
-  <script src="js/astro.js"></script>
+  <script src="js/astronomy-adapter.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/sims.js"></script>
+  <script src="js/zodiac-sim.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
