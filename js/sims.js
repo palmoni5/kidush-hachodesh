@@ -31,8 +31,11 @@ window.Sims = (function () {
   const _layout = { yearTop: null, moonTop: null };
   function clearFitCache() { _fitCache.clear(); _layout.yearTop = null; _layout.moonTop = null; }
   // גובה ה-HUD ביחס לראש הבמה (במסכים צרים בלבד); אחרת מחזיר את ברירת המחדל.
+  // הסף נקבע לפי רוחב החלון (כמו ה-@media ב-CSS) ולא לפי רוחב הקנבס: רוחב הקנבס
+  // (חלון פחות פאנל 312px) יושב לעיתים ממש סביב 760 ומתהפך על reflow זעיר —
+  // מה שגרם לפריסה לקפוץ בין מרכוז (top=0) להזחה מתחת ל-HUD עם תחילת ההפעלה.
   function hudInset(canvas, W, fallback) {
-    if (W >= 760) return fallback;   // דסקטופ/טאבלט רחב — פריסה מקורית
+    if ((window.innerWidth || W) >= 760) return fallback;   // חלון רחב — פריסה מקורית
     const stage = canvas.parentElement, hud = stage.querySelector('.hud');
     if (!hud) return fallback;
     const sr = stage.getBoundingClientRect();
@@ -83,6 +86,13 @@ window.Sims = (function () {
     draw() {
       const { ctx, W, H } = fit($('moonCanvas'));
       ctx.clearRect(0, 0, W, H);
+      // עדכון ה-HUD תחילה: hudInset מודד את גובה ה-HUD, ולכן יש לעדכן את תוכנו
+      // (שאורכו משתנה לפי המופע) לפני מדידת moonTop — אחרת הפריים הראשון נמדד
+      // לפי ערכי ברירת המחדל שב-HTML, ומדידה-מחדש מאוחרת מקפיצה את האיור.
+      const pct = Math.round(A.moonIllum(this.day) * 100);
+      $('m_day').textContent = Math.floor(this.day % A.SYNODIC) + 1;
+      $('m_pct').textContent = pct + '%';
+      $('m_phase').textContent = A.moonPhaseLabel(this.day);
       // במסך צר מורידים את כל ההרכב מתחת ל-HUD (top=0 בדסקטופ → פריסה מקורית)
       if (_layout.moonTop === null) _layout.moonTop = hudInset($('moonCanvas'), W, 0);
       const top = _layout.moonTop;
@@ -109,19 +119,24 @@ window.Sims = (function () {
       mg.addColorStop(0, '#f3f1ea'); mg.addColorStop(1, '#bdbbb1');
       ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(mx, my, 11, 0, 2 * Math.PI); ctx.fill();
       shade(ctx, mx, my, 11, sunX, sunY);
-      ctx.fillStyle = cv('--ill-text'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('הארץ', earthX, earthY + 30); ctx.fillText('הירח', mx, my - 16);
-      // תצוגת הירח כפי שנראה מהארץ (אינסט בפינה ימנית-תחתונה, הרחק מה-HUD)
-      const vR = Math.min(W, H) * 0.15, vx = W - vR - 20, vy = H - vR - 22;
+      ctx.fillStyle = cv('--ill-text'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+      // תווית הארץ — מתחת לכדור עם מרווח ברור (~8px). textBaseline=top מבטיח
+      // שכל הטקסט יושב מתחת לנקודת העוגן (אחרת טקסט alphabetic זוחל אל הכדור).
+      ctx.textBaseline = 'top';
+      ctx.fillText('הארץ', earthX, earthY + 29);
+      // תווית הירח — מעל הירח עם מרווח מתון (~8px). textBaseline=bottom מבטיח
+      // שכל הטקסט יושב מעל נקודת העוגן (ולא יזלוג מטה אל הדיסקה).
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('הירח', mx, Math.max(top + 13, my - 19));
+      ctx.textBaseline = 'alphabetic';
+      // תצוגת הירח כפי שנראה מהארץ — פינה ימנית-תחתונה. הרדיוס מוגבל למקום
+      // הפנוי מימין למסלול, כדי שלא יתנגש בירח המקיף ובתוויתו במסכים צרים.
+      const vR = Math.max(28, Math.min(Math.min(W, H) * 0.15, (W - (earthX + orbitR) - 36) / 2));
+      const vx = W - vR - 16, vy = H - vR - 20;
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('הירח מכדור הארץ', vx, vy - vR - 14);
+      ctx.fillText('הירח מכדור הארץ', vx, vy - vR - 12);
       drawPhase(ctx, vx, vy, vR, this.day);
       if (!this.hintDone) drawHint(ctx, W);
-      // HUD
-      const pct = Math.round(A.moonIllum(this.day) * 100);
-      $('m_day').textContent = Math.floor(this.day % A.SYNODIC) + 1;
-      $('m_pct').textContent = pct + '%';
-      $('m_phase').textContent = A.moonPhaseLabel(this.day);
     },
     bind() {
       if (this._bound) return; this._bound = true;

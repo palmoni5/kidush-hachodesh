@@ -118,6 +118,14 @@
     applyTheme(payload.theme);
     applyBg(await loadBg());
     const start = await loadLastView();
+    // ממתינים לטעינת הגופנים לפני הרינדור הראשון: מדידות הפריסה (גובה ה-HUD וסרגל
+    // הלשוניות) חייבות להיעשות לפי המטריקות הסופיות, אחרת reflow מאוחר עם טעינת
+    // הגופן מקפיץ את האיור פעם אחת עם תחילת ההפעלה.
+    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
     setView(['moon', 'year', 'planets', 'zodiac', 'system3d'].includes(start) ? start : 'moon');
   });
+  // ביטחון נוסף: אם גופן נטען מאוחר יותר, מנקים את מטמון המידות ומציירים מחדש פעם אחת
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { if (window.Sims.clearFitCache) window.Sims.clearFitCache(); invalidate(); });
+  }
 })();
