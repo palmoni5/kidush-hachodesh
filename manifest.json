@@ -15,7 +15,8 @@
     "events.subscribe:theme.changed",
     "ui.feedback",
     "plugin.storage.read",
-    "plugin.storage.write"
+    "plugin.storage.write",
+    "calendar.read"
   ],
   "network": {
     "enabled": false,
