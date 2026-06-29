@@ -16,6 +16,8 @@
   const AU_K     = 22;   // רדיוס מסלול = AU_K · √(מרחק ב-AU)  (דחיסה לאורבית קריא)
   const MOON_VIS = 6;    // רדיוס מסלול הירח סביב הארץ (מוגדל)
   const R_SUN = 4, R_EARTH = 1.4, R_MOON = 0.6;
+  const EARTH_TILT = -23.44 * Math.PI / 180; // נטיית ציר כדור הארץ
+  const SPIN_PER_DAY = 2 * Math.PI;          // סיבוב צירי: סל"ד שלם לכל יום מדומה (קצב פיזיקלי נכון)
 
   function orbitR(au) { return AU_K * Math.sqrt(au); }
 
@@ -41,6 +43,9 @@
   const labels = {};
   let curW = 0, curH = 0;
   let ecCache = null;
+  let earthSpin = 0;                          // זווית הסיבוב הצירי המצטברת (מתקדמת רק בזמן ניגון)
+  let qTilt, qSpin;                           // קוואטרניונים לשימוש חוזר (מאותחלים ב-init)
+  const AXIS_Y = new THREE.Vector3(0, 1, 0), AXIS_Z = new THREE.Vector3(0, 0, 1);
 
   function tex(key) {
     const url = window.ASSETS && window.ASSETS[key];
@@ -122,6 +127,8 @@
     // התוצאה — הצד המואר של כדור הארץ בהיר ונאמן לצבעי הטקסטורה.
     earth = new THREE.Mesh(new THREE.SphereGeometry(R_EARTH, 48, 48),
       new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex('globe_earth'), roughness: 1, metalness: 0 }));
+    qTilt = new THREE.Quaternion().setFromAxisAngle(AXIS_Z, EARTH_TILT); // נטייה קבועה
+    qSpin = new THREE.Quaternion();
     scene.add(earth);
 
     moon = new THREE.Mesh(new THREE.SphereGeometry(R_MOON, 40, 40),
@@ -221,10 +228,12 @@
     light.position.copy(pSun);
     moonOrbit.position.copy(pEarth);
 
-    // נטיית ציר קבועה בלבד (23.44°). אין סיבוב יומי: התצוגה מתקדמת בימים/חודשים,
-    // כך שהסיבוב הצירי היה רק מסתובב את היבשות ללא משמעות אסטרונומית. קו היום/לילה
-    // נוצר מכיוון השמש (התאורה) ולכן זז נכון גם ללא סיבוב הגלובוס.
-    earth.rotation.z = -23.44 * RAD;
+    // סיבוב צירי חלק סביב ציר הקוטב הנטוי (23.44°): קודם סיבוב סביב Y המקומי
+    // (earthSpin), ואז הטיית הציר — כך הקטבים נשארים קבועים והגלובוס מסתובב סביבם.
+    // earthSpin מתקדם רק בזמן ניגון (ב-step), ולכן הגלובוס יציב כשעוצרים על תאריך.
+    // קו היום/לילה נקבע מכיוון השמש (התאורה) ואינו תלוי בזווית הסיבוב.
+    qSpin.setFromAxisAngle(AXIS_Y, earthSpin);
+    earth.quaternion.copy(qTilt).multiply(qSpin);
 
     earthMoonLine.geometry.setFromPoints([pEarth, pMoon]);
     earthMoonLine.computeLineDistances();
@@ -287,7 +296,11 @@
     speed: 1,
     _bound: false,
 
-    step(dt) { this.date = new Date(this.date.getTime() + this.speed * dt * 86400000); },
+    step(dt) {
+      const dDays = this.speed * dt;                 // כמה ימים מדומים התקדמו בפריים זה
+      this.date = new Date(this.date.getTime() + dDays * 86400000);
+      earthSpin += dDays * SPIN_PER_DAY;             // סל"ד שלם לכל יום מדומה
+    },
 
     draw() {
       if (typeof THREE === 'undefined') return;
