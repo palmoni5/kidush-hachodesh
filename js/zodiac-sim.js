@@ -4,7 +4,7 @@
 "use strict";
 (function () {
   const AE = window.Astronomy;
-  const PI = Math.PI, RAD = PI / 180, DEG = 180 / PI;
+  const PI = Math.PI, RAD = PI / 180;
 
   const SIGNS = ['טלה','שור','תאומים','סרטן','אריה','בתולה','מאזניים','עקרב','קשת','גדי','דלי','דגים'];
 
@@ -50,33 +50,22 @@
 
   // ══ חישוב אורכי מלקה ══════════════════════════════════════════════════
 
-  // מדת נטיית הציר לחישוב המרה קוורדינטות משוונית → אקליפטית
-  const ECL = 23.4393 * RAD;
-
-  function raDegToEclLon(raDeg, decDeg) {
-    const ra = raDeg * RAD, dec = decDeg * RAD;
-    const lon = Math.atan2(
-      Math.sin(ra) * Math.cos(ECL) + Math.tan(dec) * Math.sin(ECL),
-      Math.cos(ra)
-    );
-    return ((lon * DEG) % 360 + 360) % 360;
+  // אורך מלקה אמיתי של-תאריך (tropical) של גוף, באופן אחיד לכל הגופים:
+  // וקטור גאוצנטרי (EQJ, עם תיקון אברציה) → המרה אחת ב-Astronomy.Ecliptic.
+  // (קודם השמש/הירח/הכוכבים חושבו בשלוש שיטות שונות — וגם EclipticGeoMoon().elon
+  //  היה שגוי: השדה הוא .lon, כך שהירח נתקע ב-0° טלה. כעת הכול מאוחד ומתוקן.)
+  function ecLon(body, time) {
+    try { return AE.Ecliptic(AE.GeoVector(body, time, true)).elon; } catch (_) { return 0; }
   }
 
   let _cacheMs = null, _cacheLons = null;
   function getLongitudes(date) {
     if (_cacheMs === date.getTime()) return _cacheLons;
     const time = AE.MakeTime(date);
-    const obs = new AE.Observer(31.78, 35.22, 0); // ירושלים (לאורך מלקה — לא קריטי)
     const out = {};
-    try { out.sun  = AE.SunPosition(time).elon; } catch (_) { out.sun  = 0; }
-    try { out.moon = AE.EclipticGeoMoon(time).elon; } catch (_) { out.moon = 0; }
     for (const { key } of BODIES) {
-      if (key === 'sun' || key === 'moon') continue;
-      try {
-        const name = key[0].toUpperCase() + key.slice(1);
-        const eq = AE.Equator(AE.Body[name], time, obs, true, true);
-        out[key] = raDegToEclLon(eq.ra * 15, eq.dec); // ra בשעות → מעלות
-      } catch (_) { out[key] = 0; }
+      const name = key[0].toUpperCase() + key.slice(1);   // 'sun'→'Sun', 'mercury'→'Mercury'...
+      out[key] = ecLon(AE.Body[name], time);
     }
     _cacheMs = date.getTime(); _cacheLons = out;
     return out;

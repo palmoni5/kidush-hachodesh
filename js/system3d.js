@@ -16,24 +16,56 @@
   const AU_K     = 22;   // רדיוס מסלול = AU_K · √(מרחק ב-AU)  (דחיסה לאורבית קריא)
   const MOON_VIS = 6;    // רדיוס מסלול הירח סביב הארץ (מוגדל)
   const R_SUN = 4, R_EARTH = 1.4, R_MOON = 0.6;
-  const EARTH_TILT = -23.44 * Math.PI / 180; // נטיית ציר כדור הארץ
-  const SPIN_PER_DAY = 2 * Math.PI;          // סיבוב צירי: סל"ד שלם לכל יום מדומה (קצב פיזיקלי נכון)
+  const EPS = 23.4392911 * RAD;              // נטיית המלקה J2000 (להמרה משוונית→אקליפטית)
+  const COS_EPS = Math.cos(EPS), SIN_EPS = Math.sin(EPS);
 
   function orbitR(au) { return AU_K * Math.sqrt(au); }
 
-  // כוכבי הלכת (מבט הליוצנטרי) — מרחק ממוצע ל-rings, צבע, רדיוס תצוגה
+  // כוכבי הלכת (מבט הליוצנטרי) — au לקנה-מידה, period (ימים) לדגימת מסלול אמיתי, צבע, רדיוס
   const PLANETS = [
-    { key: 'Mercury', he: 'חמה',    au: 0.387, color: 0xa09080, r: 0.45 },
-    { key: 'Venus',   he: 'נוגה',   au: 0.723, color: 0xe8c870, r: 0.7 },
-    { key: 'Mars',    he: 'מאדים',  au: 1.524, color: 0xd05030, r: 0.55 },
-    { key: 'Jupiter', he: 'צדק',    au: 5.203, color: 0xc8a870, r: 1.5 },
-    { key: 'Saturn',  he: 'שבתאי',  au: 9.537, color: 0xb0a060, r: 1.3 },
-    { key: 'Uranus',  he: 'אורנוס', au: 19.19, color: 0x70c0cc, r: 1.0 },
-    { key: 'Neptune', he: 'נפטון',  au: 30.07, color: 0x5060c8, r: 1.0 },
+    { key: 'Mercury', he: 'חמה',    au: 0.387, period: 87.969,   color: 0xa09080, r: 0.45 },
+    { key: 'Venus',   he: 'נוגה',   au: 0.723, period: 224.701,  color: 0xe8c870, r: 0.7 },
+    { key: 'Mars',    he: 'מאדים',  au: 1.524, period: 686.980,  color: 0xd05030, r: 0.55 },
+    { key: 'Jupiter', he: 'צדק',    au: 5.203, period: 4332.589, color: 0xc8a870, r: 1.5 },
+    { key: 'Saturn',  he: 'שבתאי',  au: 9.537, period: 10759.22, color: 0xb0a060, r: 1.3 },
+    { key: 'Uranus',  he: 'אורנוס', au: 19.19, period: 30688.5,  color: 0x70c0cc, r: 1.0 },
+    { key: 'Neptune', he: 'נפטון',  au: 30.07, period: 60182.0,  color: 0x5060c8, r: 1.0 },
   ];
+  const EARTH_PERIOD = 365.256, MOON_PERIOD = 27.32166;   // ימים (סידורי)
 
-  // המרת וקטור Astronomy Engine (x→שווי-יום, z→צפון) למרחב Three (Y מעלה)
-  function v3(v) { return new THREE.Vector3(v.x, v.z, v.y); }
+  // המרת וקטור Astronomy Engine (משווני J2000: x→שווי-יום, z→קוטב שמימי) למרחב Three:
+  //   1) סיבוב למערכת אקליפטית J2000 (סביב ציר השוויון בזווית ε)
+  //   2) מיפוי למרחב Three עם Y=הקוטב האקליפטי הצפוני: (x, z_ecl, -y_ecl)
+  // החלפת y↔z בלבד הייתה שיקוף (דטרמיננטה −1); הסימן השלילי ב-Z שומר מערכת ימנית
+  // (דטרמיננטה +1), כך שהמסלולים פונים נגד כיוון השעון במבט מהצפון — כמו במציאות.
+  function v3(v) {
+    const ye =  v.y * COS_EPS + v.z * SIN_EPS;   // y אקליפטי
+    const ze = -v.y * SIN_EPS + v.z * COS_EPS;   // z אקליפטי (קוטב המלקה)
+    return new THREE.Vector3(v.x, ze, -ye);
+  }
+
+  // אוריינטציה פיזיקלית של גוף מ-Astronomy.RotationAxis: בונה מסגרת-גוף אורתונורמלית
+  // ימנית במרחב הסצנה — Y=הקוטב הצפוני (של-תאריך), X≈קו-האורך הראשי. כך מתקבל קצב
+  // וכיוון סיבוב נכונים, ולירח גם נעילה גאותית (אותו צד כלפי הארץ) + ליברציה.
+  // הערה (קוסמטי בלבד): הציר/הקצב/הכיוון מדויקים, אך רישום קו-אורך 0° של קובץ
+  // הטקסטורה לציר X המקומי אינו ודאי — ייתכן היסט קבוע (גריניץ' בארץ / מרכז הצד
+  // הקרוב בירח). תיקון דורש כיול חזותי חד-פעמי של הטקסטורה, לא שינוי בחישוב.
+  const _bX = new THREE.Vector3(), _bY = new THREE.Vector3(), _bZ = new THREE.Vector3(), _basis = new THREE.Matrix4();
+  function orientBody(mesh, body, time) {
+    let ax; try { ax = AE.RotationAxis(body, time); } catch (e) { return; }
+    const a0 = ax.ra * 15 * RAD, W = ax.spin * RAD;
+    const nx = ax.north.x, ny = ax.north.y, nz = ax.north.z;
+    const qx = -Math.sin(a0), qy = Math.cos(a0);                  // כיוון הצומת העולה Q (qz=0)
+    const cx = -nz * qy, cy = nz * qx, cz = nx * qy - ny * qx;    // n × Q
+    const cw = Math.cos(W), sw = Math.sin(W);
+    // קו-האורך הראשי ב-EQJ: B = Q·cosW + (n×Q)·sinW
+    _bY.copy(v3({ x: nx, y: ny, z: nz })).normalize();                          // Y = קוטב צפוני
+    _bX.copy(v3({ x: qx * cw + cx * sw, y: qy * cw + cy * sw, z: cz * sw }));    // ≈ קו-אורך ראשי
+    _bX.addScaledVector(_bY, -_bX.dot(_bY)).normalize();          // אורתוגונליזציה מול Y
+    _bZ.crossVectors(_bX, _bY).normalize();                      // Z = X×Y (ימני)
+    _basis.makeBasis(_bX, _bY, _bZ);
+    mesh.quaternion.setFromRotationMatrix(_basis);
+  }
 
   const EK = { total: 'מלא', partial: 'חלקי', penumbral: 'צל-קדמי', annular: 'טבעתי', hybrid: 'היברידי' };
 
@@ -43,9 +75,7 @@
   const labels = {};
   let curW = 0, curH = 0;
   let ecCache = null;
-  let earthSpin = 0;                          // זווית הסיבוב הצירי המצטברת (מתקדמת רק בזמן ניגון)
-  let qTilt, qSpin;                           // קוואטרניונים לשימוש חוזר (מאותחלים ב-init)
-  const AXIS_Y = new THREE.Vector3(0, 1, 0), AXIS_Z = new THREE.Vector3(0, 0, 1);
+  let moonOrbitKey = null;   // מפתח throttle לחישוב-מחדש של טבעת הירח לפי התאריך
 
   function tex(key) {
     const url = window.ASSETS && window.ASSETS[key];
@@ -92,11 +122,36 @@
     return new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0.7 }));
   }
 
-  function ring(radius, color, op) {
-    const seg = 160, pts = [];
-    for (let i = 0; i <= seg; i++) { const a = i / seg * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius)); }
+  function loopFromPoints(pts, color, op) {
     const g = new THREE.BufferGeometry().setFromPoints(pts);
     return new THREE.LineLoop(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity: op == null ? 0.35 : op }));
+  }
+
+  // מסלול אמיתי: דגימת מיקומי הגוף לאורך תקופה שלמה → קו סגור המשמר נטיית-מסלול
+  // ואקסצנטריות. הכיוון מדויק; הרדיוס דחוס (orbitR) בדיוק כמו מיקום הגוף עצמו, כך
+  // שהקו עובר במקום שבו הגוף מצויר. נדגם פעם אחת (epoch קבוע) — המסלולים יציבים.
+  const ORBIT_EPOCH = Date.UTC(2026, 0, 1);   // עוגן לדגימה (צורת המסלול כמעט קבועה)
+  function helioOrbit(body, periodDays, color, op) {
+    const seg = 256, pts = [];
+    for (let i = 0; i < seg; i++) {
+      const t = AE.MakeTime(new Date(ORBIT_EPOCH + (i / seg) * periodDays * 86400000));
+      const v = v3(AE.HelioVector(body, t)), len = v.length() || 1;
+      pts.push(v.multiplyScalar(orbitR(len) / len));         // כיוון מדויק · רדיוס דחוס
+    }
+    return loopFromPoints(pts, color, op);
+  }
+  // נקודות מסלול הירח סביב הארץ (גאוצנטרי) לחודש סידורי שמתחיל בתאריך הנתון — רדיוס
+  // ויזואלי קבוע (המרחק האמיתי דחוס מדי) אך הכיוון אמיתי, ולכן נטיית המסלול (~5° למלקה)
+  // מוצגת. נדגם מחדש לפי התאריך (לא כמו הכוכבים) כי מישור מסלול הירח נסוג במחזור 18.6
+  // שנה — טבעת קבועה של 2026 הייתה סוטה מהירח כעבור שנים. i=0 = כיוון הירח בתאריך עצמו.
+  function moonOrbitPoints(refMs) {
+    const seg = 192, pts = [];
+    for (let i = 0; i < seg; i++) {
+      const t = AE.MakeTime(new Date(refMs + (i / seg) * MOON_PERIOD * 86400000));
+      const v = v3(AE.GeoVector(AE.Body.Moon, t, false)), len = v.length() || 1;
+      pts.push(v.multiplyScalar(MOON_VIS / len));
+    }
+    return pts;
   }
 
   function init() {
@@ -127,16 +182,14 @@
     // התוצאה — הצד המואר של כדור הארץ בהיר ונאמן לצבעי הטקסטורה.
     earth = new THREE.Mesh(new THREE.SphereGeometry(R_EARTH, 48, 48),
       new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex('globe_earth'), roughness: 1, metalness: 0 }));
-    qTilt = new THREE.Quaternion().setFromAxisAngle(AXIS_Z, EARTH_TILT); // נטייה קבועה
-    qSpin = new THREE.Quaternion();
     scene.add(earth);
 
     moon = new THREE.Mesh(new THREE.SphereGeometry(R_MOON, 40, 40),
       new THREE.MeshStandardMaterial({ color: 0xcccccc, map: tex('moon_real'), roughness: 1, metalness: 0 }));
     scene.add(moon);
 
-    earthOrbit = ring(orbitR(1), 0x88aaff); scene.add(earthOrbit);
-    moonOrbit  = ring(MOON_VIS, 0xaaaaaa); scene.add(moonOrbit);
+    earthOrbit = helioOrbit(AE.Body.Earth, EARTH_PERIOD, 0x88aaff); scene.add(earthOrbit);
+    moonOrbit  = loopFromPoints(moonOrbitPoints(ORBIT_EPOCH), 0xaaaaaa); scene.add(moonOrbit);
 
     earthMoonLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
       new THREE.LineDashedMaterial({ color: 0xffcc55, dashSize: 1.5, gapSize: 1.5, transparent: true, opacity: 0.5 }));
@@ -152,7 +205,7 @@
     for (const p of PLANETS) {
       p.mesh = new THREE.Mesh(new THREE.SphereGeometry(p.r, 32, 32),
         new THREE.MeshStandardMaterial({ color: p.color, roughness: 1, metalness: 0 }));
-      p.ringObj = ring(orbitR(p.au), p.color, 0.22);
+      p.ringObj = helioOrbit(AE.Body[p.key], p.period, p.color, 0.22);
       p.labelObj = makeLabel(p.he, '#' + p.color.toString(16).padStart(6, '0'), 0.7);
       p.mesh.visible = p.ringObj.visible = p.labelObj.visible = false;
       scene.add(p.mesh); scene.add(p.ringObj); scene.add(p.labelObj);
@@ -228,12 +281,20 @@
     light.position.copy(pSun);
     moonOrbit.position.copy(pEarth);
 
-    // סיבוב צירי חלק סביב ציר הקוטב הנטוי (23.44°): קודם סיבוב סביב Y המקומי
-    // (earthSpin), ואז הטיית הציר — כך הקטבים נשארים קבועים והגלובוס מסתובב סביבם.
-    // earthSpin מתקדם רק בזמן ניגון (ב-step), ולכן הגלובוס יציב כשעוצרים על תאריך.
-    // קו היום/לילה נקבע מכיוון השמש (התאורה) ואינו תלוי בזווית הסיבוב.
-    qSpin.setFromAxisAngle(AXIS_Y, earthSpin);
-    earth.quaternion.copy(qTilt).multiply(qSpin);
+    // חישוב-מחדש של טבעת הירח לפי התאריך (מקובץ ל-~7 ימים כדי לא לחשב בכל פריים).
+    // מישור מסלול הירח נסוג לאט, ולכן הטבעת עוקבת אחרי המישור העדכני לכל תאריך נבחר.
+    const mKey = Math.floor(date.getTime() / (7 * 86400000));
+    if (mKey !== moonOrbitKey) {
+      moonOrbitKey = mKey;
+      moonOrbit.geometry.dispose();
+      moonOrbit.geometry = new THREE.BufferGeometry().setFromPoints(moonOrbitPoints(date.getTime()));
+    }
+
+    // אוריינטציה פיזיקלית מדויקת מהתאריך (קוטב של-תאריך + קו-אורך ראשי) דרך RotationAxis:
+    // לארץ — נקיפה/נוטציה וקצב כוכבי נכון (~360.9856°/יום); לירח — נעילה גאותית + ליברציה.
+    // דטרמיניסטי: אותו תאריך → אותה אוריינטציה. קו היום/לילה עדיין נקבע מכיוון השמש.
+    orientBody(earth, AE.Body.Earth, time);
+    orientBody(moon, AE.Body.Moon, time);
 
     earthMoonLine.geometry.setFromPoints([pEarth, pMoon]);
     earthMoonLine.computeLineDistances();
@@ -296,11 +357,7 @@
     speed: 1,
     _bound: false,
 
-    step(dt) {
-      const dDays = this.speed * dt;                 // כמה ימים מדומים התקדמו בפריים זה
-      this.date = new Date(this.date.getTime() + dDays * 86400000);
-      earthSpin += dDays * SPIN_PER_DAY;             // סל"ד שלם לכל יום מדומה
-    },
+    step(dt) { this.date = new Date(this.date.getTime() + this.speed * dt * 86400000); },
 
     draw() {
       if (typeof THREE === 'undefined') return;
