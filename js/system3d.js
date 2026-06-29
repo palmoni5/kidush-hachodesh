@@ -109,7 +109,7 @@
 
     scene.add(starfield());
 
-    light = new THREE.PointLight(0xffffff, 2.2, 0, 0); scene.add(light);
+    light = new THREE.PointLight(0xffffff, 2.8, 0, 0); scene.add(light);
     ambient = new THREE.AmbientLight(0xffffff, 0.07); scene.add(ambient);
 
     // שמש — כדור זוהר אחיד (ללא טקסטורה: אייקון שטוח על ספרה יוצר כתם שחור)
@@ -118,8 +118,10 @@
     sun.add(sunGlow());
     scene.add(sun);
 
+    // color=לבן כדי לא להכהות את הטקסטורה (גוון כחול כפל את המפה והחשיך אותה);
+    // התוצאה — הצד המואר של כדור הארץ בהיר ונאמן לצבעי הטקסטורה.
     earth = new THREE.Mesh(new THREE.SphereGeometry(R_EARTH, 48, 48),
-      new THREE.MeshStandardMaterial({ color: 0x6699ff, map: tex('globe_earth'), roughness: 1, metalness: 0 }));
+      new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex('globe_earth'), roughness: 1, metalness: 0 }));
     scene.add(earth);
 
     moon = new THREE.Mesh(new THREE.SphereGeometry(R_MOON, 40, 40),
@@ -219,8 +221,10 @@
     light.position.copy(pSun);
     moonOrbit.position.copy(pEarth);
 
+    // נטיית ציר קבועה בלבד (23.44°). אין סיבוב יומי: התצוגה מתקדמת בימים/חודשים,
+    // כך שהסיבוב הצירי היה רק מסתובב את היבשות ללא משמעות אסטרונומית. קו היום/לילה
+    // נוצר מכיוון השמש (התאורה) ולכן זז נכון גם ללא סיבוב הגלובוס.
     earth.rotation.z = -23.44 * RAD;
-    try { earth.rotation.y = -AE.SiderealTime(time) * 15 * RAD; } catch (e) {}
 
     earthMoonLine.geometry.setFromPoints([pEarth, pMoon]);
     earthMoonLine.computeLineDistances();
@@ -255,7 +259,9 @@
     labels.earth.position.copy(pEarth).add(new THREE.Vector3(0, R_EARTH + 2, 0));
     labels.moon.position.copy(pMoon).add(new THREE.Vector3(0, R_MOON + 1.5, 0));
 
-    controls.target.copy(mode === 'helio' ? pSun : pEarth);
+    // הגוף המרכזי (שמש בהליוצנטרי / ארץ בגאוצנטרי) תמיד בראשית הצירים, ולכן
+    // אין צורך לאפס את controls.target בכל פריים. איפוס כזה היה מבטל את הגרירה
+    // (pan) שהמשתמש מבצע ב-Ctrl+גרירה. המיקוד מאופס לראשית רק בהחלפת מבט (_reframe).
     controls.update();
 
     // HUD — מופע
@@ -319,11 +325,13 @@
     // מרחק מבט התחלתי מתאים למצב הנוכחי
     _reframe() {
       if (!inited) return;
+      controls.target.set(0, 0, 0); // מרכוז מחדש על הגוף המרכזי (מבטל pan קודם)
       const d = this.showPlanets ? orbitR(30.07) * 1.6
         : (this.mode === 'geo' ? 55 : orbitR(1) * 2.4);
       const dir = camera.position.clone().sub(controls.target).normalize();
       if (dir.lengthSq() < 1e-6) dir.set(0.6, 0.45, 0.85).normalize();
       camera.position.copy(controls.target).add(dir.multiplyScalar(d));
+      controls.update();
     },
 
     bind() {
