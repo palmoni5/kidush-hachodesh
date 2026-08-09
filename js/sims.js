@@ -195,7 +195,7 @@ window.Sims = (function () {
   // ════════════════ מהלך השמש — שנת חמה ════════════════
   const BETA = 24;
   const year = {
-    hour: 12, dayY: 0, lat: 31.78, speed: 2, playing: false, auto: true, viewAz: 90, hintDone: false, _bound: false,
+    hour: 12, dayY: 0, lat: 31.78, lon: 35.22, speed: 2, playing: false, auto: true, viewAz: 90, hintDone: false, _bound: false,
     step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % A.SOLAR_YEAR; } } },
     proj(v, cx, cy, R) {
       const a = this.viewAz * Math.PI / 180, b = BETA * Math.PI / 180;
@@ -251,7 +251,7 @@ window.Sims = (function () {
       const ev = [Math.sin(va) * Math.cos(vb), Math.cos(va) * Math.cos(vb), Math.sin(vb)];   // כיוון הצופה (עומק)
       // נקודה מוסתרת אם היא נופלת בתוך דיסקת הכדור וגם בצדו הרחוק (רכיב עומק שלילי)
       const occ = (vd, pt) => { const dx = pt.x - cx, dy = pt.y - cy; return dx*dx + dy*dy < gR*gR && (vd.E*ev[0] + vd.N*ev[1] + vd.U*ev[2]) < 0; };
-      drawGlobe(ctx, cx, cy, gR, v, this.viewAz, this.lat);
+      drawGlobe(ctx, cx, cy, gR, v, this.viewAz, this.lat, this.lon);
       // מסלולי ייחוס + תוויות
       this.circle(ctx, 23.44, cx, cy, R, cv('--ill-summer'), 1.2, occ);
       this.circle(ctx, 0, cx, cy, R, cv('--ill-text'), 1.2, occ);
@@ -346,7 +346,8 @@ window.Sims = (function () {
   // כדור הארץ הקטן במרכז כיפת השמיים. ציר הקטבים מוטה כקו הרוחב של הצופה (זהה ל"ציר העולם" המצויר).
   // הכדור מרונדר פיקסל-אחר-פיקסל: היטל אורתוגרפי של הספֵרה, דגימת מפת עולם (equirectangular) והצללת יום/לילה
   // לפי כיוון השמש. סיבוב התצוגה (viewAz) מסובב את הספֵרה ממש, כך שהיבשות מסתובבות יחד עם הרשת.
-  function drawGlobe(ctx, cx, cy, r, sun, viewAz, lat) {
+  // lon = קו האורך של הצופה; הטקסטורה מוסטת כך שנקודת הזנית (הסמן האדום) נופלת בדיוק על מיקומו במפה.
+  function drawGlobe(ctx, cx, cy, r, sun, viewAz, lat, lon) {
     const a = viewAz * Math.PI / 180, b = BETA * Math.PI / 180;
     // שלושה צירים אורתונורמליים במערכת (E,N,U): ex→ציר-x במסך, eup→ציר-y במסך, ev→לכיוון הצופה (עומק)
     const ex  = [Math.cos(a), -Math.sin(a), 0];
@@ -364,6 +365,8 @@ window.Sims = (function () {
     };
     // כיוון השמש כווקטור יחידה (פני שטח מוארים כאשר P·sN > 0)
     const m0 = Math.hypot(sun.E, sun.N, sun.U) || 1, sN = [sun.E/m0, sun.N/m0, sun.U/m0];
+    // היסט קו-אורך: בזנית lonP=-π/2, ורוצים שתידגם שם נקודת הצופה (lon מעלות מזרחה)
+    const lonOff = Math.PI / 2 + lon * Math.PI / 180;
 
     // ── גוף הכדור: טקסטורה ממופה לספֵרה + הצללת יום/לילה (לחוצץ חוץ-מסך, ואז מצוירת מעל הכיפה) ──
     const tex = earthTexture();
@@ -386,7 +389,7 @@ window.Sims = (function () {
           const Px = aa*e0 + bb*u0 + zz*v0, Py = aa*e1 + bb*u1 + zz*v1, Pz = aa*e2 + bb*u2 + zz*v2;
           const latP = Math.asin(Math.max(-1, Math.min(1, Px*k0 + Py*k1 + Pz*k2)));
           const lonP = Math.atan2(Px*0 + Py*j1 + Pz*j2, Px);    // P·j , P·i(=Px)
-          let uu = lonP / T2 + 0.5; uu -= Math.floor(uu);
+          let uu = (lonP + lonOff) / T2 + 0.5; uu -= Math.floor(uu);
           let vv = 0.5 - latP / Math.PI; vv = vv < 0 ? 0 : (vv > 0.999999 ? 0.999999 : vv);
           const ti = ((Math.floor(vv*th)*tw) + Math.floor(uu*tw)) << 2;
           const d = Px*s0 + Py*s1 + Pz*s2;            // קוסינוס הזווית לשמש → יום/לילה
@@ -418,8 +421,8 @@ window.Sims = (function () {
       const L = la * Math.PI / 180; let prev = surf(L, 0);
       for (let lo = 8; lo <= 360; lo += 8) { const cur = surf(L, lo*Math.PI/180); seg(prev, cur, la === 0); prev = cur; }
     }
-    for (let lo = 0; lo < 360; lo += 30) {                           // קווי אורך
-      const O = lo * Math.PI / 180; let prev = surf(-Math.PI/2, O);
+    for (let lo = 0; lo < 360; lo += 30) {                           // קווי אורך (מיושרים למרידיאני המפה)
+      const O = lo * Math.PI / 180 - lonOff; let prev = surf(-Math.PI/2, O);
       for (let la = -78; la <= 78; la += 8) { const cur = surf(la*Math.PI/180, O); seg(prev, cur, false); prev = cur; }
     }
     { const L = ph; let prev = surf(L, 0);                           // קו הרוחב של הצופה — מודגש
