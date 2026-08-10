@@ -15,6 +15,8 @@
         <button data-view="year">מהלך השמש (שנת חמה)</button>
         <button data-view="planets">כוכבי הלכת</button>
         <button data-view="zodiac">גלגל המלקה</button>
+        <button data-view="hours">שרי השעות</button>
+        <button data-view="dateline">קו התאריך</button>
         <button data-view="system3d">מערכת תלת-מימד</button>
       </nav>
       <span class="spacer"></span>
@@ -50,7 +52,9 @@
               <span class="seasondot" style="background:var(--ill-sun)"></span> שמש — מקור האור<br>
               <span class="seasondot" style="background:var(--ill-blue)"></span> כדור הארץ<br>
               <span class="seasondot" style="background:var(--color-outline)"></span> ירח — מקיף את הארץ<br><br>
-              חודש הלבנה (סינודי) = 29.53 יום. הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.
+              חודש הלבנה (סינודי) = 29.53 יום<br>
+              (= כ"ט יום י"ב שעות ותשצ"ג חלקים = הזמן שבין מולד למולד).<br><br>
+              הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.
             </div>
           </div>
         </aside>
@@ -61,10 +65,15 @@
         <div class="stage"><canvas id="yearCanvas"></canvas>
           <div class="hud">
             <div class="clock" id="y_clock">12:00</div>
+            <div class="st" id="y_tz">שעון מקומי — ירושלים</div>
             <div class="st" id="y_updown">השמש מעל האופק</div>
-            <div class="row" style="margin-top:8px"><span>גובה השמש</span><b id="y_alt">58°</b></div>
+            <div class="row" style="margin-top:8px"><span>גובה השמש מעל האופק</span><b id="y_alt">58°</b></div>
+            <div class="row"><span>זוית השמש מצפון/דרום לקו המשוה</span><b id="y_dec">—</b></div>
+            <div class="row"><span>זוית השמש מצפון/דרום למקום הצופה</span><b id="y_zen">—</b></div>
             <div class="row"><span>עונה / תקופה</span><b id="y_season">אביב</b></div>
             <div class="row"><span>תאריך</span><b id="y_date">—</b></div>
+            <div class="row"><span>שעה שמשית (חצות אמיתי = 12:00)</span><b id="y_solar">—</b></div>
+            <div class="row"><span>זריחה / שקיעה</span><b id="y_rise">—</b></div>
             <div class="row"><span>אורך היום</span><b id="y_daylen">12:00</b></div>
             <div class="row"><span>עומק בחצות הלילה</span><b id="y_mid">-58°</b></div>
           </div>
@@ -113,26 +122,27 @@
             <h2>מיקום הצופה</h2>
             <label class="field">עיר</label>
             <select id="y_city">
-              <option value="31.78,35.22" selected>ירושלים</option>
-              <option value="40.71,-74.01">ניו יורק</option>
-              <option value="34.05,-118.24">לוס אנג'לס</option>
-              <option value="25.76,-80.19">מיאמי</option>
-              <option value="43.65,-79.38">טורונטו</option>
-              <option value="19.43,-99.13">מקסיקו סיטי</option>
-              <option value="-23.55,-46.63">סאו פאולו</option>
-              <option value="-34.60,-58.38">בואנוס איירס</option>
-              <option value="51.51,-0.13">לונדון</option>
-              <option value="48.86,2.35">פריז</option>
-              <option value="51.22,4.40">אנטוורפן</option>
-              <option value="55.76,37.62">מוסקבה</option>
-              <option value="-26.20,28.05">יוהנסבורג</option>
-              <option value="-33.87,151.21">סידני</option>
+              <option value="31.78,35.22" data-tz="Asia/Jerusalem" selected>ירושלים</option>
+              <option value="40.71,-74.01" data-tz="America/New_York">ניו יורק</option>
+              <option value="34.05,-118.24" data-tz="America/Los_Angeles">לוס אנג'לס</option>
+              <option value="25.76,-80.19" data-tz="America/New_York">מיאמי</option>
+              <option value="43.65,-79.38" data-tz="America/Toronto">טורונטו</option>
+              <option value="19.43,-99.13" data-tz="America/Mexico_City">מקסיקו סיטי</option>
+              <option value="-23.55,-46.63" data-tz="America/Sao_Paulo">סאו פאולו</option>
+              <option value="-34.60,-58.38" data-tz="America/Argentina/Buenos_Aires">בואנוס איירס</option>
+              <option value="51.51,-0.13" data-tz="Europe/London">לונדון</option>
+              <option value="48.86,2.35" data-tz="Europe/Paris">פריז</option>
+              <option value="51.22,4.40" data-tz="Europe/Brussels">אנטוורפן</option>
+              <option value="55.76,37.62" data-tz="Europe/Moscow">מוסקבה</option>
+              <option value="-26.20,28.05" data-tz="Africa/Johannesburg">יוהנסבורג</option>
+              <option value="-33.87,151.21" data-tz="Australia/Sydney">סידני</option>
               <option value="">מותאם אישית</option>
             </select>
             <label class="field">קו רוחב במעלות (צפון חיובי)</label>
             <input type="number" id="y_lat" step="0.1" min="-89" max="89" value="31.78" />
             <label class="field">קו אורך במעלות (מזרח חיובי)</label>
             <input type="number" id="y_lon" step="0.1" min="-180" max="180" value="35.22" />
+            <div class="htxt" style="margin-top:8px">השעון שבאיור הוא השעון האזרחי במקום הנבחר — כולל שעון קיץ, ההפרש שבין אזור הזמן לקו האורך של המקום, והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך.</div>
           </div>
           <div class="card">
             <h2>שנת החמה — הלכה</h2>
@@ -152,6 +162,9 @@
           <div class="hud">
             <div class="row"><span>תאריך</span><b id="z_date">—</b></div>
             <div class="row"><span>עברי</span><b id="z_date_he">—</b></div>
+            <div class="row"><span>שעה</span><b id="z_clock">—</b></div>
+            <div class="row"><span>מזל עולה (במזרח)</span><b id="z_asc">—</b></div>
+            <div class="row"><span>מזל באמצע הרקיע</span><b id="z_mc">—</b></div>
           </div>
         </div>
         <aside class="panel">
@@ -159,25 +172,164 @@
             <h2>בקרת זמן</h2>
             <div class="ctrls">
               <button class="btn-primary" id="z_play">▶ הפעל</button>
-              <button class="btn-secondary" id="z_today">🗓 היום</button>
+              <button class="btn-secondary" id="z_today">🗓 עכשיו</button>
             </div>
-            <label class="field">מהירות: <b id="z_spdL">1.0</b> ימים/שנייה</label>
+            <label class="field">מהירות: <b id="z_spdL">1.0</b> <span id="z_unitL">ימים</span>/שנייה</label>
             <input type="range" id="z_speed" min="0.1" max="30" step="0.1" value="1" />
+            <div class="seg seg-2" style="margin-top:6px">
+              <button data-unit="day" class="active">ימים (מהלך המזלות בשנה)</button>
+              <button data-unit="hour">שעות (עליית המזלות ביממה)</button>
+            </div>
           </div>
           <div class="card">
-            <h2>הכנס תאריך</h2>
+            <h2>הכנס תאריך ושעה</h2>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
               <label class="field">יום<input type="number" id="z_day" min="1" max="31" /></label>
               <label class="field">חודש<input type="number" id="z_month" min="1" max="12" /></label>
               <label class="field">שנה<input type="number" id="z_year" /></label>
+              <label class="field">שעה<input type="number" id="z_hh" min="0" max="23" /></label>
+              <label class="field">דקות<input type="number" id="z_mi" min="0" max="59" /></label>
             </div>
             <div class="ctrls" style="margin-top:8px">
               <button class="btn-primary" id="z_go">הצג</button>
+            </div>
+            <label class="field" style="margin-top:8px">שעה ביממה (גרירה): <b id="z_hourL">12:00</b></label>
+            <input type="range" id="z_hour" min="0" max="24" step="0.02" value="12" />
+          </div>
+          <div class="card">
+            <h2>האופק ומזל עולה</h2>
+            <div class="chk"><input type="checkbox" id="z_horizon" checked />
+              <label for="z_horizon">הצג את קו האופק ואת המזל העולה</label></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:6px">
+              <label class="field">קו רוחב °<input type="number" id="z_lat" step="0.01" value="31.78" /></label>
+              <label class="field">קו אורך °<input type="number" id="z_lon" step="0.01" value="35.22" /></label>
+            </div>
+            <div class="htxt" style="margin-top:8px">
+              המזל העולה הוא הנקודה שבגלגל המלקה העולה באותו רגע באופק המזרחי. הגלגל כולו מסתובב סביב הארץ פעם ביממה, ולכן כל שנים-עשר המזלות עולים ושוקעים בכל יום — בערך מזל לכל שעתיים.<br><br>
+              כשהאופק מוצג, הגלגל מסובב לפי הרגע והמקום: המזרח (המזל העולה) בצד שמאל, המערב (השוקע) מנגד, אמצע הרקיע למעלה, וחצי הגלגל המוצל שלמטה הוא מה שמתחת לאופק. בחרו "שעות" בבקרת הזמן והפעילו — ותראו את המזלות עולים זה אחר זה.
             </div>
           </div>
           <div class="card">
             <h2>מיקומים נוכחיים</h2>
             <div id="z_legend"></div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- ═══ שרי השעות ═══ -->
+      <section class="view" id="view-hours">
+        <div class="stage"><canvas id="hoursCanvas"></canvas>
+          <div class="hud">
+            <div class="row"><span>תאריך</span><b id="h_date">—</b></div>
+            <div class="row"><span>עברי</span><b id="h_date_he">—</b></div>
+            <div class="row"><span>שעה</span><b id="h_clock">—</b></div>
+            <div class="row"><span>יום בשבוע</span><b id="h_dow">—</b></div>
+            <div class="row"><span>שעה זמנית</span><b id="h_seasonal">—</b></div>
+            <div class="big" id="h_ruler">שר השעה —</div>
+            <div class="row"><span>שר היום</span><b id="h_dayruler">—</b></div>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="card">
+            <h2>בקרת זמן</h2>
+            <div class="ctrls">
+              <button class="btn-primary" id="h_play">▶ הפעל</button>
+              <button class="btn-secondary" id="h_now">🕐 עכשיו</button>
+            </div>
+            <label class="field">מהירות: <b id="h_spdL">1.0</b> שעות/שנייה</label>
+            <input type="range" id="h_speed" min="0.1" max="12" step="0.1" value="1" />
+            <label class="field">הכנס תאריך ושעה</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+              <label class="field">יום<input type="number" id="h_day" min="1" max="31" /></label>
+              <label class="field">חודש<input type="number" id="h_month" min="1" max="12" /></label>
+              <label class="field">שנה<input type="number" id="h_year" /></label>
+              <label class="field">שעה<input type="number" id="h_hh" min="0" max="23" /></label>
+              <label class="field">דקות<input type="number" id="h_mi" min="0" max="59" /></label>
+            </div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-primary" id="h_go">הצג</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>מיקום הצופה</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+              <label class="field">קו רוחב °<input type="number" id="h_lat" step="0.01" value="31.78" /></label>
+              <label class="field">קו אורך °<input type="number" id="h_lon" step="0.01" value="35.22" /></label>
+            </div>
+            <div class="htxt" style="margin-top:6px">השעות הזמניות מחושבות מהזריחה עד השקיעה (יום) ומהשקיעה עד הזריחה (לילה) במקום הנבחר, כל אחת מחולקת לשתים-עשרה.</div>
+          </div>
+          <div class="card">
+            <h2>ארבע התקופות ושריהן</h2>
+            <label class="field">שנה עברית</label>
+            <input type="number" id="h_hyear" />
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-primary" id="h_hgo">חשב</button>
+            </div>
+            <table id="h_tekufot" style="margin-top:8px"></table>
+            <div class="htxt" style="margin-top:8px">תקופת שמואל: שנה = 365 יום ו-6 שעות, וכל תקופה 91 יום ו-7½ שעות. מכאן שתקופת ניסן נופלת תמיד ברבעי היום (0, 6, 12, 18 שעות מתחילת הלילה), תמוז — באחת ומחצה שאחריהן, תשרי — בשלוש, וטבת — בארבע ומחצה. השעות כאן שעות שוות מתחילת הלילה (שש בערב), כדרך חשבון התקופות.</div>
+          </div>
+          <div class="card">
+            <h2>מקרא</h2>
+            <div class="htxt">
+              שבעת כוכבי הלכת משמשים בשעות היממה על הסדר <b>שצ״ם חנכ״ל</b> — שבתאי, צדק, מאדים, חמה, נוגה, כוכב, לבנה — וחוזר חלילה. שעה ראשונה של יום ראשון היא לחמה, ומכיוון שיממה בת עשרים וארבע שעות והכוכבים שבעה (24 = 3×7+3), מתקדם שר השעה הראשונה בשלושה בכל יום — ומכאן שמות ימי השבוע בלשונות אוה״ע ושר לכל יום: א׳ חמה, ב׳ לבנה, ג׳ מאדים, ד׳ כוכב, ה׳ צדק, ו׳ נוגה, שבת שבתאי.<br><br>
+              ראו עירובין נ״ו ע״א ורש״י שם ד״ה ואין תקופה, בשם רבי שבתי דונולו הרופא; וראש השנה י״א ע״ב–י״ב ע״א וברש״י שם.<br><br>
+              <span class="seasondot" style="background:#b0a060"></span> שבתאי
+              <span class="seasondot" style="background:#c8a870;margin-right:8px"></span> צדק
+              <span class="seasondot" style="background:#d05030;margin-right:8px"></span> מאדים
+              <span class="seasondot" style="background:#f5c842;margin-right:8px"></span> חמה<br>
+              <span class="seasondot" style="background:#e8c870"></span> נוגה
+              <span class="seasondot" style="background:#a09080;margin-right:8px"></span> כוכב
+              <span class="seasondot" style="background:#c8c8c8;margin-right:8px"></span> לבנה
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- ═══ קו התאריך ═══ -->
+      <section class="view" id="view-dateline">
+        <div class="stage"><canvas id="datelineCanvas"></canvas>
+          <div class="hud">
+            <div class="big">קו התאריך</div>
+            <div class="row"><span>מרכז המבט</span><b id="d_center">—</b></div>
+            <div class="row"><span style="color:#dfe6ef">קו זמן יקום מתואם (גריניץ')</span><b>0°</b></div>
+            <div class="row"><span style="color:#ffd24d">חזון איש</span><b>125.2° מזרח</b></div>
+            <div class="row"><span style="color:#5ad2ff">הגרי"מ טוקצינסקי</span><b>144.8° מערב</b></div>
+            <div class="row"><span style="color:#ff6b6b">הסכמי אוה"ע</span><b>180°</b></div>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="card">
+            <h2>סיבוב הגלובוס</h2>
+            <div class="htxt">גררו את הגלובוס לסיבוב.</div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-secondary" id="d_goJlem">ירושלים</button>
+              <button class="btn-secondary" id="d_goCI">קו החזו"א</button>
+              <button class="btn-secondary" id="d_goGRIT">קו הגרי"מ</button>
+              <button class="btn-secondary" id="d_goIDL">קו 180°</button>
+            </div>
+            <label class="field" style="margin-top:8px">קו אורך במרכז המבט: <b id="d_lonL">125°</b></label>
+            <input type="range" id="d_lon" min="-180" max="180" step="1" value="125" />
+            <label class="field">קו רוחב במרכז המבט: <b id="d_latL">10°</b></label>
+            <input type="range" id="d_lat" min="-80" max="80" step="1" value="10" />
+          </div>
+          <div class="card">
+            <h2>הצגת הקווים</h2>
+            <div class="chk"><input type="checkbox" id="d_utc" checked /><label for="d_utc">קו זמן יקום מתואם (גריניץ')</label></div>
+            <div class="chk"><input type="checkbox" id="d_ci" checked /><label for="d_ci">קו התאריך — שיטת החזו"א</label></div>
+            <div class="chk"><input type="checkbox" id="d_grit" checked /><label for="d_grit">קו התאריך — שיטת הגרי"מ טוקצינסקי</label></div>
+            <div class="chk"><input type="checkbox" id="d_idl" checked /><label for="d_idl">קו התאריך — הסכמי אומות העולם</label></div>
+            <div class="chk"><input type="checkbox" id="d_grid" checked /><label for="d_grid">רשת קווי אורך ורוחב</label></div>
+          </div>
+          <div class="card">
+            <h2>מקרא</h2>
+            <div class="htxt">
+              <span class="seasondot" style="background:#dfe6ef"></span> <b>קו זמן יקום מתואם (UTC)</b> — קו גריניץ', 0°.<br><br>
+              <span class="seasondot" style="background:#ffd24d"></span> <b>קו התאריך שיטת החזו"א</b> — 90 מעלות מזרחית לירושלים (125.24° מזרח). כל מה שמחובר יבשית למערב מקו התאריך נדון כמו המערב, ולכן הקו נוטה אל סוף היבשת (הקו הישר העובר בתוך היבשת מסומן במקווקו).<br><br>
+              <span class="seasondot" style="background:#5ad2ff"></span> <b>קו התאריך הגרי"מ טוקצינסקי</b> — 180 מעלות מירושלים (144.76° מערב).<br><br>
+              <span class="seasondot" style="background:#ff6b6b"></span> <b>קו התאריך הסכמי אוה"ע</b> — 180 מעלות מקו זמן יקום מתואם.<br><br>
+              <span class="seasondot" style="background:#7ee081"></span> ירושלים (35.24° מזרח).<br><br>
+              הערה: מהלך הקו לאורך חופי היבשות מצויר בקירוב, להמחשת העיקרון בלבד.
+            </div>
           </div>
         </aside>
       </section>
@@ -295,6 +447,8 @@
   <script src="js/theme.js"></script>
   <script src="js/sims.js"></script>
   <script src="js/zodiac-sim.js"></script>
+  <script src="js/hours-sim.js"></script>
+  <script src="js/dateline-sim.js"></script>
   <script src="js/system3d.js"></script>
   <script src="js/app.js"></script>
 </body>

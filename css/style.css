@@ -212,6 +212,10 @@ input:focus-visible {
   padding: 7px 3px; font-size: 0.72em; font-weight: 500; cursor: pointer; font-family: var(--font-main);
 }
 .seg button:hover { background: var(--color-primary-subtle); }
+.seg.seg-2 { grid-template-columns: 1fr 1fr; }
+.seg button.active {
+  background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary);
+}
 
 /* ── בורר מקטעים (M3 Segmented button) — לבחירה הדדית (למשל נקודת מבט) ── */
 .segmented {

@@ -1,6 +1,8 @@
 // zodiac-sim.js — גלגל המלקה והמזלות
 // מציג את מיקומי השמש, הירח וכוכבי הלכת על גלגל המזלות (מבט גאוצנטרי מעמוד העולם).
 // 0° טלה = ימין; הגלגל מתקדם נגד כיוון השעון (מזרחה).
+// כשמוצג האופק (מזל עולה) הגלגל מסובב לפי הרגע והמקום: המזל העולה במזרח (שמאל),
+// אמצע הרקיע למעלה, והחלק שמתחת לאופק מוצל למטה.
 "use strict";
 (function () {
   const AE = window.Astronomy;
@@ -72,6 +74,23 @@
   }
 
   function signOf(lon) { return SIGNS[Math.floor(((lon % 360) + 360) % 360 / 30)]; }
+  const rev360 = x => ((x % 360) + 360) % 360;
+
+  // ══ האופק — מזל עולה ואמצע הרקיע ══════════════════════════════════════
+  // ASC = אורך המלקה של הנקודה העולה באופק המזרחי; MC = אורך המלקה שעל קו חצי השמים.
+  //   θ = זמן הכוכבים המקומי (מעלות), ε = נטיית המלקה, φ = קו הרוחב.
+  //   ASC = atan2( cos θ , −(sin θ·cos ε + tan φ·sin ε) )
+  //   MC  = atan2( sin θ , cos θ·cos ε )
+  // (בדיקה: ב-φ=0, ε=0 מתקבל ASC = θ+90 ו-MC = θ — כמצופה.)
+  const EPS = 23.4392911;
+  function horizonPoints(date, lat, lon) {
+    let gast;
+    try { gast = AE.SiderealTime(AE.MakeTime(date)); } catch (_) { return null; }
+    const th = rev360(gast * 15 + lon) * RAD, ph = lat * RAD, ep = EPS * RAD;
+    const asc = rev360(Math.atan2(Math.cos(th), -(Math.sin(th) * Math.cos(ep) + Math.tan(ph) * Math.sin(ep))) / RAD);
+    const mc  = rev360(Math.atan2(Math.sin(th), Math.cos(th) * Math.cos(ep)) / RAD);
+    return { asc, mc };
+  }
 
   // המרת מספר לאותיות עבריות (גימטריה) עם גרשיים
   function toHebNum(n) {
@@ -123,10 +142,17 @@
   // אורך מלקה → זווית קנבס: 0° = ימין, גדל נגד כיוון השעון
   function L2A(lon) { return -lon * RAD; }
 
-  function drawWheel(ctx, W, H, date) {
+  function drawWheel(ctx, W, H, date, hz) {
     ctx.clearRect(0, 0, W, H);
-    const cx = W / 2, cy = H / 2;
-    const maxR  = Math.min(W, H) * 0.46;
+    // כשמוצג האופק הגלגל מסובב כך שהמזל העולה יושב במזרח (שמאל), אמצע הרקיע למעלה,
+    // וחצי הגלגל שמתחת לאופק למטה — כך נראית עליית המזלות כפי שהיא בשמים.
+    // בלי האופק נשמרת התצוגה הקבועה: 0° טלה מימין.
+    const rot = hz ? (180 + hz.asc) * RAD : 0;
+    const A = lon => -lon * RAD + rot;
+    // אזור הציור הפנוי מה-HUD (רצועה מימין במסך רחב, בראש במסך צר)
+    const L = window.Sims.stageLayout(document.getElementById('zodiacCanvas'), W, H);
+    const cx = L.x + L.w / 2, cy = L.y + L.h / 2;
+    const maxR  = Math.min(L.w, L.h) * 0.46;
     const outerR = maxR;
     const innerR = maxR * 0.74;
     const bodyR  = maxR * 0.54;
@@ -137,7 +163,7 @@
 
     // ── רינג 12 מזלות ──
     for (let i = 0; i < 12; i++) {
-      const a0 = L2A(i * 30), a1 = L2A((i + 1) * 30);
+      const a0 = A(i * 30), a1 = A((i + 1) * 30);
       ctx.fillStyle = ELEM[ELEM_I[i]];
       ctx.beginPath();
       ctx.arc(cx, cy, outerR, a0, a1, true);
@@ -149,7 +175,7 @@
     ctx.strokeStyle = cv('--ill-grid') || 'rgba(255,255,255,0.22)';
     ctx.lineWidth = 1;
     for (let i = 0; i < 12; i++) {
-      const a = L2A(i * 30);
+      const a = A(i * 30);
       ctx.beginPath();
       ctx.moveTo(cx + innerR * Math.cos(a), cy + innerR * Math.sin(a));
       ctx.lineTo(cx + outerR * Math.cos(a), cy + outerR * Math.sin(a));
@@ -162,7 +188,7 @@
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const labelR = (innerR + outerR) / 2;
     for (let i = 0; i < 12; i++) {
-      const midA = L2A(i * 30 + 15);
+      const midA = A(i * 30 + 15);
       ctx.fillStyle = cv('--ill-text') || '#e0e0e0';
       ctx.fillText(SIGNS[i], cx + labelR * Math.cos(midA), cy + labelR * Math.sin(midA));
     }
@@ -178,21 +204,56 @@
     ctx.beginPath(); ctx.arc(cx, cy, innerR - 1, 0, 2 * PI); ctx.fill();
 
     // קו 0° (נקודת השוויון)
+    const a0 = A(0);
     ctx.strokeStyle = 'rgba(255,200,80,0.35)';
     ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
-    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + innerR - 2, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + (innerR - 2) * Math.cos(a0), cy + (innerR - 2) * Math.sin(a0)); ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = 'rgba(255,200,80,0.7)';
     ctx.font = `${Math.max(8, fontSize - 2)}px sans-serif`;
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText('↑ 0° טלה', cx + innerR + 4, cy);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('0° טלה', cx + (innerR - 22) * Math.cos(a0), cy + (innerR - 22) * Math.sin(a0));
+
+    // ── האופק: החצי שמתחת לאופק מוצל, וקו האופק מסומן מהמזל העולה אל השוקע ──
+    if (hz) {
+      ctx.fillStyle = 'rgba(0,0,0,0.42)';
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, outerR, A(hz.asc), A(hz.asc + 180), true);
+      ctx.closePath(); ctx.fill();
+
+      const aA = A(hz.asc), aD = A(hz.asc + 180);
+      ctx.strokeStyle = '#7ee081'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + outerR * Math.cos(aA), cy + outerR * Math.sin(aA));
+      ctx.lineTo(cx + outerR * Math.cos(aD), cy + outerR * Math.sin(aD));
+      ctx.stroke();
+      // קו אמצע הרקיע (חצי השמים) — מהמרכז כלפי מעלה
+      const aM = A(hz.mc);
+      ctx.strokeStyle = 'rgba(126,224,129,0.45)'; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + outerR * Math.cos(aM), cy + outerR * Math.sin(aM)); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // התווית מוצמדת אל גבולות הקנבס: בקנבס צר אין מקום מחוץ לגלגל, ובלי ההצמדה
+      // הכיתוב נחתך בשוליים.
+      const tag = (a, txt) => {
+        ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const w = ctx.measureText(txt).width + 8, h = 16;
+        let x = cx + (outerR + 14) * Math.cos(a), y = cy + (outerR + 14) * Math.sin(a);
+        x = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, x));
+        y = Math.max(h / 2 + 2, Math.min(H - h / 2 - 2, y));
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+        ctx.fillStyle = '#7ee081'; ctx.fillText(txt, x, y);
+      };
+      tag(aA, 'מזרח · עולה'); tag(aD, 'מערב · שוקע'); tag(aM, 'אמצע הרקיע');
+    }
 
     // ── גרמי שמים ──
     const lons = getLongitudes(date);
 
     for (let i = 0; i < BODIES.length; i++) {
       const body = BODIES[i];
-      const ang = L2A(lons[body.key] ?? 0);
+      const ang = A(lons[body.key] ?? 0);
       const r = bodyR;
       const x = cx + r * Math.cos(ang), y = cy + r * Math.sin(ang);
 
@@ -256,14 +317,25 @@
     date: new Date(),
     playing: false,
     speed: 1,
+    // מהירות נפרדת לכל יחידה: בסיבוב היומי אפילו שעה לשנייה מהירה מדי לעין,
+    // ולכן הטווח שם עדין יותר (ברירת מחדל: יממה שלמה בכ-80 שניות).
+    speeds: { day: 1, hour: 0.3 },
+    RANGE: { day: { min: 0.1, max: 30, step: 0.1 }, hour: { min: 0.02, max: 6, step: 0.02 } },
+    unit: 'day',              // 'day' — מהלך המזלות בשנה; 'hour' — עליית המזלות ביממה
+    horizon: true,
+    lat: 31.78, lon: 35.22,
     _bound: false,
 
-    step(dt) { this.date = new Date(this.date.getTime() + this.speed * dt * 86400000); },
+    step(dt) { this.date = new Date(this.date.getTime() + this.speed * dt * (this.unit === 'day' ? 86400000 : 3600000)); },
 
     draw() {
       const c = $('zodiacCanvas'); if (!c) return;
       const { ctx, W, H } = fit(c);
-      drawWheel(ctx, W, H, this.date);
+      const hz = this.horizon ? horizonPoints(this.date, this.lat, this.lon) : null;
+      drawWheel(ctx, W, H, this.date, hz);
+      $('z_clock').textContent = this.date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      $('z_asc').textContent = hz ? signOf(hz.asc) + ' ' + Math.floor(hz.asc % 30) + '°' : '—';
+      $('z_mc').textContent  = hz ? signOf(hz.mc)  + ' ' + Math.floor(hz.mc  % 30) + '°' : '—';
       const hud = $('z_date');
       if (hud) hud.textContent = this.date.toLocaleDateString('he-IL', { day:'numeric', month:'long', year:'numeric' });
       const hudHe = $('z_date_he');
@@ -280,25 +352,56 @@
 
     _syncDate() {
       const d = this.date;
-      const dy = $('z_day'), dm = $('z_month'), dyr = $('z_year');
-      if (dy  && document.activeElement !== dy)  dy.value  = d.getDate();
-      if (dm  && document.activeElement !== dm)  dm.value  = d.getMonth() + 1;
-      if (dyr && document.activeElement !== dyr) dyr.value = d.getFullYear();
+      const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
+      set('z_day', d.getDate()); set('z_month', d.getMonth() + 1); set('z_year', d.getFullYear());
+      set('z_hh', d.getHours()); set('z_mi', d.getMinutes());
+      const h = d.getHours() + d.getMinutes() / 60;
+      set('z_hour', h.toFixed(2));
+      $('z_hourL').textContent = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
     },
 
     sync() { this._syncDate(); },
+
+    _spdTxt() { return this.unit === 'day' ? this.speed.toFixed(1) : this.speed.toFixed(2); },
+
+    // החלפת יחידת המהירות — כולל התאמת טווח המחוון והערך השמור לכל יחידה
+    _setUnit(u) {
+      this.unit = u;
+      const r = this.RANGE[u], el = $('z_speed');
+      el.min = r.min; el.max = r.max; el.step = r.step;
+      this.speed = this.speeds[u]; el.value = this.speed;
+      $('z_spdL').textContent = this._spdTxt();
+      $('z_unitL').textContent = u === 'day' ? 'ימים' : 'שעות';
+    },
+
+    // קביעת השעה ביממה תוך שמירה על התאריך
+    _setHour(h) {
+      const d = new Date(this.date);
+      d.setHours(Math.floor(h), Math.round((h % 1) * 60), 0, 0);
+      this.date = d;
+    },
 
     bind() {
       if (this._bound) return; this._bound = true;
       this._syncDate();
       $('z_play').onclick   = e => { this.playing = !this.playing; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
       $('z_today').onclick  = () => { this.date = new Date(); this.playing = false; $('z_play').textContent = '▶ הפעל'; this._syncDate(); };
-      $('z_speed').oninput  = e => { this.speed = +e.target.value; $('z_spdL').textContent = (+e.target.value).toFixed(1); };
+      $('z_speed').oninput  = e => { this.speed = this.speeds[this.unit] = +e.target.value; $('z_spdL').textContent = this._spdTxt(); };
       $('z_go').onclick     = () => {
         const y = +$('z_year').value, m = +$('z_month').value, d = +$('z_day').value;
-        this.date = new Date(y, m - 1, d, 12, 0, 0);
+        const hh = +$('z_hh').value || 0, mi = +$('z_mi').value || 0;
+        this.date = new Date(y, m - 1, d, hh, mi, 0);
         this.playing = false; $('z_play').textContent = '▶ הפעל';
       };
+      $('z_hour').oninput = e => { this._setHour(+e.target.value); this.playing = false; $('z_play').textContent = '▶ הפעל'; };
+      $('z_horizon').onchange = e => this.horizon = e.target.checked;
+      $('z_lat').oninput = e => this.lat = Math.max(-89, Math.min(89, +e.target.value || 0));
+      $('z_lon').oninput = e => this.lon = Math.max(-180, Math.min(180, +e.target.value || 0));
+      document.querySelectorAll('#view-zodiac .seg button').forEach(b => b.onclick = () => {
+        document.querySelectorAll('#view-zodiac .seg button').forEach(x => x.classList.toggle('active', x === b));
+        this._setUnit(b.dataset.unit);
+      });
+      this._setUnit('day');
     },
   };
 
