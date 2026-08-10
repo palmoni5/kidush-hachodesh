@@ -64,6 +64,7 @@
             <div class="st" id="y_updown">השמש מעל האופק</div>
             <div class="row" style="margin-top:8px"><span>גובה השמש</span><b id="y_alt">58°</b></div>
             <div class="row"><span>עונה / תקופה</span><b id="y_season">אביב</b></div>
+            <div class="row"><span>תאריך</span><b id="y_date">—</b></div>
             <div class="row"><span>אורך היום</span><b id="y_daylen">12:00</b></div>
             <div class="row"><span>עומק בחצות הלילה</span><b id="y_mid">-58°</b></div>
           </div>
@@ -98,6 +99,15 @@
             </div>
             <label class="field">יום מתקופת ניסן: <b id="y_dayL">0</b></label>
             <input type="range" id="y_dayY" min="0" max="365.25" step="0.5" value="0" />
+            <label class="field">או לפי תאריך</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+              <label class="field">יום<input type="number" id="y_dd" min="1" max="31" /></label>
+              <label class="field">חודש<input type="number" id="y_mm" min="1" max="12" /></label>
+              <label class="field">שנה<input type="number" id="y_yy" /></label>
+            </div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-primary" id="y_dateGo">הצג</button>
+            </div>
           </div>
           <div class="card">
             <h2>מיקום הצופה</h2>

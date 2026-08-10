@@ -72,11 +72,25 @@ window.Sims = (function () {
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(txt, W / 2, 8);
   }
-  // יום בשנת החמה (מתקופת ניסן) ושעה נוכחית — שוויון אביב ~20.3
+  // נקודת ייחוס לשנת החמה — שוויון אביב (תקופת ניסן) 20.3.2000 07:35 UT
+  const SPRING_REF = Date.UTC(2000, 2, 20, 7, 35, 0);
+  // יום בשנת החמה (מתקופת ניסן) ושעה נוכחית
   function solarToday() {
-    const springRef = Date.UTC(2000, 2, 20, 7, 35, 0), now = new Date();
-    const dayY = ((((now.getTime() - springRef) / 86400000) % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
+    const now = new Date();
+    const dayY = ((((now.getTime() - SPRING_REF) / 86400000) % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
     return { dayY, hour: now.getHours() + now.getMinutes() / 60 };
+  }
+  // יום בשנת החמה מתאריך לועזי (נדגם בצהרי היום)
+  function dayYFromDate(Y, M, D) {
+    return ((((Date.UTC(Y, M - 1, D, 12) - SPRING_REF) / 86400000) % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
+  }
+  // תאריך לועזי מיום בשנת החמה — ממופה למחזור השנה שמכיל את היום הנוכחי
+  const GREG_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  function dayYToDateLabel(dayY) {
+    const cyc = A.SOLAR_YEAR * 86400000;
+    const n = Math.floor((Date.now() - SPRING_REF) / cyc);
+    const d = new Date(SPRING_REF + n * cyc + dayY * 86400000);
+    return d.getUTCDate() + ' ב' + GREG_MONTHS[d.getUTCMonth()];
   }
 
   // ════════════════ מופעי הירח ════════════════
@@ -286,6 +300,7 @@ window.Sims = (function () {
       $('y_updown').textContent = altNow > 0 ? 'השמש מעל האופק ☀' : 'השמש מתחת לאופק 🌙';
       $('y_alt').textContent = altNow.toFixed(0) + '°';
       $('y_season').textContent = s.n;
+      $('y_date').textContent = dayYToDateLabel(this.dayY);
       $('y_daylen').textContent = fmtH(dl);
       $('y_mid').textContent = midAlt.toFixed(0) + '°';
     },
@@ -311,6 +326,13 @@ window.Sims = (function () {
       $('y_speed').oninput = e => this.speed = +e.target.value;
       $('y_hour').oninput = e => { this.hour = +e.target.value; this.playing = false; $('y_play').textContent = '▶ הפעל'; };
       $('y_dayY').oninput = e => this.dayY = +e.target.value;
+      // קביעת היום בשנה לפי תאריך לועזי (כמו בכוכבי הלכת)
+      { const d = new Date(); $('y_dd').value = d.getDate(); $('y_mm').value = d.getMonth() + 1; $('y_yy').value = d.getFullYear(); }
+      $('y_dateGo').onclick = () => {
+        const Y = +$('y_yy').value, M = +$('y_mm').value, D = +$('y_dd').value;
+        if (!Y || !M || !D) return;
+        this.dayY = dayYFromDate(Y, M, D);
+      };
       // מיקום הצופה: בחירת עיר קובעת רוחב+אורך; עריכה ידנית מעבירה ל"מותאם אישית"
       $('y_city').onchange = e => {
         const v = e.target.value; if (!v) return;
