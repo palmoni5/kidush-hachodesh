@@ -311,7 +311,14 @@ window.Sims = (function () {
       $('y_speed').oninput = e => this.speed = +e.target.value;
       $('y_hour').oninput = e => { this.hour = +e.target.value; this.playing = false; $('y_play').textContent = '▶ הפעל'; };
       $('y_dayY').oninput = e => this.dayY = +e.target.value;
-      $('y_lat').oninput = e => this.lat = +e.target.value || 0;
+      // מיקום הצופה: בחירת עיר קובעת רוחב+אורך; עריכה ידנית מעבירה ל"מותאם אישית"
+      $('y_city').onchange = e => {
+        const v = e.target.value; if (!v) return;
+        const [la, lo] = v.split(',').map(Number);
+        this.lat = la; this.lon = lo; $('y_lat').value = la; $('y_lon').value = lo;
+      };
+      $('y_lat').oninput = e => { this.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); $('y_city').value = ''; };
+      $('y_lon').oninput = e => { this.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); $('y_city').value = ''; };
       $('y_auto').onchange = e => this.auto = e.target.checked;
       $('y_rotR').onclick = () => { this.viewAz = (this.viewAz + 10) % 360; };
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };

@@ -98,8 +98,31 @@
             </div>
             <label class="field">יום מתקופת ניסן: <b id="y_dayL">0</b></label>
             <input type="range" id="y_dayY" min="0" max="365.25" step="0.5" value="0" />
-            <label class="field">קו רוחב במעלות (ירושלים=31.78)</label>
-            <input type="number" id="y_lat" step="0.1" value="31.78" />
+          </div>
+          <div class="card">
+            <h2>מיקום הצופה</h2>
+            <label class="field">עיר</label>
+            <select id="y_city">
+              <option value="31.78,35.22" selected>ירושלים</option>
+              <option value="40.71,-74.01">ניו יורק</option>
+              <option value="34.05,-118.24">לוס אנג'לס</option>
+              <option value="25.76,-80.19">מיאמי</option>
+              <option value="43.65,-79.38">טורונטו</option>
+              <option value="19.43,-99.13">מקסיקו סיטי</option>
+              <option value="-23.55,-46.63">סאו פאולו</option>
+              <option value="-34.60,-58.38">בואנוס איירס</option>
+              <option value="51.51,-0.13">לונדון</option>
+              <option value="48.86,2.35">פריז</option>
+              <option value="51.22,4.40">אנטוורפן</option>
+              <option value="55.76,37.62">מוסקבה</option>
+              <option value="-26.20,28.05">יוהנסבורג</option>
+              <option value="-33.87,151.21">סידני</option>
+              <option value="">מותאם אישית</option>
+            </select>
+            <label class="field">קו רוחב במעלות (צפון חיובי)</label>
+            <input type="number" id="y_lat" step="0.1" min="-89" max="89" value="31.78" />
+            <label class="field">קו אורך במעלות (מזרח חיובי)</label>
+            <input type="number" id="y_lon" step="0.1" min="-180" max="180" value="35.22" />
           </div>
           <div class="card">
             <h2>שנת החמה — הלכה</h2>

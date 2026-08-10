@@ -254,6 +254,13 @@ input[type=number] {
   text-align: center; outline: none;
 }
 input[type=number]:focus { border-color: var(--color-primary); }
+select {
+  width: 100%; min-width: 0; padding: 6px 9px; border: 1.5px solid var(--color-outline);
+  border-radius: var(--radius-sm); font-family: var(--font-main); font-size: 0.82em;
+  color: var(--color-on-surface); background: var(--color-surface);
+  outline: none; margin-top: 3px; cursor: pointer;
+}
+select:focus { border-color: var(--color-primary); }
 /* הסתרת ה-spinner המובנה (זעיר ונחתך) — מוחלף בחצים מותאמים (.numstep) */
 input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 input[type=number]::-webkit-inner-spin-button,
