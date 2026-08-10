@@ -316,12 +316,12 @@
   const zodiac = {
     date: new Date(),
     playing: false,
-    speed: 1,
+    speed: 0.3,
     // מהירות נפרדת לכל יחידה: בסיבוב היומי אפילו שעה לשנייה מהירה מדי לעין,
     // ולכן הטווח שם עדין יותר (ברירת מחדל: יממה שלמה בכ-80 שניות).
     speeds: { day: 1, hour: 0.3 },
     RANGE: { day: { min: 0.1, max: 30, step: 0.1 }, hour: { min: 0.02, max: 6, step: 0.02 } },
-    unit: 'day',              // 'day' — מהלך המזלות בשנה; 'hour' — עליית המזלות ביממה
+    unit: 'hour',             // 'hour' — עליית המזלות ביממה (ברירת מחדל); 'day' — מהלך המזלות בשנה
     horizon: true,
     lat: 31.78, lon: 35.22,
     _bound: false,
@@ -401,7 +401,7 @@
         document.querySelectorAll('#view-zodiac .seg button').forEach(x => x.classList.toggle('active', x === b));
         this._setUnit(b.dataset.unit);
       });
-      this._setUnit('day');
+      this._setUnit('hour');
     },
   };
 
