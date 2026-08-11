@@ -104,19 +104,30 @@ b, strong { font-weight: 600; }
 #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
 /* ── סרגל עליון + ניווט ───────────────────────────── */
+/* פס הכותרת לפי מפרט אוצריא (DESIGN_GUIDE § סרגל כותרת התוסף): גובה קשיח
+   56px (44px במסך צר), רקע surfaceContainerHigh, כותרת 16px משקל 600 בצבע
+   onSurface — גדלים ב-px דווקא, שלא יתנפחו עם גופן הקריאה של המשתמש.
+   הלשוניות נגללות אופקית בתוך הפס במקום להישבר לשורה שנייה. */
 header.topbar {
   display: flex; align-items: center; gap: 14px;
-  padding: 8px 16px;
+  height: 56px; padding: 0 16px;
   background: var(--color-surface-container-high);
   border-bottom: 1px solid var(--color-outline);
-  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 header.topbar .brand {
   display: flex; align-items: center; gap: 9px;
-  font-size: 1.05em; font-weight: 600; color: var(--color-primary);
+  font-size: 16px; font-weight: 600; color: var(--color-on-surface);
+  white-space: nowrap; flex-shrink: 0;
 }
 header.topbar .brand img { width: 26px; height: 26px; }
-nav.tabs { display: flex; gap: 7px; flex-wrap: wrap; }
+nav.tabs {
+  display: flex; gap: 7px; flex-wrap: nowrap;
+  flex: 1; min-width: 0; overflow-x: auto;
+  scrollbar-width: none;               /* הגלילה קיימת; הפס נשאר נקי */
+}
+nav.tabs::-webkit-scrollbar { display: none; }
+nav.tabs button { white-space: nowrap; flex-shrink: 0; }
 nav.tabs button {
   background: transparent; color: var(--color-on-surface);
   border: 1px solid var(--color-outline);
@@ -347,15 +358,11 @@ footer {
    התאמה למסכים צרים ולמובייל
    ============================================================ */
 @media (max-width: 760px) {
-  /* סרגל עליון: שורה ראשונה = מותג + כפתור רקע; הלשוניות יורדות לשורה
-     מלאה משלהן (order) ועוטפות בלי להיחתך, במקום גלילה אופקית שמסתירה טקסט */
-  header.topbar { gap: 8px 10px; padding: 6px 10px; }
-  header.topbar .brand { font-size: 0.95em; flex-shrink: 0; }
+  /* פס הכותרת במסך צר: 44px כמפרט אוצריא (מצב compact), שורה אחת —
+     הלשוניות ממשיכות להיגלל אופקית בתוך הפס במקום להישבר לשורה שנייה */
+  header.topbar { height: 44px; gap: 8px; padding: 0 10px; }
   .icon-btn { flex: 0 0 auto; white-space: nowrap; }
-  nav.tabs {
-    order: 5; flex-basis: 100%; flex-wrap: wrap; gap: 6px;
-  }
-  nav.tabs button { white-space: nowrap; }
+  nav.tabs { gap: 6px; }
 
   /* פריסה אנכית נגללת: בתוך ה-webview של אוצריא הגובה הזמין קטן ולא צפוי
      (סרגלי האפליקציה למעלה/למטה גוזלים מקום). פריסת flex קבועה עם 100dvh

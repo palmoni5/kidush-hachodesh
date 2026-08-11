@@ -14,6 +14,7 @@
     "app.info.read",
     "events.subscribe:theme.changed",
     "events.subscribe:calendar.city_changed",
+    "events.subscribe:settings.changed",
     "ui.feedback",
     "plugin.storage.read",
     "plugin.storage.write",

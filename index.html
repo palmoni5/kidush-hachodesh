@@ -218,6 +218,16 @@
             <div class="ctrls" style="margin-top:8px">
               <button class="btn-primary" id="z_go">הצג</button>
             </div>
+            <label class="field" style="margin-top:8px">ראשי חודשים (הנידונים בר״ה ובב״מ)</label>
+            <div class="seg" style="grid-template-columns:1fr 1fr 1fr">
+              <button data-rh="nisan">ר״ח ניסן</button>
+              <button data-rh="shevat">ר״ח שבט</button>
+              <button data-rh="adar">ר״ח אדר</button>
+            </div>
+            <div class="seg seg-2" style="margin-top:6px">
+              <button data-tod="6">🌅 בוקר (06:00)</button>
+              <button data-tod="21">🌙 לילה (21:00)</button>
+            </div>
             <label class="field" style="margin-top:8px">שעה ביממה (גרירה): <b id="z_hourL">12:00</b></label>
             <input type="range" id="z_hour" min="0" max="24" step="0.02" value="12" />
           </div>
@@ -360,8 +370,8 @@
               <button class="btn-secondary" id="d_goGRIT">קו הגרי"מ</button>
               <button class="btn-secondary" id="d_goIDL">קו 180°</button>
             </div>
-            <label class="field" style="margin-top:8px">קו אורך במרכז המבט: <b id="d_lonL">125°</b></label>
-            <input type="range" id="d_lon" min="-180" max="180" step="1" value="125" />
+            <label class="field" style="margin-top:8px">קו אורך במרכז המבט: <b id="d_lonL">170°</b></label>
+            <input type="range" id="d_lon" min="-180" max="180" step="1" value="170" />
             <label class="field">קו רוחב במרכז המבט: <b id="d_latL">10°</b></label>
             <input type="range" id="d_lat" min="-80" max="80" step="1" value="10" />
           </div>
@@ -497,6 +507,8 @@
   <script src="vendor/three.min.js"></script>
   <script src="vendor/OrbitControls.js"></script>
   <script src="js/assets.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="i18n/en.js"></script>
   <script src="js/astronomy-adapter.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/sims.js"></script>

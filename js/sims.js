@@ -3,6 +3,7 @@
 "use strict";
 window.Sims = (function () {
   const A = window.Astro, AS = window.ASSETS;
+  const T = s => (window.I18N ? window.I18N.t(s) : s);
   // מטמון לערכי משתני CSS — getComputedStyle יקר (מכריח חישוב-סגנון).
   // מתאפס רק כשערכת הנושא/הרקע משתנים (clearColorCache).
   // נקרא מ-document.body (ולא מ-documentElement): דריסת פלטת האיור הבהירה
@@ -59,7 +60,12 @@ window.Sims = (function () {
       if (mode === 'below' || (window.innerWidth || W) < 760) {
         const top = Math.max(0, hr.bottom - sr.top + 8);
         L = { x: 0, y: top, w: W, h: Math.max(80, H - top) };
+      } else if ((hr.left + hr.right) / 2 < (sr.left + sr.right) / 2) {
+        // ה-HUD בצד שמאל (פריסת LTR) — האזור הפנוי מימינו
+        const reserve = Math.max(0, hr.right - sr.left + 10);
+        L = { x: Math.min(reserve, W - 120), y: 0, w: Math.max(120, W - reserve), h: H };
       } else {
+        // ה-HUD בצד ימין (פריסת RTL) — האזור הפנוי משמאלו
         const reserve = Math.max(0, sr.right - hr.left + 10);
         L = { x: 0, y: 0, w: Math.max(120, W - reserve), h: H };
       }
@@ -105,10 +111,10 @@ window.Sims = (function () {
     } catch (e) { return { rise: '—', set: '—' }; }
   }
   // שורת הסבר עדינה (ללא רקע) למעלה — מוצגת בזמן השהיה
-  function drawHint(ctx, W, txt = 'לחצו ▶ הפעל כדי להניע את הסיבוב') {
+  function drawHint(ctx, W, txt = T('לחצו ▶ הפעל כדי להניע את הסיבוב')) {
     ctx.fillStyle = cv('--ill-muted'); ctx.font = '12px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText(txt, W / 2, 8);
+    ctx.fillText(T(txt), W / 2, 8);
   }
   // נקודת ייחוס לשנת החמה — שוויון אביב (תקופת ניסן) 20.3.2000 07:35 UT
   const SPRING_REF = Date.UTC(2000, 2, 20, 7, 35, 0);
@@ -214,7 +220,9 @@ window.Sims = (function () {
   }
   function dayYToDateLabel(dayY) {
     const d = dayYToDate(dayY);
-    return d.getUTCDate() + ' ב' + GREG_MONTHS[d.getUTCMonth()];
+    return window.I18N && window.I18N.active
+      ? T(GREG_MONTHS[d.getUTCMonth()]) + ' ' + d.getUTCDate()
+      : d.getUTCDate() + ' ב' + GREG_MONTHS[d.getUTCMonth()];
   }
 
   // ════════════════ מופעי הירח ════════════════
@@ -230,7 +238,7 @@ window.Sims = (function () {
       const pct = Math.round(A.moonIllum(this.day) * 100);
       $('m_day').textContent = Math.floor(this.day % A.SYNODIC) + 1;
       $('m_pct').textContent = pct + '%';
-      $('m_phase').textContent = A.moonPhaseLabel(this.day);
+      $('m_phase').textContent = T(A.moonPhaseLabel(this.day));
       // זריחת/שקיעת הירח — ליום שגיל הירח שלו הוא היום המוצג (יחסית להיום).
       // החיפוש יקר, ולכן מחושב רק כשהיום המוצג משתנה בפועל (רבע יום).
       const rsKey = Math.floor(this.day * 4);
@@ -272,29 +280,29 @@ window.Sims = (function () {
       // תווית הארץ — מתחת לכדור עם מרווח ברור (~8px). textBaseline=top מבטיח
       // שכל הטקסט יושב מתחת לנקודת העוגן (אחרת טקסט alphabetic זוחל אל הכדור).
       ctx.textBaseline = 'top';
-      ctx.fillText('הארץ', earthX, earthY + 29);
+      ctx.fillText(T('הארץ'), earthX, earthY + 29);
       // תווית הירח — מעל הירח עם מרווח מתון (~8px). textBaseline=bottom מבטיח
       // שכל הטקסט יושב מעל נקודת העוגן (ולא יזלוג מטה אל הדיסקה).
       ctx.textBaseline = 'bottom';
-      ctx.fillText('הירח', mx, Math.max(top + 13, my - 19));
+      ctx.fillText(T('הירח'), mx, Math.max(top + 13, my - 19));
       ctx.textBaseline = 'alphabetic';
       // תצוגת הירח כפי שנראה מהארץ — פינה ימנית-תחתונה. הרדיוס מוגבל למקום
       // הפנוי מימין למסלול, כדי שלא יתנגש בירח המקיף ובתוויתו במסכים צרים.
       const vR = Math.max(28, Math.min(Math.min(W, H) * 0.15, (W - (earthX + orbitR) - 36) / 2));
       const vx = W - vR - 16, vy = H - vR - 20;
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('הירח מכדור הארץ', vx, vy - vR - 12);
+      ctx.fillText(T('הירח מכדור הארץ'), vx, vy - vR - 12);
       drawPhase(ctx, vx, vy, vR, this.day);
       if (!this.hintDone) drawHint(ctx, W);
     },
     bind() {
       if (this._bound) return; this._bound = true;
       this.day = moonAgeToday();   // ברירת מחדל: מצב הירח היום
-      $('m_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
+      $('m_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
       $('m_reset').onclick = () => { this.day = 0; };
-      $('m_today').onclick = () => { this.day = moonAgeToday(); this.playing = false; $('m_play').textContent = '▶ הפעל'; };
+      $('m_today').onclick = () => { this.day = moonAgeToday(); this.playing = false; $('m_play').textContent = T('▶ הפעל'); };
       $('m_speed').oninput = e => { this.speed = +e.target.value; $('m_spdL').textContent = this.speed.toFixed(1); };
-      $('m_scrub').oninput = e => { this.day = +e.target.value; this.playing = false; $('m_play').textContent = '▶ הפעל'; };
+      $('m_scrub').oninput = e => { this.day = +e.target.value; this.playing = false; $('m_play').textContent = T('▶ הפעל'); };
     },
     sync() { if (document.activeElement !== $('m_scrub')) $('m_scrub').value = (this.day % A.SYNODIC).toFixed(2); },
   };
@@ -432,7 +440,7 @@ window.Sims = (function () {
       if (W >= 760) {
         // רצועה שמורה ל-HUD מימין, כדי שהכיפה לא תצויר מתחתיו
         const L = stageLayout($('yearCanvas'), W, H);
-        cx = L.w / 2; cy = H / 2 + 12; R = Math.min(L.w * 0.40, (H - 54) / 2);
+        cx = L.x + L.w / 2; cy = H / 2 + 12; R = Math.min(L.w * 0.40, (H - 54) / 2);
       }
       else {
         if (_layout.yearTop === null) _layout.yearTop = hudInset($('yearCanvas'), W, 54);
@@ -447,13 +455,13 @@ window.Sims = (function () {
       ctx.fillStyle = cv('--ill-text'); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       for (const [az, lbl] of [[180, 'דרום'], [0, 'צפון'], [90, 'מזרח'], [270, 'מערב']]) {
         const rd = az * Math.PI / 180, p = this.proj({ E: 1.15 * Math.sin(rd), N: 1.15 * Math.cos(rd), U: 0 }, cx, cy, R);
-        ctx.fillText(lbl, p.x, p.y);
+        ctx.fillText(T(lbl), p.x, p.y);
       }
       // ציר העולם
       const pole = this.proj({ E: 0, N: Math.cos(this.lat * Math.PI / 180), U: Math.sin(this.lat * Math.PI / 180) }, cx, cy, R);
       ctx.strokeStyle = cv('--ill-grid'); ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(pole.x, pole.y); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.fillText('ציר העולם', pole.x, pole.y - 10);
+      ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.fillText(T('ציר העולם'), pole.x, pole.y - 10);
       // השמש (כיוון) + כדור הארץ. מציירים את הכדור תחילה, ואז את מסלולי השמיים והשמש מעליו עם
       // הסתרה (occlusion): מה שמאחורי הכדור (בצד הרחוק מהצופה) מוסתר על־ידו, ומה שלפניו מצויר מעליו.
       const s = this.season();
@@ -476,7 +484,7 @@ window.Sims = (function () {
           [0, 'שוויון', cv('--ill-text')],
           [-23.44, nearEq ? 'קו ההיפוך הדרומי' : (south ? 'קיץ' : 'חורף'), cv(south ? '--ill-summer' : '--ill-winter')]]) {
         const tp = this.proj(A.sunHorizon(0, dc, this.lat), cx, cy, R);
-        ctx.fillStyle = col; ctx.font = '11px sans-serif'; ctx.fillText(lbl, tp.x + 24, tp.y - 2);
+        ctx.fillStyle = col; ctx.font = '11px sans-serif'; ctx.fillText(T(lbl), tp.x + 24, tp.y - 2);
       }
       // המסלול הנוכחי
       this.circle(ctx, dec, cx, cy, R, cv(s.c), 2.6, occ);
@@ -503,14 +511,14 @@ window.Sims = (function () {
       const altNow = Math.asin(Unow) * 180 / Math.PI;
       const s = this.season();
       $('y_clock').textContent = fmtH(this.hour);
-      $('y_tz').textContent = 'שעון מקומי — ' + this.cityName + ' (' + fmtOff(this.tzOff()) + ')';
-      $('y_updown').textContent = altNow > 0 ? 'השמש מעל האופק ☀' : 'השמש מתחת לאופק 🌙';
+      $('y_tz').textContent = T('שעון מקומי') + ' — ' + T(this.cityName) + ' (' + fmtOff(this.tzOff()) + ')';
+      $('y_updown').textContent = altNow > 0 ? T('השמש מעל האופק ☀') : T('השמש מתחת לאופק 🌙');
       $('y_alt').textContent = altNow.toFixed(0) + '°';
       // נטיית השמש — זוית השמש מצפון/דרום לקו המשוה
       $('y_dec').textContent = fmtNS(dec);
       // זוית השמש מצפון/דרום למקום הצופה (מרחק זויתי מהזנית בכיוון צפון–דרום)
       $('y_zen').textContent = fmtNS(dec - phi);
-      $('y_season').textContent = s.n;
+      $('y_season').textContent = T(s.n);
       $('y_date').textContent = dayYToDateLabel(this.dayY);
       // שעה שמשית אמיתית — מזוית השעה של השמש (חצות אמיתי = 12:00)
       $('y_solar').textContent = fmtH(sn.H / 15 + 12);
@@ -522,7 +530,7 @@ window.Sims = (function () {
         $('y_daylen').textContent = fmtH((((rs.set - rs.rise) / 3600000) % 24 + 24) % 24);
       } else {
         const cosH = -Math.tan(phi * Math.PI / 180) * Math.tan(dec * Math.PI / 180);
-        $('y_rise').textContent = cosH <= -1 ? 'יום תמידי' : cosH >= 1 ? 'לילה תמידי' : '—';
+        $('y_rise').textContent = cosH <= -1 ? T('יום תמידי') : cosH >= 1 ? T('לילה תמידי') : '—';
         $('y_daylen').textContent = fmtH(A.dayLengthHours(dec, phi));
       }
       $('y_mid').textContent = (rs && rs.midAlt != null ? rs.midAlt
@@ -532,7 +540,7 @@ window.Sims = (function () {
       const f = (((this.viewAz + 180) % 360) + 360) % 360;
       const names = ['צפון', 'צפון-מזרח', 'מזרח', 'דרום-מזרח', 'דרום', 'דרום-מערב', 'מערב', 'צפון-מערב'];
       const off = ((this.viewAz % 360) + 360) % 360, sgn = off > 180 ? off - 360 : off;
-      return names[Math.round(f / 45) % 8] + (sgn ? ` (${sgn > 0 ? '+' : ''}${sgn}°)` : '');
+      return T(names[Math.round(f / 45) % 8]) + (sgn ? ` (${sgn > 0 ? '+' : ''}${sgn}°)` : '');
     },
     sync() {
       $('y_spdL').textContent = this.speed; $('y_hourL').textContent = fmtH(this.hour); $('y_dayL').textContent = Math.floor(this.dayY);
@@ -543,8 +551,8 @@ window.Sims = (function () {
     bind() {
       if (this._bound) return; this._bound = true;
       { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; }   // ברירת מחדל: היום והשעה הנוכחיים
-      $('y_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
-      $('y_today').onclick = () => { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; this.playing = false; $('y_play').textContent = '▶ הפעל'; loadOtzariaTimes(); };
+      $('y_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
+      $('y_today').onclick = () => { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; this.playing = false; $('y_play').textContent = T('▶ הפעל'); loadOtzariaTimes(); };
       // חצות אמיתי (מעבר המרידיאן, Astronomy Engine) בשעון האזרחי — בירושלים
       // (חורף) ~11:39, ובשעון קיץ ~12:39; לא 12:00 שעל השעון.
       $('y_noon').onclick = () => {
@@ -556,7 +564,7 @@ window.Sims = (function () {
         this.hour = rs && rs.mid ? this.civilOfDate(rs.mid) : ((this.civilHour(0) % 24) + 24) % 24;
       };
       $('y_speed').oninput = e => this.speed = +e.target.value;
-      $('y_hour').oninput = e => { this.hour = +e.target.value; this.playing = false; $('y_play').textContent = '▶ הפעל'; };
+      $('y_hour').oninput = e => { this.hour = +e.target.value; this.playing = false; $('y_play').textContent = T('▶ הפעל'); };
       $('y_dayY').oninput = e => this.dayY = +e.target.value;
       // קביעת היום בשנה לפי תאריך לועזי (כמו בכוכבי הלכת)
       { const d = new Date(); $('y_dd').value = d.getDate(); $('y_mm').value = d.getMonth() + 1; $('y_yy').value = d.getFullYear(); }
@@ -608,7 +616,7 @@ window.Sims = (function () {
   // זוית בכיוון צפון/דרום — הערך המוחלט ואחריו הצד
   function fmtNS(deg) {
     const a = Math.abs(deg).toFixed(1) + '°';
-    return Math.abs(deg) < 0.05 ? a : a + (deg > 0 ? ' צפון' : ' דרום');
+    return Math.abs(deg) < 0.05 ? a : a + ' ' + (deg > 0 ? T('צפון') : T('דרום'));
   }
   // היסט אזור זמן לתצוגה: UTC+3, UTC−4:30
   function fmtOff(h) {
@@ -747,16 +755,16 @@ window.Sims = (function () {
       ctx.beginPath(); ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy); ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R); ctx.stroke();
       ctx.strokeStyle = cv('--ill-horizon'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.stroke();
       ctx.fillStyle = cv('--ill-text'); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('צפון', cx, cy - R - 14); ctx.fillText('דרום', cx, cy + R + 14);
-      ctx.fillText('מזרח', cx - R - 16, cy); ctx.fillText('מערב', cx + R + 16, cy);
-      ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.fillText('זניט', cx + 16, cy - 12);
+      ctx.fillText(T('צפון'), cx, cy - R - 14); ctx.fillText(T('דרום'), cx, cy + R + 14);
+      ctx.fillText(T('מזרח'), cx - R - 16, cy); ctx.fillText(T('מערב'), cx + R + 16, cy);
+      ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.fillText(T('זניט'), cx + 16, cy - 12);
       if (!this.sky) return;
       for (const b of BODIES) {
         const o = this.sky[b.k]; if (o.alt <= 0) continue;
         const rr = (90 - o.alt) / 90 * R, x = cx - rr * Math.sin(o.az * Math.PI / 180), y = cy - rr * Math.cos(o.az * Math.PI / 180);
         const im = IMG.planets[b.k]; let w = b.k === 'sun' ? 28 : (b.k === 'saturn' ? 34 : 22), h = im.naturalWidth ? w * im.naturalHeight / im.naturalWidth : w;
         sprite(ctx, im, x, y, w, h);
-        ctx.fillStyle = cv('--ill-text'); ctx.font = '12px sans-serif'; ctx.textBaseline = 'top'; ctx.fillText(b.n, x, y + h / 2 + 2);
+        ctx.fillStyle = cv('--ill-text'); ctx.font = '12px sans-serif'; ctx.textBaseline = 'top'; ctx.fillText(T(b.n), x, y + h / 2 + 2);
         ctx.textBaseline = 'middle';
       }
     },
@@ -766,8 +774,8 @@ window.Sims = (function () {
         const o = this.sky[b.k], up = o.alt > 0;
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:3px 4px;font-size:0.72em;' + (up ? '' : 'opacity:.45');
-        row.innerHTML = `<img src="${AS['planet_' + b.k]}" style="width:20px;height:20px;object-fit:contain" alt=""><span style="flex:1">${b.n}</span>` +
-          `<span style="direction:ltr;opacity:.75">${up ? ('h ' + o.alt.toFixed(0) + '° · az ' + o.az.toFixed(0) + '°') : 'מתחת לאופק'}</span>`;
+        row.innerHTML = `<img src="${AS['planet_' + b.k]}" style="width:20px;height:20px;object-fit:contain" alt=""><span style="flex:1">${T(b.n)}</span>` +
+          `<span style="direction:ltr;opacity:.75">${up ? ('h ' + o.alt.toFixed(0) + '° · az ' + o.az.toFixed(0) + '°') : T('מתחת לאופק')}</span>`;
         L.appendChild(row);
       }
     },
@@ -784,6 +792,10 @@ window.Sims = (function () {
       this.compute();
     },
   };
+
+  // החלפת שפה: מקרא כוכבי הלכת וכרטיס זמני הלוח נבנים באירוע — מרעננים
+  planets.onLanguage = function () { if (this.sky) this.legend(); };
+  year.onLanguage = function () { if (this._bound) loadOtzariaTimes(); };
 
   return { moon, year, planets, clearColorCache, clearFitCache, stageLayout };
 })();

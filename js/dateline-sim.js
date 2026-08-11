@@ -10,6 +10,7 @@
 (function () {
   const AE = window.Astronomy;
   const $ = id => document.getElementById(id);
+  const T = s => (window.I18N ? window.I18N.t(s) : s);
   const RAD = Math.PI / 180, DEG = 180 / Math.PI;
 
   const JLEM_LON = 35.2354, JLEM_LAT = 31.7784;
@@ -47,9 +48,9 @@
   // "יום שישי" / "ליל שבת": הלילה שמן הערב (מ-18:00 בקירוב) שייך ליום שאחריו
   function jLabel(d, h) {
     d = ((d % 7) + 7) % 7;
-    if (h >= 18) return 'ליל ' + DAYNAMES[(d + 1) % 7];
-    if (h < 6) return 'ליל ' + DAYNAMES[d];
-    return 'יום ' + DAYNAMES[d];
+    if (h >= 18) return T('ליל') + ' ' + T(DAYNAMES[(d + 1) % 7]);
+    if (h < 6) return T('ליל') + ' ' + T(DAYNAMES[d]);
+    return T('יום') + ' ' + T(DAYNAMES[d]);
   }
 
   // הנקודה שמתחת לשמש (subsolar) — להצללת יום/לילה על הגלובוס
@@ -177,7 +178,9 @@
   }
 
   const sim = {
-    lat0: 10, lon0: 125, playing: false, _bound: false,
+    // מרכז המבט הפותח ניטרלי — באמצע האוקיינוס השקט, כך ששלושת קווי התאריך
+    // (חזו"א, אוה"ע והגרי"מ) נראים יחד ואף שיטה אינה במרכז.
+    lat0: 10, lon0: 170, playing: false, _bound: false,
     date: new Date(), speed: 0.5,          // מהירות ההנעה: שעות לשנייה
     show: { utc: true, ci: true, grit: true, idl: true, grid: true, daynight: true },
     step(dt) { if (this.playing) this.date = new Date(this.date.getTime() + this.speed * dt * 3600000); },
@@ -269,9 +272,9 @@
         ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1; ctx.stroke();
         ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        const w = ctx.measureText('ירושלים').width + 10;
+        const w = ctx.measureText(T('ירושלים')).width + 10;
         ctx.fillRect(j.x - w / 2, j.y - 24, w, 17);
-        ctx.fillStyle = COL.jlem; ctx.fillText('ירושלים', j.x, j.y - 9);
+        ctx.fillStyle = COL.jlem; ctx.fillText(T('ירושלים'), j.x, j.y - 9);
       }
 
       // המקומות שהנדון משליך עליהם
@@ -281,16 +284,16 @@
         ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, 2 * Math.PI); ctx.fill();
         ctx.strokeStyle = 'rgba(0,0,0,0.65)'; ctx.lineWidth = 1; ctx.stroke();
         ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        const w = ctx.measureText(p.short).width + 8;
+        const w = ctx.measureText(T(p.short)).width + 8;
         ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(q.x - w / 2, q.y + 5, w, 14);
-        ctx.fillStyle = '#ffffff'; ctx.fillText(p.short, q.x, q.y + 7);
+        ctx.fillStyle = '#ffffff'; ctx.fillText(T(p.short), q.x, q.y + 7);
       }
 
       // תוויות הקווים — במרווחים אנכיים שונים כדי שלא ייערמו
-      if (this.show.utc)  this.label(ctx, 'גריניץ׳ 0°', 0, cx, cy, R, COL.utc, -34);
-      if (this.show.ci)   this.label(ctx, 'חזו״א', CI_LON, cx, cy, R, COL.ci, -12);
-      if (this.show.grit) this.label(ctx, 'גרי״מ טוקצינסקי', GRIT_LON, cx, cy, R, COL.grit, 12);
-      if (this.show.idl)  this.label(ctx, 'הסכמי אוה״ע 180°', IDL_LON, cx, cy, R, COL.idl, 34);
+      if (this.show.utc)  this.label(ctx, T('גריניץ׳ 0°'), 0, cx, cy, R, COL.utc, -34);
+      if (this.show.ci)   this.label(ctx, T('חזו״א'), CI_LON, cx, cy, R, COL.ci, -12);
+      if (this.show.grit) this.label(ctx, T('גרי״מ טוקצינסקי'), GRIT_LON, cx, cy, R, COL.grit, 12);
+      if (this.show.idl)  this.label(ctx, T('הסכמי אוה״ע 180°'), IDL_LON, cx, cy, R, COL.idl, 34);
 
       // מתאר הכדור
       ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.4;
@@ -310,17 +313,17 @@
       el.innerHTML = PLACES.map(p => {
         const c = localParts(this.date, p.tz), o = dayOffsets(p.lon), t = tt(c);
         return `<div style="margin-bottom:9px;font-size:0.75em;line-height:1.75">
-          <b>${p.he}</b><br>
-          <span style="color:${COL.idl}">■</span> הסכמי אוה״ע: <b>${jLabel(c.d + o.intl, c.h)}</b> שעה ${t}<br>
-          <span style="color:${COL.ci}">■</span> שיטת החזו״א: <b>${jLabel(c.d + o.ci, c.h)}</b> שעה ${t}<br>
-          <span style="color:${COL.grit}">■</span> שיטת הגרי״מ: <b>${jLabel(c.d + o.grit, c.h)}</b> שעה ${t}
+          <b>${T(p.he)}</b><br>
+          <span style="color:${COL.idl}">■</span> ${T('הסכמי אוה״ע')}: <b>${jLabel(c.d + o.intl, c.h)}</b> ${T('בשעה')} ${t}<br>
+          <span style="color:${COL.ci}">■</span> ${T('שיטת החזו״א')}: <b>${jLabel(c.d + o.ci, c.h)}</b> ${T('בשעה')} ${t}<br>
+          <span style="color:${COL.grit}">■</span> ${T('שיטת הגרי״מ')}: <b>${jLabel(c.d + o.grit, c.h)}</b> ${T('בשעה')} ${t}
         </div>`;
       }).join('');
     },
 
     _syncDate() {
       const d = this.date;
-      const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
+      const set = (id, v) => { const el = $(id); if (el && !window.__fieldLocked(el)) el.value = v; };
       set('d_dd', d.getDate()); set('d_mm', d.getMonth() + 1); set('d_yy', d.getFullYear());
       set('d_hh', d.getHours()); set('d_mi', d.getMinutes());
     },
@@ -347,14 +350,14 @@
       for (const [id, k] of [['d_utc','utc'],['d_ci','ci'],['d_grit','grit'],['d_idl','idl'],['d_grid','grid'],['d_daynight','daynight']])
         $(id).onchange = e => this.show[k] = e.target.checked;
       // בקרת זמן (שעון ישראל = שעון המחשב)
-      $('d_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
-      $('d_now').onclick = () => { this.date = new Date(); this.playing = false; $('d_play').textContent = '▶ הפעל'; this._syncDate(); };
+      $('d_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
+      $('d_now').onclick = () => { this.date = new Date(); this.playing = false; $('d_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('d_speed').oninput = e => { this.speed = +e.target.value; $('d_spdL').textContent = (+e.target.value).toFixed(1); };
       $('d_go').onclick = () => {
         const y = +$('d_yy').value, m = +$('d_mm').value, d = +$('d_dd').value;
         if (!y || !m || !d) return;
         this.date = new Date(y, m - 1, d, +$('d_hh').value || 0, +$('d_mi').value || 0, 0);
-        this.playing = false; $('d_play').textContent = '▶ הפעל';
+        this.playing = false; $('d_play').textContent = T('▶ הפעל');
       };
       // גרירה לסיבוב הגלובוס
       const cnv = $('datelineCanvas');
@@ -371,8 +374,11 @@
     },
   };
 
-  function fmtLon(l) { return Math.abs(l).toFixed(0) + '° ' + (l >= 0 ? 'מזרח' : 'מערב'); }
-  function fmtLat(l) { return Math.abs(l).toFixed(0) + '° ' + (l >= 0 ? 'צפון' : 'דרום'); }
+  function fmtLon(l) { return Math.abs(l).toFixed(0) + '° ' + (l >= 0 ? T('מזרח') : T('מערב')); }
+  function fmtLat(l) { return Math.abs(l).toFixed(0) + '° ' + (l >= 0 ? T('צפון') : T('דרום')); }
+
+  // החלפת שפה: לוח המקומות נבנה לפי מטמון-דקה — מאלצים בנייה מחדש
+  sim.onLanguage = () => { sim._mKey = null; };
 
   window.Sims.dateline = sim;
   const _cfc = window.Sims.clearFitCache;

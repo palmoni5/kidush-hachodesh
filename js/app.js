@@ -88,7 +88,12 @@
         // (document.activeElement), ובלי זה הערך היה קופץ מיד חזרה לערך הקודם.
         inp.focus();
         if (inp.value === '') inp.value = inp.min || 0;
-        if (dir > 0) inp.stepUp(); else inp.stepDown();
+        // גלגול מחזורי בקצוות: מ-59 דקות חוזרים ל-0 ולהפך, במקום להיתקע בתקרה
+        const min = inp.min !== '' ? +inp.min : null, max = inp.max !== '' ? +inp.max : null;
+        const cur = +inp.value;
+        if (dir > 0 && max !== null && cur >= max) inp.value = min !== null ? min : max;
+        else if (dir < 0 && min !== null && cur <= min) inp.value = max !== null ? max : min;
+        else if (dir > 0) inp.stepUp(); else inp.stepDown();
         inp.dispatchEvent(new Event('input', { bubbles: true }));
         inp.dispatchEvent(new Event('change', { bubbles: true }));
       };
@@ -98,6 +103,23 @@
     });
   }
   enhanceNumberInputs();
+
+  // ── שמירת ערכים שהוזנו בשדות תאריך/שעה ──────────────────────────────
+  // sync() של האיורים כותב לשדות שאינם בפוקוס, ולכן מילוי של כמה שדות ברצף
+  // (יום ואז חודש) איפס את הראשון ברגע שהפוקוס עבר הלאה. שדה שהמשתמש שינה
+  // מסומן "מלוכלך" ואינו נדרס — עד לחיצה על כפתור כלשהו (הצג/עכשיו/היום),
+  // שמאשרת או מחליפה את הערכים. חיצי ההגדלה (.numstep) אינם מנקים, כדי שעריכת
+  // שדה אחד בחיצים לא תאפס שדה אחר שהוקלד לפניו.
+  document.addEventListener('input', e => {
+    if (e.target.matches && e.target.matches('input[type=number]')) e.target.dataset.dirty = '1';
+  }, true);
+  document.addEventListener('click', e => {
+    const btn = e.target.closest && e.target.closest('button');
+    if (btn && !btn.closest('.numstep'))
+      document.querySelectorAll('input[type=number][data-dirty]').forEach(i => delete i.dataset.dirty);
+  }, true);
+  // עוזר לפונקציות ה-sync: אין לדרוס שדה בפוקוס או שדה שהוזן ולא אושר
+  window.__fieldLocked = el => document.activeElement === el || (el.dataset && el.dataset.dirty === '1');
 
   // ערכת נושא משתנה בזמן אמת → ניקוי מטמון הצבעים וציור מחדש של הנוף הפעיל
   window.__onThemeApplied = () => { if (window.Sims.clearColorCache) window.Sims.clearColorCache(); invalidate(); };
@@ -116,9 +138,32 @@
     window.addEventListener('resize', onResize, { passive: true });
   }
 
+  // ── שפת הממשק ──────────────────────────────────────────────────────
+  // עברית ברירת המחדל; שפה אחרת מוחלת רק אם יש לה מילון (ראו js/i18n.js).
+  // החלפת שפה משנה כיוון ופריסה — ולכן מנקים את מטמוני המידות ומציירים מחדש.
+  function applyLocale(app) {
+    try {
+      window.I18N.setLanguage(app && (app.language || app.locale), app && app.textDirection);
+      // תוכן שנבנה באירוע (טבלאות, תוויות תלת-מימד) מתרענן דרך hook ייעודי
+      for (const k of ['moon', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'system3d'])
+        if (SIMS[k] && SIMS[k].onLanguage) { try { SIMS[k].onLanguage(); } catch (e) {} }
+      if (window.Sims.clearFitCache) window.Sims.clearFitCache();
+      invalidate();
+    } catch (e) {}
+  }
+  // עדכון חי כשמחליפים שפה בהגדרות אוצריא (הרשאת events.subscribe:settings.changed)
+  Otzaria.on('settings.changed', async p => {
+    if (!p || p.key !== 'key-settings-language') return;
+    try {
+      const r = await Otzaria.call('app.getLocale', {});
+      if (r && r.success && r.data) applyLocale(r.data);
+    } catch (e) {}
+  });
+
   Otzaria.on('theme.changed', applyTheme);
   Otzaria.on('plugin.boot', async (payload) => {
     applyTheme(payload.theme);
+    applyLocale(payload.app);
     applyBg(await loadBg());
     const start = await loadLastView();
     // ממתינים לטעינת הגופנים לפני הרינדור הראשון: מדידות הפריסה (גובה ה-HUD וסרגל

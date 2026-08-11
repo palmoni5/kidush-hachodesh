@@ -9,6 +9,7 @@
 (function () {
   const AE = window.Astronomy;
   const $ = id => document.getElementById(id);
+  const T = s => (window.I18N ? window.I18N.t(s) : s);
 
   const PLANETS = [
     { he: 'שבתאי', ab: 'ש', color: '#b0a060' },
@@ -108,9 +109,9 @@
   function fmtTekufaHour(h) {
     const clock = (18 + h) % 24, hh = Math.floor(clock), mm = Math.round((clock - hh) * 60);
     const cnt = Number.isInteger(h) ? h : Math.floor(h) + '½';
-    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} — ${cnt} שעות מתחילת הלילה`;
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} — ${cnt} ${T('שעות מתחילת הלילה')}`;
   }
-  const tekufaDay = (d, h) => (h < 12 ? 'ליל ' : 'יום ') + DOW_S[d];
+  const tekufaDay = (d, h) => (h < 12 ? T('ליל') : T('יום')) + ' ' + T(DOW_S[d]);
 
   // ══ ציור הלוח ═════════════════════════════════════════════════════════
   function draw(ctx, W, H, cur) {
@@ -130,8 +131,8 @@
 
     // כותרות הקבוצות
     ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = muted;
-    ctx.fillText('שעות הלילה', x(11) + 6 * cw, top + 9);
-    ctx.fillText('שעות היום', x(23) + 6 * cw, top + 9);
+    ctx.fillText(T('שעות הלילה'), x(11) + 6 * cw, top + 9);
+    ctx.fillText(T('שעות היום'), x(23) + 6 * cw, top + 9);
     // מספרי השעות
     ctx.font = '10px sans-serif';
     for (let c = 0; c < 24; c++) {
@@ -145,9 +146,9 @@
       const y = gridTop + d * rowH;
       ctx.textAlign = 'right';
       ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = txt;
-      ctx.fillText(DOW_S[d], W - pad, y + rowH / 2 - 6);
+      ctx.fillText(T(DOW_S[d]), W - pad, y + rowH / 2 - 6);
       ctx.font = '10px sans-serif'; ctx.fillStyle = dayRuler(d).color;
-      ctx.fillText(dayRuler(d).he, W - pad, y + rowH / 2 + 7);
+      ctx.fillText(T(dayRuler(d).he), W - pad, y + rowH / 2 + 7);
       ctx.textAlign = 'center';
     }
 
@@ -163,7 +164,7 @@
           const full = cw >= 44 && rowH >= 26;
           ctx.fillStyle = 'rgba(20,18,10,0.85)';
           ctx.font = `${Math.max(9, Math.min(14, full ? cw * 0.24 : Math.min(cw * 0.55, rowH * 0.5)))}px sans-serif`;
-          ctx.fillText(full ? p.he : p.ab, xx + cw / 2, yy + rowH / 2);
+          ctx.fillText(full ? T(p.he) : T(p.ab), xx + cw / 2, yy + rowH / 2);
         }
       }
     }
@@ -183,7 +184,7 @@
     }
 
     ctx.textAlign = 'center'; ctx.fillStyle = muted; ctx.font = '11px sans-serif';
-    ctx.fillText('ש=שבתאי · צ=צדק · מ=מאדים · ח=חמה · נ=נוגה · כ=כוכב · ל=לבנה',
+    ctx.fillText(T('ש=שבתאי · צ=צדק · מ=מאדים · ח=חמה · נ=נוגה · כ=כוכב · ל=לבנה'),
       W / 2, Math.min(H - 10, gridTop + 7 * rowH + 16));
   }
 
@@ -198,14 +199,14 @@
       const s = seasonal(this.date, this.lat, this.lon);
       draw(ctx, W, H, s);
       const p = ruler(s.d, s.n);
-      $('h_date').textContent = this.date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+      $('h_date').textContent = this.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
       $('h_clock').textContent = this.date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-      $('h_dow').textContent = DOW[s.d] + (s.day ? ' — ביום' : ' — בלילה');
-      $('h_seasonal').textContent = 'שעה ' + ((s.n % 12) + 1) + (s.day ? ' של היום' : ' של הלילה') +
-        (s.approx ? '' : ' (' + (s.len * 60).toFixed(0) + ' דקות)');
-      $('h_ruler').textContent = 'שר השעה — ' + p.he;
+      $('h_dow').textContent = T(DOW[s.d]) + (s.day ? T(' — ביום') : T(' — בלילה'));
+      $('h_seasonal').textContent = T('שעה') + ' ' + ((s.n % 12) + 1) + (s.day ? T(' של היום') : T(' של הלילה')) +
+        (s.approx ? '' : ' (' + (s.len * 60).toFixed(0) + ' ' + T('דק׳') + ')');
+      $('h_ruler').textContent = T('שר השעה') + ' — ' + T(p.he);
       $('h_ruler').style.color = p.color;
-      $('h_dayruler').textContent = dayRuler(s.d).he;
+      $('h_dayruler').textContent = T(dayRuler(s.d).he);
       const he = $('h_date_he');
       if (he && window.HebrewDate) window.HebrewDate(this.date).then(x => { he.textContent = x; });
     },
@@ -213,13 +214,13 @@
     tekufotTable(hy) {
       const t = tekufot(hy);
       $('h_tekufot').innerHTML = t.map(r =>
-        `<tr><td>תקופת ${r.nm}</td><td>${tekufaDay(r.d, r.h)}, ${fmtTekufaHour(r.h)}</td>` +
-        `<td style="color:${r.ruler.color};font-weight:600">${r.ruler.he}</td></tr>`).join('');
+        `<tr><td>${T('תקופת')} ${T(r.nm)}</td><td>${tekufaDay(r.d, r.h)}, ${fmtTekufaHour(r.h)}</td>` +
+        `<td style="color:${r.ruler.color};font-weight:600">${T(r.ruler.he)}</td></tr>`).join('');
     },
 
     _syncDate() {
       const d = this.date;
-      const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
+      const set = (id, v) => { const el = $(id); if (el && !window.__fieldLocked(el)) el.value = v; };
       set('h_day', d.getDate()); set('h_month', d.getMonth() + 1); set('h_year', d.getFullYear());
       set('h_hh', d.getHours()); set('h_mi', d.getMinutes());
     },
@@ -230,20 +231,23 @@
       this._syncDate();
       $('h_hyear').value = hebYearOf(this.date);
       this.tekufotTable(+$('h_hyear').value);
-      $('h_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
-      $('h_now').onclick = () => { this.date = new Date(); this.playing = false; $('h_play').textContent = '▶ הפעל'; this._syncDate(); };
+      $('h_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
+      $('h_now').onclick = () => { this.date = new Date(); this.playing = false; $('h_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('h_speed').oninput = e => { this.speed = +e.target.value; $('h_spdL').textContent = (+e.target.value).toFixed(1); };
       $('h_go').onclick = () => {
         const y = +$('h_year').value, m = +$('h_month').value, d = +$('h_day').value;
         if (!y || !m || !d) return;
         this.date = new Date(y, m - 1, d, +$('h_hh').value || 0, +$('h_mi').value || 0, 0);
-        this.playing = false; $('h_play').textContent = '▶ הפעל';
+        this.playing = false; $('h_play').textContent = T('▶ הפעל');
       };
       $('h_lat').oninput = e => this.lat = Math.max(-89, Math.min(89, +e.target.value || 0));
       $('h_lon').oninput = e => this.lon = Math.max(-180, Math.min(180, +e.target.value || 0));
       $('h_hgo').onclick = () => { const y = +$('h_hyear').value; if (y) this.tekufotTable(y); };
     },
   };
+
+  // החלפת שפה: בנייה מחדש של טבלת התקופות (נבנית רק באירוע)
+  sim.onLanguage = () => { if (sim._bound) { const y = +$('h_hyear').value; if (y) sim.tekufotTable(y); } };
 
   window.Sims.hours = sim;
   const _ccc = window.Sims.clearColorCache;

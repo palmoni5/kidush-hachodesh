@@ -10,6 +10,7 @@
 (function () {
   const AE = window.Astronomy;
   const $ = id => document.getElementById(id);
+  const T = s => (window.I18N ? window.I18N.t(s) : s);
   const RAD = Math.PI / 180;
 
   // ── קני מידה לתצוגה (לא פיזיקליים — לקריאוּת) ──────────────────────────
@@ -83,14 +84,27 @@
     return new THREE.TextureLoader().load(url, () => { try { window.__invalidate(); } catch (e) {} });
   }
 
+  // התווית מציירת את התרגום העדכני של המקור העברי; paintLabel מאפשר
+  // רענון בעת החלפת שפה (repaintLabels) בלי לבנות את הספרייט מחדש.
+  function paintLabel(sp) {
+    const cv = sp.userData.cv, c = cv.getContext('2d');
+    c.clearRect(0, 0, 256, 64);
+    c.font = 'bold 40px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = sp.userData.color; c.fillText(T(sp.userData.src), 128, 32);
+    sp.material.map.needsUpdate = true;
+  }
   function makeLabel(text, color, scale) {
     const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
-    const c = cv.getContext('2d');
-    c.font = 'bold 40px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = color; c.fillText(text, 128, 32);
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthTest: false }));
+    sp.userData = { cv, src: text, color };
+    paintLabel(sp);
     const s = scale || 1; sp.scale.set(12 * s, 3 * s, 1);
     return sp;
+  }
+  function repaintLabels() {
+    if (!inited) return;
+    for (const k in labels) paintLabel(labels[k]);
+    for (const p of PLANETS) if (p.labelObj) paintLabel(p.labelObj);
   }
 
   // הילת זוהר רכה לשמש — sprite עם מילוי רדיאלי, מיזוג חיבורי (additive)
@@ -338,12 +352,12 @@
     let elong = 0, illum = 0;
     try { elong = AE.MoonPhase(time); } catch (e) {}
     try { illum = AE.Illumination(AE.Body.Moon, time).phase_fraction; } catch (e) {}
-    const sp = $('s_phase'); if (sp) sp.textContent = phaseLabel(elong);
+    const sp = $('s_phase'); if (sp) sp.textContent = T(phaseLabel(elong));
     const sc = $('s_pct'); if (sc) sc.textContent = Math.round(illum * 100) + '%';
 
     // HUD — ליקויים
     const ec = eclipses(date);
-    const fmt = e => e ? `${e.date.toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' })} (${EK[e.kind] || e.kind})` : '—';
+    const fmt = e => e ? `${e.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'short', year: 'numeric' })} (${T(EK[e.kind] || e.kind)})` : '—';
     const el1 = $('s_eclLun'); if (el1) el1.textContent = fmt(ec.lun);
     const el2 = $('s_eclSol'); if (el2) el2.textContent = fmt(ec.sol);
   }
@@ -367,7 +381,7 @@
       renderer.render(scene, camera);
 
       const sd = $('s_date');
-      if (sd) sd.textContent = this.date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+      if (sd) sd.textContent = this.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
       this._syncHebrew();
     },
 
@@ -378,9 +392,9 @@
 
     _syncDate() {
       const d = this.date, dy = $('s_day'), dm = $('s_month'), dyr = $('s_year');
-      if (dy && document.activeElement !== dy) dy.value = d.getDate();
-      if (dm && document.activeElement !== dm) dm.value = d.getMonth() + 1;
-      if (dyr && document.activeElement !== dyr) dyr.value = d.getFullYear();
+      if (dy && !window.__fieldLocked(dy)) dy.value = d.getDate();
+      if (dm && !window.__fieldLocked(dm)) dm.value = d.getMonth() + 1;
+      if (dyr && !window.__fieldLocked(dyr)) dyr.value = d.getFullYear();
     },
 
     sync() { this._syncDate(); },
@@ -388,7 +402,7 @@
     _setMode(m) {
       this.mode = m;
       document.querySelectorAll('#view-system3d .segmented button').forEach(b => b.classList.toggle('active', b.dataset.cam === m));
-      const lbl = $('s_view'); if (lbl) lbl.textContent = m === 'helio' ? 'מבט הליוצנטרי' : 'מבט גאוצנטרי';
+      const lbl = $('s_view'); if (lbl) lbl.textContent = m === 'helio' ? T('מבט הליוצנטרי') : T('מבט גאוצנטרי');
       this._reframe();
     },
 
@@ -407,22 +421,25 @@
     bind() {
       if (this._bound) return; this._bound = true;
       this._syncDate();
-      $('s_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
-      $('s_today').onclick = () => { this.date = new Date(); this.playing = false; $('s_play').textContent = '▶ הפעל'; this._syncDate(); };
+      $('s_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
+      $('s_today').onclick = () => { this.date = new Date(); this.playing = false; $('s_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('s_speed').oninput = e => { this.speed = +e.target.value; $('s_spdL').textContent = (+e.target.value).toFixed(1); };
       $('s_go').onclick = () => {
         const y = +$('s_year').value, m = +$('s_month').value, d = +$('s_day').value;
-        if (y && m && d) { this.date = new Date(y, m - 1, d, 12, 0, 0); this.playing = false; $('s_play').textContent = '▶ הפעל'; }
+        if (y && m && d) { this.date = new Date(y, m - 1, d, 12, 0, 0); this.playing = false; $('s_play').textContent = T('▶ הפעל'); }
       };
       document.querySelectorAll('#view-system3d .segmented button').forEach(b => { b.onclick = () => this._setMode(b.dataset.cam); });
       const pc = $('s_planets');
       if (pc) pc.onchange = () => { this.showPlanets = pc.checked; if (this.mode === 'helio') this._reframe(); };
       const jl = $('s_jumpLun');
-      if (jl) jl.onclick = () => { try { const e = AE.SearchLunarEclipse(this.date); this.date = e.peak.date; this.playing = false; $('s_play').textContent = '▶ הפעל'; this._syncDate(); } catch (er) {} };
+      if (jl) jl.onclick = () => { try { const e = AE.SearchLunarEclipse(this.date); this.date = e.peak.date; this.playing = false; $('s_play').textContent = T('▶ הפעל'); this._syncDate(); } catch (er) {} };
       const js = $('s_jumpSol');
-      if (js) js.onclick = () => { try { const e = AE.SearchGlobalSolarEclipse(this.date); this.date = e.peak.date; this.playing = false; $('s_play').textContent = '▶ הפעל'; this._syncDate(); } catch (er) {} };
+      if (js) js.onclick = () => { try { const e = AE.SearchGlobalSolarEclipse(this.date); this.date = e.peak.date; this.playing = false; $('s_play').textContent = T('▶ הפעל'); this._syncDate(); } catch (er) {} };
     },
   };
+
+  // רענון תוויות התלת-מימד בהחלפת שפה (נקרא מ-app.js)
+  sim.onLanguage = () => { repaintLabels(); };
 
   window.Sims.system3d = sim;
 })();

@@ -6,6 +6,7 @@
 "use strict";
 (function () {
   const AE = window.Astronomy;
+  const T = s => (window.I18N ? window.I18N.t(s) : s);
   const PI = Math.PI, RAD = PI / 180;
 
   const SIGNS = ['טלה','שור','תאומים','סרטן','אריה','בתולה','מאזניים','עקרב','קשת','גדי','דלי','דגים'];
@@ -18,7 +19,8 @@
     { key: 'mars',    he: 'מאדים',  color: '#d05030', r: 5 },
     { key: 'jupiter', he: 'צדק',    color: '#c8a870', r: 6 },
     { key: 'saturn',  he: 'שבתאי',  color: '#b0a060', r: 5 },
-    { key: 'mercury', he: 'חמה',    color: '#a09080', r: 4 },
+    // 'כוכב' (ולא 'חמה' הקצר): בשצ"ם חנכ"ל כ=כוכב, וגם נבדל מ'חמה'=שמש בתרגום
+    { key: 'mercury', he: 'כוכב',   color: '#a09080', r: 4 },
     { key: 'uranus',  he: 'אורנוס', color: '#70c0cc', r: 3 },
     { key: 'neptune', he: 'נפטון',  color: '#5060c8', r: 3 },
   ];
@@ -90,6 +92,25 @@
     const asc = rev360(Math.atan2(Math.cos(th), -(Math.sin(th) * Math.cos(ep) + Math.tan(ph) * Math.sin(ep))) / RAD);
     const mc  = rev360(Math.atan2(Math.sin(th), Math.cos(th) * Math.cos(ep)) / RAD);
     return { asc, mc };
+  }
+
+  // ══ ראשי חודשים — א' בחודש עברי הקרוב (מהיום והלאה) ═══════════════════
+  // הנידונים ברש"י ותוס' ר"ה וב"מ: ניסן, שבט, ואדר (בשנה מעוברת — אדר ב',
+  // הסמוך לניסן). האיתור: סריקת ימים קדימה עד למציאת א' בחודש המבוקש,
+  // לפי הלוח העברי של Intl. התוצאה נשמרת במטמון.
+  const RH_MONTHS = { nisan: ['Nisan'], shevat: ['Shevat'], adar: ['Adar', 'Adar II'] };
+  const _rhFmt = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' });
+  const _rhCache = Object.create(null);
+  function nextRoshChodesh(key) {
+    const dayKey = key + '|' + new Date().toDateString();
+    if (_rhCache[dayKey]) return _rhCache[dayKey];
+    const names = RH_MONTHS[key], start = new Date(); start.setHours(12, 0, 0, 0);
+    for (let i = 0; i < 400; i++) {
+      const d = new Date(start.getTime() + i * 86400000);
+      const p = {}; for (const x of _rhFmt.formatToParts(d)) p[x.type] = x.value;
+      if (+p.day === 1 && names.includes(p.month)) return (_rhCache[dayKey] = d);
+    }
+    return null;
   }
 
   // המרת מספר לאותיות עבריות (גימטריה) עם גרשיים
@@ -190,7 +211,7 @@
     for (let i = 0; i < 12; i++) {
       const midA = A(i * 30 + 15);
       ctx.fillStyle = cv('--ill-text') || '#e0e0e0';
-      ctx.fillText(SIGNS[i], cx + labelR * Math.cos(midA), cy + labelR * Math.sin(midA));
+      ctx.fillText(T(SIGNS[i]), cx + labelR * Math.cos(midA), cy + labelR * Math.sin(midA));
     }
 
     // מסגרות רינג
@@ -213,7 +234,7 @@
     ctx.fillStyle = 'rgba(255,200,80,0.7)';
     ctx.font = `${Math.max(8, fontSize - 2)}px sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('0° טלה', cx + (innerR - 22) * Math.cos(a0), cy + (innerR - 22) * Math.sin(a0));
+    ctx.fillText(T('0° טלה'), cx + (innerR - 22) * Math.cos(a0), cy + (innerR - 22) * Math.sin(a0));
 
     // ── האופק: החצי שמתחת לאופק מוצל, וקו האופק מסומן מהמזל העולה אל השוקע ──
     if (hz) {
@@ -245,7 +266,7 @@
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
         ctx.fillStyle = '#7ee081'; ctx.fillText(txt, x, y);
       };
-      tag(aA, 'מזרח · עולה'); tag(aD, 'מערב · שוקע'); tag(aM, 'אמצע הרקיע');
+      tag(aA, T('מזרח · עולה')); tag(aD, T('מערב · שוקע')); tag(aM, T('אמצע הרקיע'));
     }
 
     // ── גרמי שמים ──
@@ -279,7 +300,7 @@
       ctx.font = `bold ${lfs}px sans-serif`;
       ctx.fillStyle = body.color;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(body.he, x + (dx / d) * (body.r + 13), y + (dy / d) * (body.r + 13));
+      ctx.fillText(T(body.he), x + (dx / d) * (body.r + 13), y + (dy / d) * (body.r + 13));
     }
 
     // ── הארץ במרכז ──
@@ -292,7 +313,7 @@
     ctx.fillStyle = cv('--ill-text') || '#ddd';
     ctx.font = `${Math.max(8, maxR * 0.055)}px sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('ארץ', cx, cy + eR + 4);
+    ctx.fillText(T('ארץ'), cx, cy + eR + 4);
   }
 
   // ══ פאנל מיקומים ══════════════════════════════════════════════════════
@@ -303,8 +324,8 @@
       const lon = lons[b.key]; if (lon === undefined) return '';
       const deg = Math.floor(((lon % 360) + 360) % 360);
       return `<div style="display:flex;gap:6px;align-items:center;padding:2px 0;font-size:0.75em">
-        <span style="color:${b.color};font-weight:bold;min-width:40px">${b.he}</span>
-        <span style="flex:1">${signOf(lon)}</span>
+        <span style="color:${b.color};font-weight:bold;min-width:40px">${T(b.he)}</span>
+        <span style="flex:1">${T(signOf(lon))}</span>
         <span style="opacity:.6;direction:ltr;font-size:0.9em">${deg}°</span>
       </div>`;
     }).join('');
@@ -334,10 +355,10 @@
       const hz = this.horizon ? horizonPoints(this.date, this.lat, this.lon) : null;
       drawWheel(ctx, W, H, this.date, hz);
       $('z_clock').textContent = this.date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-      $('z_asc').textContent = hz ? signOf(hz.asc) + ' ' + Math.floor(hz.asc % 30) + '°' : '—';
-      $('z_mc').textContent  = hz ? signOf(hz.mc)  + ' ' + Math.floor(hz.mc  % 30) + '°' : '—';
+      $('z_asc').textContent = hz ? T(signOf(hz.asc)) + ' ' + Math.floor(hz.asc % 30) + '°' : '—';
+      $('z_mc').textContent  = hz ? T(signOf(hz.mc))  + ' ' + Math.floor(hz.mc  % 30) + '°' : '—';
       const hud = $('z_date');
-      if (hud) hud.textContent = this.date.toLocaleDateString('he-IL', { day:'numeric', month:'long', year:'numeric' });
+      if (hud) hud.textContent = this.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day:'numeric', month:'long', year:'numeric' });
       const hudHe = $('z_date_he');
       if (hudHe) {
         const ms = this.date.getTime();
@@ -352,7 +373,7 @@
 
     _syncDate() {
       const d = this.date;
-      const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
+      const set = (id, v) => { const el = $(id); if (el && !window.__fieldLocked(el)) el.value = v; };
       set('z_day', d.getDate()); set('z_month', d.getMonth() + 1); set('z_year', d.getFullYear());
       set('z_hh', d.getHours()); set('z_mi', d.getMinutes());
       const h = d.getHours() + d.getMinutes() / 60;
@@ -371,7 +392,7 @@
       el.min = r.min; el.max = r.max; el.step = r.step;
       this.speed = this.speeds[u]; el.value = this.speed;
       $('z_spdL').textContent = this._spdTxt();
-      $('z_unitL').textContent = u === 'day' ? 'ימים' : 'שעות';
+      $('z_unitL').textContent = u === 'day' ? T('ימים') : T('שעות');
     },
 
     // קביעת השעה ביממה תוך שמירה על התאריך
@@ -384,21 +405,34 @@
     bind() {
       if (this._bound) return; this._bound = true;
       this._syncDate();
-      $('z_play').onclick   = e => { this.playing = !this.playing; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
-      $('z_today').onclick  = () => { this.date = new Date(); this.playing = false; $('z_play').textContent = '▶ הפעל'; this._syncDate(); };
+      $('z_play').onclick   = e => { this.playing = !this.playing; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
+      $('z_today').onclick  = () => { this.date = new Date(); this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('z_speed').oninput  = e => { this.speed = this.speeds[this.unit] = +e.target.value; $('z_spdL').textContent = this._spdTxt(); };
       $('z_go').onclick     = () => {
         const y = +$('z_year').value, m = +$('z_month').value, d = +$('z_day').value;
         const hh = +$('z_hh').value || 0, mi = +$('z_mi').value || 0;
         this.date = new Date(y, m - 1, d, hh, mi, 0);
-        this.playing = false; $('z_play').textContent = '▶ הפעל';
+        this.playing = false; $('z_play').textContent = T('▶ הפעל');
       };
-      $('z_hour').oninput = e => { this._setHour(+e.target.value); this.playing = false; $('z_play').textContent = '▶ הפעל'; };
+      $('z_hour').oninput = e => { this._setHour(+e.target.value); this.playing = false; $('z_play').textContent = T('▶ הפעל'); };
+      // ראשי חודשים — קפיצה לא' בחודש הקרוב, תוך שמירת השעה הנוכחית
+      document.querySelectorAll('#view-zodiac [data-rh]').forEach(b => b.onclick = () => {
+        const d = nextRoshChodesh(b.dataset.rh);
+        if (!d) return;
+        const cur = this.date;
+        this.date = new Date(d.getFullYear(), d.getMonth(), d.getDate(), cur.getHours(), cur.getMinutes(), 0);
+        this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
+      });
+      // בוקר / לילה — קביעת השעה בלבד, התאריך נשמר
+      document.querySelectorAll('#view-zodiac [data-tod]').forEach(b => b.onclick = () => {
+        this._setHour(+b.dataset.tod);
+        this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
+      });
       $('z_horizon').onchange = e => this.horizon = e.target.checked;
       $('z_lat').oninput = e => this.lat = Math.max(-89, Math.min(89, +e.target.value || 0));
       $('z_lon').oninput = e => this.lon = Math.max(-180, Math.min(180, +e.target.value || 0));
-      document.querySelectorAll('#view-zodiac .seg button').forEach(b => b.onclick = () => {
-        document.querySelectorAll('#view-zodiac .seg button').forEach(x => x.classList.toggle('active', x === b));
+      document.querySelectorAll('#view-zodiac .seg button[data-unit]').forEach(b => b.onclick = () => {
+        document.querySelectorAll('#view-zodiac .seg button[data-unit]').forEach(x => x.classList.toggle('active', x === b));
         this._setUnit(b.dataset.unit);
       });
       this._setUnit('hour');
