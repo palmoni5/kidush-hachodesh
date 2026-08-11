@@ -30,6 +30,8 @@
           <div class="hud">
             <div class="row"><span>יום בחודש</span><b id="m_day">1</b></div>
             <div class="row"><span>אחוז הירח הנראה</span><b id="m_pct">0%</b></div>
+            <div class="row"><span>זריחת הירח (ירושלים)</span><b id="m_rise">—</b></div>
+            <div class="row"><span>שקיעת הירח (ירושלים)</span><b id="m_set">—</b></div>
             <div class="big" id="m_phase">מולד</div>
           </div>
         </div>
@@ -54,7 +56,8 @@
               <span class="seasondot" style="background:var(--color-outline)"></span> ירח — מקיף את הארץ<br><br>
               חודש הלבנה (סינודי) = 29.53 יום<br>
               (= כ"ט יום י"ב שעות ותשצ"ג חלקים = הזמן שבין מולד למולד).<br><br>
-              הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.
+              הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.<br><br>
+              זמני זריחת הירח ושקיעתו מוצגים ליום שמתאים לגיל הירח שבאיור (סביב היום הנוכחי), לפי אופק ירושלים — להמחשה בלבד.
             </div>
           </div>
         </aside>
@@ -151,7 +154,9 @@
               <tr><td>תקופת רב אדא</td><td>365י' 5ש' 997ח' 48ר'</td></tr>
               <tr><td>כל תקופה</td><td>91 ימים 7.5 שעות</td></tr>
             </table>
-            <div class="htxt" style="margin-top:8px">ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז (היום הארוך), טבת (הלילה הארוך).</div>
+            <div class="htxt" style="margin-top:8px">ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז וטבת (הקיצון).</div>
+            <div class="htxt" style="margin-top:8px">מצפון לקו המשוה: תמוז=קיץ, טבת=חורף. מדרום לקו המשוה: תמוז=חורף, טבת=קיץ.</div>
+            <div class="htxt" style="margin-top:8px"><b>אזהרה:</b> הזמנים המוצגים (זריחה, שקיעה, חצות וכד') אינם בהכרח מדויקים ואין לסמוך עליהם כלל — הם נועדו להמחשה בלבד.</div>
           </div>
         </aside>
       </section>
@@ -290,6 +295,7 @@
         <div class="stage"><canvas id="datelineCanvas"></canvas>
           <div class="hud">
             <div class="big">קו התאריך</div>
+            <div class="row"><span>שעון ישראל</span><b id="d_iltime">—</b></div>
             <div class="row"><span>מרכז המבט</span><b id="d_center">—</b></div>
             <div class="row"><span style="color:#dfe6ef">קו זמן יקום מתואם (גריניץ')</span><b>0°</b></div>
             <div class="row"><span style="color:#ffd24d">חזון איש</span><b>125.2° מזרח</b></div>
@@ -298,6 +304,33 @@
           </div>
         </div>
         <aside class="panel">
+          <div class="card">
+            <h2>בקרת זמן (שעון ישראל)</h2>
+            <div class="ctrls">
+              <button class="btn-primary" id="d_play">▶ הפעל</button>
+              <button class="btn-secondary" id="d_now">🕐 עכשיו</button>
+            </div>
+            <label class="field">מהירות: <b id="d_spdL">0.5</b> שעות/שנייה</label>
+            <input type="range" id="d_speed" min="0.1" max="6" step="0.1" value="0.5" />
+            <label class="field">הכנס תאריך ושעה</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+              <label class="field">יום<input type="number" id="d_dd" min="1" max="31" /></label>
+              <label class="field">חודש<input type="number" id="d_mm" min="1" max="12" /></label>
+              <label class="field">שנה<input type="number" id="d_yy" /></label>
+              <label class="field">שעה<input type="number" id="d_hh" min="0" max="23" /></label>
+              <label class="field">דקות<input type="number" id="d_mi" min="0" max="59" /></label>
+            </div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-primary" id="d_go">הצג</button>
+            </div>
+            <div class="chk" style="margin-top:6px"><input type="checkbox" id="d_daynight" checked />
+              <label for="d_daynight">הצג יום ולילה על הגלובוס</label></div>
+            <div class="htxt" style="margin-top:6px">הפעילו וצפו: כשהחמה שוקעת במקומות שבמחלוקת, היום מתחלף לפי שיטה אחת ועדיין לא לפי חברתה.</div>
+          </div>
+          <div class="card">
+            <h2>מקומות שהנדון משליך עליהם</h2>
+            <div id="d_places"></div>
+          </div>
           <div class="card">
             <h2>סיבוב הגלובוס</h2>
             <div class="htxt">גררו את הגלובוס לסיבוב.</div>

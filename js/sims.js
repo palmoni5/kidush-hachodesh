@@ -93,6 +93,17 @@ window.Sims = (function () {
     const refNew = Date.UTC(2000, 0, 6, 18, 14, 0);
     return ((((Date.now() - refNew) / 86400000) % A.SYNODIC) + A.SYNODIC) % A.SYNODIC;
   }
+  // זריחת/שקיעת הירח בירושלים ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
+  const _jlmT = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
+  function moonRiseSet(date) {
+    try {
+      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.22, 0);
+      const t = AE.MakeTime(date);
+      const r = AE.SearchRiseSet(AE.Body.Moon, obs, +1, t, 1.2);
+      const s = AE.SearchRiseSet(AE.Body.Moon, obs, -1, t, 1.2);
+      return { rise: r ? _jlmT.format(r.date) : '—', set: s ? _jlmT.format(s.date) : '—' };
+    } catch (e) { return { rise: '—', set: '—' }; }
+  }
   // שורת הסבר עדינה (ללא רקע) למעלה — מוצגת בזמן השהיה
   function drawHint(ctx, W, txt = 'לחצו ▶ הפעל כדי להניע את הסיבוב') {
     ctx.fillStyle = cv('--ill-muted'); ctx.font = '12px sans-serif';
@@ -164,6 +175,17 @@ window.Sims = (function () {
       $('m_day').textContent = Math.floor(this.day % A.SYNODIC) + 1;
       $('m_pct').textContent = pct + '%';
       $('m_phase').textContent = A.moonPhaseLabel(this.day);
+      // זריחת/שקיעת הירח — ליום שגיל הירח שלו הוא היום המוצג (יחסית להיום).
+      // החיפוש יקר, ולכן מחושב רק כשהיום המוצג משתנה בפועל (רבע יום).
+      const rsKey = Math.floor(this.day * 4);
+      if (this._rsKey !== rsKey) {
+        this._rsKey = rsKey;
+        const d = new Date(Date.now() + (this.day - moonAgeToday()) * 86400000);
+        d.setHours(0, 0, 0, 0);
+        this._rs = moonRiseSet(d);
+      }
+      $('m_rise').textContent = this._rs.rise;
+      $('m_set').textContent = this._rs.set;
       // במסך צר מורידים את כל ההרכב מתחת ל-HUD (top=0 בדסקטופ → פריסה מקורית)
       if (_layout.moonTop === null) _layout.moonTop = hudInset($('moonCanvas'), W, 0);
       const top = _layout.moonTop;
@@ -341,11 +363,16 @@ window.Sims = (function () {
       // נקודה מוסתרת אם היא נופלת בתוך דיסקת הכדור וגם בצדו הרחוק (רכיב עומק שלילי)
       const occ = (vd, pt) => { const dx = pt.x - cx, dy = pt.y - cy; return dx*dx + dy*dy < gR*gR && (vd.E*ev[0] + vd.N*ev[1] + vd.U*ev[2]) < 0; };
       drawGlobe(ctx, cx, cy, gR, v, this.viewAz, this.lat, this.lon);
-      // מסלולי ייחוס + תוויות
-      this.circle(ctx, 23.44, cx, cy, R, cv('--ill-summer'), 1.2, occ);
+      // מסלולי ייחוס + תוויות. מדרום לקו המשוה הקיץ והחורף מתהפכים:
+      // המסלול הגבוה שם (נטייה דרומית, תקופת טבת) הוא הקיץ.
+      const south = this.lat < 0;
+      this.circle(ctx, 23.44, cx, cy, R, cv(south ? '--ill-winter' : '--ill-summer'), 1.2, occ);
       this.circle(ctx, 0, cx, cy, R, cv('--ill-text'), 1.2, occ);
-      this.circle(ctx, -23.44, cx, cy, R, cv('--ill-winter'), 1.2, occ);
-      for (const [dc, lbl, col] of [[23.44, 'קיץ', cv('--ill-summer')], [0, 'שוויון', cv('--ill-text')], [-23.44, 'חורף', cv('--ill-winter')]]) {
+      this.circle(ctx, -23.44, cx, cy, R, cv(south ? '--ill-summer' : '--ill-winter'), 1.2, occ);
+      for (const [dc, lbl, col] of [
+          [23.44, south ? 'חורף' : 'קיץ', cv(south ? '--ill-winter' : '--ill-summer')],
+          [0, 'שוויון', cv('--ill-text')],
+          [-23.44, south ? 'קיץ' : 'חורף', cv(south ? '--ill-summer' : '--ill-winter')]]) {
         const tp = this.proj(A.sunHorizon(0, dc, this.lat), cx, cy, R);
         ctx.fillStyle = col; ctx.font = '11px sans-serif'; ctx.fillText(lbl, tp.x + 24, tp.y - 2);
       }
@@ -360,11 +387,13 @@ window.Sims = (function () {
       this.hud(v.U);
     },
     season() {
+      // מדרום לקו המשוה העונות מהופכות: תקופת תמוז שם חורף ותקופת טבת קיץ
+      const south = this.lat < 0;
       const t = ((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
-      if (t < 91.31) return { n: 'אביב · ניסן', c: '--ill-spring' };
-      if (t < 182.62) return { n: 'קיץ · תמוז', c: '--ill-summer' };
-      if (t < 273.94) return { n: 'סתיו · תשרי', c: '--ill-autumn' };
-      return { n: 'חורף · טבת', c: '--ill-winter' };
+      if (t < 91.31) return south ? { n: 'סתיו · ניסן', c: '--ill-autumn' } : { n: 'אביב · ניסן', c: '--ill-spring' };
+      if (t < 182.62) return south ? { n: 'חורף · תמוז', c: '--ill-winter' } : { n: 'קיץ · תמוז', c: '--ill-summer' };
+      if (t < 273.94) return south ? { n: 'אביב · תשרי', c: '--ill-spring' } : { n: 'סתיו · תשרי', c: '--ill-autumn' };
+      return south ? { n: 'קיץ · טבת', c: '--ill-summer' } : { n: 'חורף · טבת', c: '--ill-winter' };
     },
     hud(Unow) {
       const dec = A.solarDecl(this.dayY), phi = this.lat;
@@ -407,8 +436,10 @@ window.Sims = (function () {
       { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; }   // ברירת מחדל: היום והשעה הנוכחיים
       $('y_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
       $('y_today').onclick = () => { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; this.playing = false; $('y_play').textContent = '▶ הפעל'; };
-      $('y_noon').onclick = () => { this.hour = 12; };
-      $('y_midnight').onclick = () => { this.hour = 0; };
+      // חצות אמיתי: 12:00 בשעה השמשית מומר לשעון האזרחי — בירושלים (חורף) ~11:39,
+      // ובשעון קיץ ~12:39; לא 12:00 שעל השעון.
+      $('y_noon').onclick = () => { this.hour = ((this.civilHour(12) % 24) + 24) % 24; };
+      $('y_midnight').onclick = () => { this.hour = ((this.civilHour(0) % 24) + 24) % 24; };
       $('y_speed').oninput = e => this.speed = +e.target.value;
       $('y_hour').oninput = e => { this.hour = +e.target.value; this.playing = false; $('y_play').textContent = '▶ הפעל'; };
       $('y_dayY').oninput = e => this.dayY = +e.target.value;
@@ -420,16 +451,22 @@ window.Sims = (function () {
         this.dayY = dayYFromDate(Y, M, D);
       };
       // מיקום הצופה: בחירת עיר קובעת רוחב+אורך; עריכה ידנית מעבירה ל"מותאם אישית"
-      $('y_city').onchange = e => {
+      // מעבר מקום שומר על אותו רגע פיזי: השעון מוסט בהפרש אזורי הזמן, כך
+      // שבחירת ניו יורק בשעה 21:00 בירושלים תציג 14:00 — השעה המקומית שם.
+      const reClock = fn => {
+        const o = this.tzOff(); fn();
+        this.hour = (((this.hour + this.tzOff() - o) % 24) + 24) % 24;
+      };
+      $('y_city').onchange = e => reClock(() => {
         const opt = e.target.selectedOptions[0], v = e.target.value;
         if (!v) { this.tz = null; this.cityName = 'מותאם אישית'; return; }
         const [la, lo] = v.split(',').map(Number);
         this.lat = la; this.lon = lo; $('y_lat').value = la; $('y_lon').value = lo;
         this.tz = opt.dataset.tz || null; this.cityName = opt.textContent.trim();
-      };
+      });
       const custom = () => { $('y_city').value = ''; this.tz = null; this.cityName = 'מותאם אישית'; };
-      $('y_lat').oninput = e => { this.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); custom(); };
-      $('y_lon').oninput = e => { this.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); custom(); };
+      $('y_lat').oninput = e => reClock(() => { this.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); custom(); });
+      $('y_lon').oninput = e => reClock(() => { this.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); custom(); });
       $('y_auto').onchange = e => this.auto = e.target.checked;
       $('y_rotR').onclick = () => { this.viewAz = (this.viewAz + 10) % 360; };
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };

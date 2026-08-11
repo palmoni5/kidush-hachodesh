@@ -84,6 +84,9 @@
       };
       const up = mk('num-up', '▲', 'הגדל'), down = mk('num-down', '▼', 'הקטן');
       const bump = dir => {
+        // הפוקוס מועבר לשדה עצמו: sync() של האיורים דורס שדות שאינם בפוקוס
+        // (document.activeElement), ובלי זה הערך היה קופץ מיד חזרה לערך הקודם.
+        inp.focus();
         if (inp.value === '') inp.value = inp.min || 0;
         if (dir > 0) inp.stepUp(); else inp.stepDown();
         inp.dispatchEvent(new Event('input', { bubbles: true }));

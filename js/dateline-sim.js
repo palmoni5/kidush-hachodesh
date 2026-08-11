@@ -8,6 +8,7 @@
 // לדעתו אין מחלקים יבשה אחת לשני תאריכים, וכל המחובר יבשית למערב הקו נדון כמערב.
 "use strict";
 (function () {
+  const AE = window.Astronomy;
   const $ = id => document.getElementById(id);
   const RAD = Math.PI / 180, DEG = 180 / Math.PI;
 
@@ -18,19 +19,63 @@
 
   const COL = { utc: '#dfe6ef', ci: '#ffd24d', grit: '#5ad2ff', idl: '#ff6b6b', jlem: '#7ee081' };
 
-  // מהלך קו החזו"א בפועל: יורד לאורך 125.24°E, ובמפגש עם יבשת הנמשכת ממערבו
-  // הוא נוטה מזרחה עד סוף אותה יבשת (אסיה, ואחר כך אוסטרליה) וחוזר אל הקו הישר.
+  // ══ מקומות שהנדון משליך עליהם ═══════════════════════════════════════
+  // טוקיו וּוולינגטון — ממזרח לקו החזו"א אך ממערב ל-180 (יום אחד אחורה לחזו"א);
+  // הונולולו — ממערב לקו הגרי"מ אך ממזרח ל-180 (יום אחד קדימה לגרי"מ).
+  const PLACES = [
+    { he: 'טוקיו — יפן',           short: 'טוקיו',    tz: 'Asia/Tokyo',       lat: 35.68,  lon: 139.69 },
+    { he: 'וולינגטון — ניו זילנד', short: 'וולינגטון', tz: 'Pacific/Auckland', lat: -41.29, lon: 174.78 },
+    { he: 'הונולולו — הוואי',      short: 'הונולולו',  tz: 'Pacific/Honolulu', lat: 21.31,  lon: -157.86 },
+  ];
+  const DAYNAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  const _fmtCache = Object.create(null);
+  function tzFmt(tz) {
+    return _fmtCache[tz] || (_fmtCache[tz] = new Intl.DateTimeFormat('en-US',
+      { timeZone: tz, weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }));
+  }
+  // היום בשבוע והשעה המקומיים-אזרחיים במקום נתון
+  function localParts(date, tz) {
+    const p = {}; for (const x of tzFmt(tz).formatToParts(date)) p[x.type] = x.value;
+    return { d: { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[p.weekday], h: (+p.hour) % 24, m: +p.minute };
+  }
+  // הפרש הימים מהיום האזרחי לכל שיטה, לפי קו האורך (הקווים הישרים):
+  // בין קו החזו"א ל-180 — לחזו"א היום אחד אחורה; בין 180 לקו הגרי"מ — לגרי"מ אחד קדימה.
+  function dayOffsets(lonE) {
+    const L = ((lonE % 360) + 360) % 360;
+    return { intl: 0, ci: (L > CI_LON && L <= 180) ? -1 : 0, grit: (L > 180 && L < 360 + GRIT_LON) ? 1 : 0 };
+  }
+  // "יום שישי" / "ליל שבת": הלילה שמן הערב (מ-18:00 בקירוב) שייך ליום שאחריו
+  function jLabel(d, h) {
+    d = ((d % 7) + 7) % 7;
+    if (h >= 18) return 'ליל ' + DAYNAMES[(d + 1) % 7];
+    if (h < 6) return 'ליל ' + DAYNAMES[d];
+    return 'יום ' + DAYNAMES[d];
+  }
+
+  // הנקודה שמתחת לשמש (subsolar) — להצללת יום/לילה על הגלובוס
+  function subsolar(date) {
+    try {
+      const t = AE.MakeTime(date);
+      const eq = AE.Equator(AE.Body.Sun, t, new AE.Observer(0, 0, 0), true, true);
+      let lon = (eq.ra - AE.SiderealTime(t)) * 15;
+      lon = ((lon + 180) % 360 + 360) % 360 - 180;
+      return { lat: eq.dec, lon };
+    } catch (e) { return null; }
+  }
+
+  // מהלך קו החזו"א בפועל: הקו לעולם אינו נע ממערב ל-90° מירושלים. על הים הוא
+  // יורד ישר לאורך 125.24°E, ובמפגש עם יבשת שחלקה נמשך מזרחה מן הקו (אסיה,
+  // אוסטרליה) הוא נוטה מזרחה סביב סוף היבשת — שהמחובר יבשית נדון כמערב —
+  // וחוזר אל הקו הישר עם רדתו אל הים. הקו הישר בתוך היבשות מסומן במקווקו.
   // הקואורדינטות מקורבות — להמחשת העיקרון, לא לפסיקה למעשה.
   const CI_PATH = [
     [90, CI_LON], [74, CI_LON],
-    // חופה המזרחי של אסיה: סיביר → צ'וקוטקה → קמצ'טקה → ים אוכוצק → קוריאה
+    // הקפת קצה אסיה מזרחה: סיביר → צ'וקוטקה → קמצ'טקה → ים אוכוצק → קוריאה
     [73, 129], [72, 140], [70, 160], [69, 180], [66, -170], [64, -173], [62, 179],
     [60, 170], [56, 163], [51, 157], [54, 155], [59, 152], [59, 143], [53, 141],
-    [48, 140], [43, 132], [39, 128], [35, 129], [37, 126], [34, 126],
-    // חופה של סין → וייטנאם → חצי האי מלאיה
-    [32, 121], [25, 119], [22, 114], [21, 108], [16, 109], [11, 109], [9, 106], [6, 103], [1.3, 104],
-    // מכאן ואילך אין יבשת מחוברת — חזרה אל הקו הישר
-    [1.3, CI_LON], [-13.5, CI_LON],
+    [48, 140], [43, 132], [39, 128], [35, 129], [34.3, 126.5],
+    // מדרום לקוריאה הקו יורד אל הים — חזרה אל הקו הישר, ישר עד אוסטרליה
+    [33, CI_LON], [-13.5, CI_LON],
     // אוסטרליה: חופה הצפוני ואז החוף המזרחי דרומה
     [-12, 130], [-12, 136], [-11, 142], [-16, 146], [-24, 153], [-28, 153.6],
     [-33, 151.3], [-37, 150], [-39, 146.4],
@@ -68,12 +113,13 @@
     return c;
   }
 
-  // ── רינדור גוף הכדור לחוצץ חוץ-מסך; מחושב מחדש רק כשהמבט/הגודל משתנים ──
+  // ── רינדור גוף הכדור לחוצץ חוץ-מסך; מחושב מחדש רק כשהמבט/הגודל/השמש משתנים ──
   const _cache = { key: '', cv: null };
-  function globeBuffer(lat0, lon0, R) {
+  function globeBuffer(lat0, lon0, R, sun) {
     const tex = texture(); if (!tex) return null;
     const px = Math.max(64, Math.min(900, Math.round(2 * R * (window.devicePixelRatio || 1))));
-    const key = lat0.toFixed(2) + '|' + lon0.toFixed(2) + '|' + px;
+    const sunKey = sun ? sun.lat.toFixed(1) + ',' + sun.lon.toFixed(1) : 'x';
+    const key = lat0.toFixed(2) + '|' + lon0.toFixed(2) + '|' + px + '|' + sunKey;
     if (_cache.key === key) return _cache.cv;
     if (!_cache.cv) _cache.cv = document.createElement('canvas');
     const cvs = _cache.cv;
@@ -85,6 +131,12 @@
     const u0 = -Math.sin(la) * Math.cos(lo), u1 = -Math.sin(la) * Math.sin(lo), u2 = Math.cos(la);
     const v0 = Math.cos(la) * Math.cos(lo), v1 = Math.cos(la) * Math.sin(lo), v2 = Math.sin(la);
     const td = tex.data, tw = tex.w, th = tex.h, C = px / 2;
+    // וקטור השמש במערכת הגאוגרפית (x לכיוון קו אורך 0 על המשווה)
+    let s0 = 0, s1 = 0, s2 = 0;
+    if (sun) {
+      const sl = sun.lat * RAD, so = sun.lon * RAD;
+      s0 = Math.cos(sl) * Math.cos(so); s1 = Math.cos(sl) * Math.sin(so); s2 = Math.sin(sl);
+    }
     for (let y = 0; y < px; y++) {
       const b = (C - y - 0.5) / C;
       for (let x = 0; x < px; x++) {
@@ -96,8 +148,15 @@
         let vv = 0.5 - Math.asin(Math.max(-1, Math.min(1, Pz))) / Math.PI;
         vv = vv < 0 ? 0 : (vv > 0.999999 ? 0.999999 : vv);
         const ti = ((Math.floor(vv * th) * tw) + Math.floor(uu * tw)) << 2;
-        // הבהרה קלה — התמונה כהה יחסית, וכאן אין הצללת יום/לילה
-        out[o] = td[ti] * 1.32; out[o + 1] = td[ti + 1] * 1.32; out[o + 2] = td[ti + 2] * 1.32; out[o + 3] = 255;
+        // הצללת יום/לילה לפי כיוון השמש; צד הלילה מעומעם אך נשאר קריא,
+        // כדי שהקווים והמפה יוסיפו להיראות. בלי שמש — הבהרה אחידה.
+        let shf = 1.32;
+        if (sun) {
+          const d = Px * s0 + Py * s1 + Pz * s2;
+          const t = d <= -0.05 ? 0 : d >= 0.05 ? 1 : (d + 0.05) / 0.1;
+          shf = 0.45 + 0.95 * t;
+        }
+        out[o] = td[ti] * shf; out[o + 1] = td[ti + 1] * shf; out[o + 2] = td[ti + 2] * shf; out[o + 3] = 255;
       }
     }
     g.putImageData(img, 0, 0);
@@ -107,8 +166,9 @@
 
   const sim = {
     lat0: 10, lon0: 125, playing: false, _bound: false,
-    show: { utc: true, ci: true, grit: true, idl: true, grid: true },
-    step() {},
+    date: new Date(), speed: 0.5,          // מהירות ההנעה: שעות לשנייה
+    show: { utc: true, ci: true, grit: true, idl: true, grid: true, daynight: true },
+    step(dt) { if (this.playing) this.date = new Date(this.date.getTime() + this.speed * dt * 3600000); },
 
     // היטל נקודה גאוגרפית למסך; vis=false כשהיא בצדו הרחוק של הכדור
     proj(lat, lon, cx, cy, R) {
@@ -163,7 +223,8 @@
       const L = window.Sims.stageLayout($('datelineCanvas'), W, H);
       const cx = L.x + L.w / 2, cy = L.y + L.h / 2, R = Math.max(60, Math.min(L.w, L.h) / 2 - 18);
 
-      const buf = globeBuffer(this.lat0, this.lon0, R);
+      const sun = this.show.daynight ? subsolar(this.date) : null;
+      const buf = globeBuffer(this.lat0, this.lon0, R, sun);
       if (buf) ctx.drawImage(buf, cx - R, cy - R, 2 * R, 2 * R);
       else { ctx.fillStyle = '#2f6fb0'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.fill(); }
 
@@ -197,6 +258,18 @@
         ctx.fillStyle = COL.jlem; ctx.fillText('ירושלים', j.x, j.y - 9);
       }
 
+      // המקומות שהנדון משליך עליהם
+      for (const p of PLACES) {
+        const q = this.proj(p.lat, p.lon, cx, cy, R);
+        if (!q.vis) continue;
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, 2 * Math.PI); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.65)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        const w = ctx.measureText(p.short).width + 8;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(q.x - w / 2, q.y + 5, w, 14);
+        ctx.fillStyle = '#ffffff'; ctx.fillText(p.short, q.x, q.y + 7);
+      }
+
       // תוויות הקווים — במרווחים אנכיים שונים כדי שלא ייערמו
       if (this.show.utc)  this.label(ctx, 'גריניץ׳ 0°', 0, cx, cy, R, COL.utc, -34);
       if (this.show.ci)   this.label(ctx, 'חזו״א', CI_LON, cx, cy, R, COL.ci, -12);
@@ -208,6 +281,32 @@
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.stroke();
 
       $('d_center').textContent = fmtLon(this.lon0) + ' · ' + fmtLat(this.lat0);
+      // שעון ישראל + לוח המקומות — מתעדכנים רק כשהדקה משתנה (Intl יקר יחסית)
+      const mKey = Math.floor(this.date.getTime() / 60000);
+      if (this._mKey !== mKey) { this._mKey = mKey; this._updateClocks(); }
+    },
+
+    _updateClocks() {
+      const il = localParts(this.date, 'Asia/Jerusalem');
+      const tt = c => String(c.h).padStart(2, '0') + ':' + String(c.m).padStart(2, '0');
+      $('d_iltime').textContent = jLabel(il.d, il.h) + ' ' + tt(il);
+      const el = $('d_places'); if (!el) return;
+      el.innerHTML = PLACES.map(p => {
+        const c = localParts(this.date, p.tz), o = dayOffsets(p.lon), t = tt(c);
+        return `<div style="margin-bottom:9px;font-size:0.75em;line-height:1.75">
+          <b>${p.he}</b><br>
+          <span style="color:${COL.idl}">■</span> הסכמי אוה״ע: <b>${jLabel(c.d + o.intl, c.h)}</b> שעה ${t}<br>
+          <span style="color:${COL.ci}">■</span> שיטת החזו״א: <b>${jLabel(c.d + o.ci, c.h)}</b> שעה ${t}<br>
+          <span style="color:${COL.grit}">■</span> שיטת הגרי״מ: <b>${jLabel(c.d + o.grit, c.h)}</b> שעה ${t}
+        </div>`;
+      }).join('');
+    },
+
+    _syncDate() {
+      const d = this.date;
+      const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
+      set('d_dd', d.getDate()); set('d_mm', d.getMonth() + 1); set('d_yy', d.getFullYear());
+      set('d_hh', d.getHours()); set('d_mi', d.getMinutes());
     },
 
     sync() {
@@ -215,20 +314,32 @@
       $('d_latL').textContent = fmtLat(this.lat0);
       if (document.activeElement !== $('d_lon')) $('d_lon').value = Math.round(this.lon0);
       if (document.activeElement !== $('d_lat')) $('d_lat').value = Math.round(this.lat0);
+      this._syncDate();
     },
 
     goto(lon, lat) { this.lon0 = lon; this.lat0 = (lat === undefined ? this.lat0 : lat); },
 
     bind() {
       if (this._bound) return; this._bound = true;
+      this._syncDate();
       $('d_lon').oninput = e => this.lon0 = +e.target.value;
       $('d_lat').oninput = e => this.lat0 = +e.target.value;
       $('d_goJlem').onclick = () => this.goto(JLEM_LON, 25);
       $('d_goCI').onclick   = () => this.goto(CI_LON, 10);
       $('d_goGRIT').onclick = () => this.goto(GRIT_LON, 10);
       $('d_goIDL').onclick  = () => this.goto(IDL_LON, 10);
-      for (const [id, k] of [['d_utc','utc'],['d_ci','ci'],['d_grit','grit'],['d_idl','idl'],['d_grid','grid']])
+      for (const [id, k] of [['d_utc','utc'],['d_ci','ci'],['d_grit','grit'],['d_idl','idl'],['d_grid','grid'],['d_daynight','daynight']])
         $(id).onchange = e => this.show[k] = e.target.checked;
+      // בקרת זמן (שעון ישראל = שעון המחשב)
+      $('d_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
+      $('d_now').onclick = () => { this.date = new Date(); this.playing = false; $('d_play').textContent = '▶ הפעל'; this._syncDate(); };
+      $('d_speed').oninput = e => { this.speed = +e.target.value; $('d_spdL').textContent = (+e.target.value).toFixed(1); };
+      $('d_go').onclick = () => {
+        const y = +$('d_yy').value, m = +$('d_mm').value, d = +$('d_dd').value;
+        if (!y || !m || !d) return;
+        this.date = new Date(y, m - 1, d, +$('d_hh').value || 0, +$('d_mi').value || 0, 0);
+        this.playing = false; $('d_play').textContent = '▶ הפעל';
+      };
       // גרירה לסיבוב הגלובוס
       const cnv = $('datelineCanvas');
       let dx = 0, dy = 0, lo0 = 0, la0 = 0, dragging = false;
