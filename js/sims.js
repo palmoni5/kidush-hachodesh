@@ -138,6 +138,30 @@ window.Sims = (function () {
     } catch (e) { v = null; }
     return (_tzCache[key] = v);
   }
+  // ── זמני היום מלוח אוצריא ────────────────────────────────────────────
+  // calendar.getDailyTimes (הרשאת calendar.read) מחזיר את הזמנים המדויקים
+  // (kosher_dart) לתאריך ולעיר הנבחרים בלוח שבאפליקציה. הערכים מגיעים בפורמט
+  // "⁦HH:MM.⁩" — עטופים ב-LTR isolate ועם סימן שניות בסופם — ולכן מנוקים לתצוגה.
+  const cleanZman = s => typeof s === 'string' ? s.replace(/[⁦⁩]/g, '').replace(/[.:]$/, '') : '';
+  async function loadOtzariaTimes() {
+    const card = $('y_otzCard');
+    if (!card || typeof window.Otzaria === 'undefined') return;
+    try {
+      const g = async (m, a) => { const r = await Otzaria.call(m, a || {}); return r && r.success ? r.data : null; };
+      const times = await g('calendar.getDailyTimes');
+      if (!times || typeof times !== 'object') return;   // מחוץ לאוצריא — הכרטיס נשאר מוסתר
+      const city = await g('settings.get', { key: 'key-selected-city' });
+      const dateIso = await g('calendar.getSelectedDate');
+      $('yo_city').textContent = city || '—';
+      $('yo_date').textContent = dateIso ? new Date(dateIso).toLocaleDateString('he-IL') : '—';
+      const put = (id, key) => { $(id).textContent = cleanZman(times[key]) || '—'; };
+      put('yo_riseSea', 'seaLevelSunrise'); put('yo_rise', 'sunrise');
+      put('yo_setSea', 'seaLevelSunset');   put('yo_set', 'sunset');
+      put('yo_noon', 'chatzos');            put('yo_midnight', 'chatzosLayla');
+      card.style.display = '';
+    } catch (e) {}
+  }
+
   // משוואת הזמן (שעות) — ההפרש בין השמש האמיתית לשמש הממוצעת (קירוב סטנדרטי)
   function equationOfTime(dateUTC) {
     const N = (Date.UTC(dateUTC.getUTCFullYear(), dateUTC.getUTCMonth(), dateUTC.getUTCDate())
@@ -472,6 +496,9 @@ window.Sims = (function () {
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };
       $('y_rot0').onclick = () => { this.viewAz = 90; };
       document.querySelectorAll('#view-year .seg button').forEach(b => b.onclick = () => this.dayY = +b.dataset.d);
+      // זמני היום מלוח אוצריא — נטענים בכניסה ללשונית, ורעננים בלחיצה
+      $('yo_refresh').onclick = () => loadOtzariaTimes();
+      loadOtzariaTimes();
       // גרירת העכבר/מגע לסיבוב התצוגה (~0.5° לכל פיקסל)
       { const cnv = $('yearCanvas'); let dragX = 0, dragAz = 0, dragging = false; cnv.style.cursor = 'grab';
         cnv.onpointerdown = e => { dragging = true; this.hintDone = true; dragX = e.clientX; dragAz = this.viewAz; cnv.setPointerCapture(e.pointerId); cnv.style.cursor = 'grabbing'; };

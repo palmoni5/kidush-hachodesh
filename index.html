@@ -147,6 +147,23 @@
             <input type="number" id="y_lon" step="0.1" min="-180" max="180" value="35.22" />
             <div class="htxt" style="margin-top:8px">השעון שבאיור הוא השעון האזרחי במקום הנבחר — כולל שעון קיץ, ההפרש שבין אזור הזמן לקו האורך של המקום, והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך.</div>
           </div>
+          <div class="card" id="y_otzCard" style="display:none">
+            <h2>זמני היום — לוח אוצריא</h2>
+            <table>
+              <tr><td>עיר</td><td id="yo_city">—</td></tr>
+              <tr><td>תאריך</td><td id="yo_date">—</td></tr>
+              <tr><td>זריחה מישורית</td><td id="yo_riseSea">—</td></tr>
+              <tr><td>זריחה (עם גובה)</td><td id="yo_rise">—</td></tr>
+              <tr><td>שקיעה מישורית</td><td id="yo_setSea">—</td></tr>
+              <tr><td>שקיעה (עם גובה)</td><td id="yo_set">—</td></tr>
+              <tr><td>חצות היום</td><td id="yo_noon">—</td></tr>
+              <tr><td>חצות הלילה</td><td id="yo_midnight">—</td></tr>
+            </table>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-secondary" id="yo_refresh">↻ רענן מהלוח</button>
+            </div>
+            <div class="htxt" style="margin-top:6px">זמנים מדויקים מחושבי לוח אוצריא, לתאריך ולעיר הנבחרים בלוח שבאפליקציה — בשונה מהאיור, שהוא סכמטי ולהמחשה בלבד.</div>
+          </div>
           <div class="card">
             <h2>שנת החמה — הלכה</h2>
             <table>
