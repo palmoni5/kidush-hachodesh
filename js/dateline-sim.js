@@ -82,6 +82,18 @@
     [-39, CI_LON], [-90, CI_LON],
   ];
 
+  // שטח הספק של הגרי"מ טוקצינסקי: מערב אלסקה — מקו התאריך שלו (144.77°W)
+  // מערבה עד מיצר ברינג. בספרו "היומם בכדור הארץ" הסתפק אם השטח, המחובר
+  // יבשית למזרח הקו, נדון כמזרח או כמערב. מוקף בקו מקווקו בצבע שיטתו.
+  // הקואורדינטות מקורבות — להמחשת העיקרון.
+  const GRIT_DOUBT = [
+    [70.1, GRIT_LON], [70.4, -148.5], [71.2, -156.5], [70.1, -161.9], [68.9, -166.2],
+    [67.0, -163.7], [65.6, -168.1], [64.5, -166.4], [63.0, -164.5], [61.5, -166.1],
+    [60.0, -164.7], [58.6, -162.0], [57.0, -158.2], [55.8, -161.8], [55.2, -163.3],
+    [55.6, -160.5], [56.6, -156.7], [58.1, -154.2], [59.4, -151.6], [60.2, -148.2],
+    [60.1, GRIT_LON], [70.1, GRIT_LON],
+  ];
+
   // ── טקסטורת כדור הארץ (equirectangular) ──────────────────────────────
   const IMG = new Image(); IMG.src = window.ASSETS.globe_earth;
   IMG.onload = () => { _tex = null; _cache.key = ''; window.__invalidate && window.__invalidate(); };
@@ -240,7 +252,11 @@
       // ארבעת הקווים
       if (this.show.utc)  this.path(ctx, this.meridian(0), cx, cy, R, COL.utc, 2.6);
       if (this.show.idl)  this.path(ctx, this.meridian(IDL_LON), cx, cy, R, COL.idl, 2.6);
-      if (this.show.grit) this.path(ctx, this.meridian(GRIT_LON), cx, cy, R, COL.grit, 2.6);
+      if (this.show.grit) {
+        this.path(ctx, this.meridian(GRIT_LON), cx, cy, R, COL.grit, 2.6);
+        // מערב אלסקה — שטח שהסתפק בו הגרי"מ, מוקף מקווקו בצבע שיטתו
+        this.path(ctx, GRIT_DOUBT, cx, cy, R, COL.grit, 2.2, [5, 4]);
+      }
       if (this.show.ci) {
         this.path(ctx, this.meridian(CI_LON), cx, cy, R, COL.ci, 1.8, [5, 5]);   // הקו הישר, בתוך היבשת
         this.path(ctx, CI_PATH, cx, cy, R, COL.ci, 3);                            // הקו בפועל — עד סוף היבשת

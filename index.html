@@ -149,8 +149,11 @@
           </div>
           <div class="card" id="y_otzCard" style="display:none">
             <h2>זמני היום — לוח אוצריא</h2>
+            <label class="field" id="yo_cityRow" style="display:none">עיר (מרשימת הלוח)
+              <select id="yo_city"></select>
+            </label>
             <table>
-              <tr><td>עיר</td><td id="yo_city">—</td></tr>
+              <tr><td>עיר</td><td id="yo_cityName">—</td></tr>
               <tr><td>תאריך</td><td id="yo_date">—</td></tr>
               <tr><td>זריחה מישורית</td><td id="yo_riseSea">—</td></tr>
               <tr><td>זריחה (עם גובה)</td><td id="yo_rise">—</td></tr>
@@ -162,7 +165,7 @@
             <div class="ctrls" style="margin-top:8px">
               <button class="btn-secondary" id="yo_refresh">↻ רענן מהלוח</button>
             </div>
-            <div class="htxt" style="margin-top:6px">זמנים מדויקים מחושבי לוח אוצריא, לתאריך ולעיר הנבחרים בלוח שבאפליקציה — בשונה מהאיור, שהוא סכמטי ולהמחשה בלבד.</div>
+            <div class="htxt" style="margin-top:6px" id="yo_note">זמנים הלכתיים מחושבי לוח אוצריא (כולל גובה המקום), לתאריך המוצג באיור ולעיר שנבחרה כאן. ברירת המחדל — העיר הנבחרת באפליקציה, והיא מתעדכנת עם שינויה שם.</div>
           </div>
           <div class="card">
             <h2>שנת החמה — הלכה</h2>
@@ -173,7 +176,7 @@
             </table>
             <div class="htxt" style="margin-top:8px">ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז וטבת (הקיצון).</div>
             <div class="htxt" style="margin-top:8px">מצפון לקו המשוה: תמוז=קיץ, טבת=חורף. מדרום לקו המשוה: תמוז=חורף, טבת=קיץ.</div>
-            <div class="htxt" style="margin-top:8px"><b>אזהרה:</b> הזמנים המוצגים (זריחה, שקיעה, חצות וכד') אינם בהכרח מדויקים ואין לסמוך עליהם כלל — הם נועדו להמחשה בלבד.</div>
+            <div class="htxt" style="margin-top:8px">הזמנים באיור (זריחה, שקיעה, חצות, השעה השמשית ומיקום השמש) מחושבים אסטרונומית במדויק (Astronomy Engine) לגובה פני הים. ייתכנו הבדלים קלים מהלוחות בשל גובה המקום ושיטות החישוב — אין לסמוך עליהם להלכה.</div>
           </div>
         </aside>
       </section>
@@ -342,7 +345,7 @@
             </div>
             <div class="chk" style="margin-top:6px"><input type="checkbox" id="d_daynight" checked />
               <label for="d_daynight">הצג יום ולילה על הגלובוס</label></div>
-            <div class="htxt" style="margin-top:6px">הפעילו וצפו: כשהחמה שוקעת במקומות שבמחלוקת, היום מתחלף לפי שיטה אחת ועדיין לא לפי חברתה.</div>
+            <div class="htxt" style="margin-top:6px">הפעילו וצפו: כשהחמה שוקעת במקומות שבמחלוקת, שלפי כל שיטה מתחלף היום ליום אחר.</div>
           </div>
           <div class="card">
             <h2>מקומות שהנדון משליך עליהם</h2>
@@ -375,10 +378,11 @@
             <div class="htxt">
               <span class="seasondot" style="background:#dfe6ef"></span> <b>קו זמן יקום מתואם (UTC)</b> — קו גריניץ', 0°.<br><br>
               <span class="seasondot" style="background:#ffd24d"></span> <b>קו התאריך שיטת החזו"א</b> — 90 מעלות מזרחית לירושלים (125.24° מזרח). כל מה שמחובר יבשית למערב מקו התאריך נדון כמו המערב, ולכן הקו נוטה אל סוף היבשת (הקו הישר העובר בתוך היבשת מסומן במקווקו).<br><br>
-              <span class="seasondot" style="background:#5ad2ff"></span> <b>קו התאריך הגרי"מ טוקצינסקי</b> — 180 מעלות מירושלים (144.76° מערב).<br><br>
+              <span class="seasondot" style="background:#5ad2ff"></span> <b>קו התאריך הגרי"מ טוקצינסקי</b> — 180 מעלות מירושלים (144.76° מערב). קו מקווקו תכלת — שטח בספק של הגרי"מ: מערב אלסקה, מקו התאריך שלו עד מיצר ברינג, שהסתפק אם הוא נדון כמזרח הקו (שהוא מחובר אליו יבשית) או כמערבו.<br><br>
               <span class="seasondot" style="background:#ff6b6b"></span> <b>קו התאריך הסכמי אוה"ע</b> — 180 מעלות מקו זמן יקום מתואם.<br><br>
               <span class="seasondot" style="background:#7ee081"></span> ירושלים (35.24° מזרח).<br><br>
-              הערה: מהלך הקו לאורך חופי היבשות מצויר בקירוב, להמחשת העיקרון בלבד.
+              הערה: מהלך הקו לאורך חופי היבשות מצויר בקירוב, להמחשת העיקרון בלבד.<br><br>
+              <b>מקורות:</b> חזון איש, או"ח סי' ס"ד; הגרי"מ טוקצינסקי, ספר "היומם בכדור הארץ".
             </div>
           </div>
         </aside>

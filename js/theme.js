@@ -49,6 +49,8 @@ if (typeof window.Otzaria === 'undefined') {
     call: async (m, p) => ({ success: true, data: null, error: null }),
     on:  (e, cb) => { (listeners[e] = listeners[e] || []).push(cb); },
     off: (e, cb) => { listeners[e] = (listeners[e] || []).filter(f => f !== cb); },
+    // לבדיקות פיתוח בלבד: הזרקת אירוע כאילו הגיע מאוצריא
+    _emit: (e, payload) => { (listeners[e] || []).forEach(cb => cb(payload)); },
   };
   setTimeout(() => {
     (listeners['plugin.boot'] || []).forEach(cb => cb({

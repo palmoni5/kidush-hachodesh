@@ -143,22 +143,54 @@ window.Sims = (function () {
   // (kosher_dart) לתאריך ולעיר הנבחרים בלוח שבאפליקציה. הערכים מגיעים בפורמט
   // "⁦HH:MM.⁩" — עטופים ב-LTR isolate ועם סימן שניות בסופם — ולכן מנוקים לתצוגה.
   const cleanZman = s => typeof s === 'string' ? s.replace(/[⁦⁩]/g, '').replace(/[.:]$/, '') : '';
+  // הכרטיס דורש אוצריא 0.9.97+ (calendar.getCities ו-getDailyTimes עם
+  // {date, city} — ראו minAppVersion במניפסט): הזמנים עוקבים אחרי התאריך
+  // שבאיור, ובורר הערים נפתח על העיר הנבחרת באפליקציה. שינוי עיר באפליקציה
+  // מעדכן את הכרטיס בזמן אמת (אירוע calendar.city_changed).
+  const otz = { ready: false, city: null, followApp: true };
   async function loadOtzariaTimes() {
     const card = $('y_otzCard');
     if (!card || typeof window.Otzaria === 'undefined') return;
     try {
       const g = async (m, a) => { const r = await Otzaria.call(m, a || {}); return r && r.success ? r.data : null; };
-      const times = await g('calendar.getDailyTimes');
-      if (!times || typeof times !== 'object') return;   // מחוץ לאוצריא — הכרטיס נשאר מוסתר
-      const city = await g('settings.get', { key: 'key-selected-city' });
-      const dateIso = await g('calendar.getSelectedDate');
-      $('yo_city').textContent = city || '—';
-      $('yo_date').textContent = dateIso ? new Date(dateIso).toLocaleDateString('he-IL') : '—';
+      // אתחול חד-פעמי: אכלוס בורר הערים (מקובצות לפי מדינה), ברירת מחדל —
+      // העיר הנבחרת באפליקציה
+      if (!otz.ready) {
+        const cities = await g('calendar.getCities');
+        if (!Array.isArray(cities) || !cities.length) return;   // מחוץ לאוצריא — מוסתר
+        const groups = {};
+        for (const c of cities) (groups[c.country] = groups[c.country] || []).push(c.name);
+        $('yo_city').innerHTML = Object.entries(groups).map(([gr, names]) =>
+          `<optgroup label="${gr}">` + names.map(n => `<option>${n}</option>`).join('') + '</optgroup>').join('');
+        const cur = await g('settings.get', { key: 'key-selected-city' });
+        $('yo_city').value = cur || '';
+        if (!$('yo_city').value) $('yo_city').value = cities[0].name;
+        otz.city = $('yo_city').value;
+        $('yo_cityRow').style.display = '';
+        otz.ready = true;
+      }
+      const d = dayYToDate(year.dayY);
+      const times = await g('calendar.getDailyTimes', { date: d.toISOString().slice(0, 10), city: otz.city });
+      if (!times || typeof times !== 'object') return;
+      $('yo_cityName').textContent = otz.city || '—';
+      $('yo_date').textContent = d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.' + d.getUTCFullYear();
       const put = (id, key) => { $(id).textContent = cleanZman(times[key]) || '—'; };
       put('yo_riseSea', 'seaLevelSunrise'); put('yo_rise', 'sunrise');
       put('yo_setSea', 'seaLevelSunset');   put('yo_set', 'sunset');
       put('yo_noon', 'chatzos');            put('yo_midnight', 'chatzosLayla');
       card.style.display = '';
+    } catch (e) {}
+  }
+  // שינוי העיר באפליקציה משתקף בזמן אמת — כל עוד המשתמש לא בחר עיר אחרת בכרטיס
+  if (typeof window.Otzaria !== 'undefined' && Otzaria.on) {
+    try {
+      Otzaria.on('calendar.city_changed', payload => {
+        if (!otz.ready || !otz.followApp) return;
+        const name = payload && (payload.city || payload.name);
+        if (!name) return;
+        $('yo_city').value = name;
+        if ($('yo_city').value === name) { otz.city = name; loadOtzariaTimes(); }
+      });
     } catch (e) {}
   }
 
@@ -323,12 +355,56 @@ window.Sims = (function () {
       return o === null ? Math.round(this.lon / 15) : o;
     },
     eot() { return equationOfTime(dayYToDate(this.dayY)); },
-    // שעון אזרחי → שעה שמשית אמיתית (חצות היום האמיתי = 12:00)
+    // שעון אזרחי → שעה שמשית אמיתית (חצות היום האמיתי = 12:00) — נפילה סכמטית
     solarHour(h) {
       return (h === undefined ? this.hour : h) - this.tzOff() + this.lon / 15 + this.eot();
     },
-    // שעה שמשית אמיתית → שעון אזרחי
+    // שעה שמשית אמיתית → שעון אזרחי — נפילה סכמטית
     civilHour(s) { return s + this.tzOff() - this.lon / 15 - this.eot(); },
+    // הרגע המוצג: התאריך שבאיור + השעון האזרחי במקום הנבחר
+    instant() {
+      const d = dayYToDate(this.dayY);
+      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+        + (this.hour - this.tzOff()) * 3600000);
+    },
+    // מיקום השמש האמיתי לרגע המוצג (Astronomy Engine): זוית השעה המקומית
+    // והנטייה. האיור וה-HUD נצמדים לזמנים האמיתיים; אם המנוע אינו זמין —
+    // נפילה למודל הסכמטי (שנת שמואל + משוואת הזמן).
+    sun() {
+      try {
+        const AE = window.Astronomy, t = AE.MakeTime(this.instant());
+        const eq = AE.Equator(AE.Body.Sun, t, new AE.Observer(this.lat, this.lon, 0), true, true);
+        const H = (((AE.SiderealTime(t) * 15 + this.lon - eq.ra * 15) % 360) + 360) % 360;
+        return { H, dec: eq.dec };
+      } catch (e) {
+        return { H: (((this.solarHour() - 12) * 15 % 360) + 360) % 360, dec: A.solarDecl(this.dayY) };
+      }
+    },
+    // זריחה/שקיעה/חצות אמיתיים ליום המוצג — במטמון (חיפושי AE יקרים יחסית)
+    riseSet() {
+      const key = Math.floor(this.dayY) + '|' + this.lat + '|' + this.lon + '|' + this.tz;
+      if (this._rsKey === key) return this._rs;
+      this._rsKey = key;
+      let out = null;
+      try {
+        const AE = window.Astronomy, obs = new AE.Observer(this.lat, this.lon, 0);
+        const d = dayYToDate(this.dayY);
+        const t0 = AE.MakeTime(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+          - this.tzOff() * 3600000));
+        const rise = AE.SearchRiseSet(AE.Body.Sun, obs, +1, t0, 1.2);
+        const set  = AE.SearchRiseSet(AE.Body.Sun, obs, -1, t0, 1.2);
+        const noon = AE.SearchHourAngle(AE.Body.Sun, obs, 0, t0);
+        const mid  = AE.SearchHourAngle(AE.Body.Sun, obs, 12, t0);
+        out = {
+          rise: rise && rise.date, set: set && set.date,
+          noon: noon && noon.time.date, mid: mid && mid.time.date,
+          midAlt: mid && mid.hor ? mid.hor.altitude : null,
+        };
+      } catch (e) {}
+      return (this._rs = out);
+    },
+    // רגע מוחלט → השעון האזרחי במקום הנבחר
+    civilOfDate(dt) { return (((dt.getTime() / 3600000 + this.tzOff()) % 24) + 24) % 24; },
     proj(v, cx, cy, R) {
       const a = this.viewAz * Math.PI / 180, b = BETA * Math.PI / 180;
       const E = v.E * Math.cos(a) - v.N * Math.sin(a), N = v.E * Math.sin(a) + v.N * Math.cos(a);
@@ -364,7 +440,8 @@ window.Sims = (function () {
         cy = _layout.yearTop + usableH / 2; R = Math.min(W * 0.40, usableH / 2);
       }
       const yR = R * Math.sin(BETA * Math.PI / 180);
-      const dec = A.solarDecl(this.dayY);
+      // מיקום השמש האמיתי (Astronomy Engine) — המסלול הנוכחי והשמש עצמה
+      const sn = this.sun(), dec = sn.dec;
       ctx.strokeStyle = cv('--ill-horizon'); ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(cx, cy, R, yR, 0, 0, 2 * Math.PI); ctx.stroke();
       ctx.fillStyle = cv('--ill-text'); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -380,7 +457,7 @@ window.Sims = (function () {
       // השמש (כיוון) + כדור הארץ. מציירים את הכדור תחילה, ואז את מסלולי השמיים והשמש מעליו עם
       // הסתרה (occlusion): מה שמאחורי הכדור (בצד הרחוק מהצופה) מוסתר על־ידו, ומה שלפניו מצויר מעליו.
       const s = this.season();
-      const Hh = (this.solarHour() - 12) * 15, v = A.sunHorizon(Hh, dec, this.lat), p = this.proj(v, cx, cy, R), up = v.U > 0, sR = up ? 17 : 13;
+      const v = A.sunHorizon(sn.H, dec, this.lat), p = this.proj(v, cx, cy, R), up = v.U > 0, sR = up ? 17 : 13;
       const gR = Math.max(26, R * 0.2);
       const va = this.viewAz * Math.PI / 180, vb = BETA * Math.PI / 180;
       const ev = [Math.sin(va) * Math.cos(vb), Math.cos(va) * Math.cos(vb), Math.sin(vb)];   // כיוון הצופה (עומק)
@@ -388,15 +465,16 @@ window.Sims = (function () {
       const occ = (vd, pt) => { const dx = pt.x - cx, dy = pt.y - cy; return dx*dx + dy*dy < gR*gR && (vd.E*ev[0] + vd.N*ev[1] + vd.U*ev[2]) < 0; };
       drawGlobe(ctx, cx, cy, gR, v, this.viewAz, this.lat, this.lon);
       // מסלולי ייחוס + תוויות. מדרום לקו המשוה הקיץ והחורף מתהפכים:
-      // המסלול הגבוה שם (נטייה דרומית, תקופת טבת) הוא הקיץ.
-      const south = this.lat < 0;
+      // המסלול הגבוה שם (נטייה דרומית, תקופת טבת) הוא הקיץ. סמוך לקו המשוה
+      // (3°±) אין לא קיץ ולא חורף — הקווים מסומנים כקווי ההיפוך בלבד.
+      const south = this.lat < 0, nearEq = Math.abs(this.lat) <= 3;
       this.circle(ctx, 23.44, cx, cy, R, cv(south ? '--ill-winter' : '--ill-summer'), 1.2, occ);
       this.circle(ctx, 0, cx, cy, R, cv('--ill-text'), 1.2, occ);
       this.circle(ctx, -23.44, cx, cy, R, cv(south ? '--ill-summer' : '--ill-winter'), 1.2, occ);
       for (const [dc, lbl, col] of [
-          [23.44, south ? 'חורף' : 'קיץ', cv(south ? '--ill-winter' : '--ill-summer')],
+          [23.44, nearEq ? 'קו ההיפוך הצפוני' : (south ? 'חורף' : 'קיץ'), cv(south ? '--ill-winter' : '--ill-summer')],
           [0, 'שוויון', cv('--ill-text')],
-          [-23.44, south ? 'קיץ' : 'חורף', cv(south ? '--ill-summer' : '--ill-winter')]]) {
+          [-23.44, nearEq ? 'קו ההיפוך הדרומי' : (south ? 'קיץ' : 'חורף'), cv(south ? '--ill-summer' : '--ill-winter')]]) {
         const tp = this.proj(A.sunHorizon(0, dc, this.lat), cx, cy, R);
         ctx.fillStyle = col; ctx.font = '11px sans-serif'; ctx.fillText(lbl, tp.x + 24, tp.y - 2);
       }
@@ -408,22 +486,22 @@ window.Sims = (function () {
         ctx.globalAlpha = up ? 1 : 0.5; sprite(ctx, IMG.sun, p.x, p.y, 2 * sR, 2 * sR); ctx.globalAlpha = 1;
       }
       if (!this.hintDone) drawHint(ctx, W, 'גררו לסיבוב · ▶ הפעל להנעה');
-      this.hud(v.U);
+      this.hud(v.U, sn);
     },
     season() {
-      // מדרום לקו המשוה העונות מהופכות: תקופת תמוז שם חורף ותקופת טבת קיץ
-      const south = this.lat < 0;
+      // מדרום לקו המשוה העונות מהופכות: תקופת תמוז שם חורף ותקופת טבת קיץ.
+      // סמוך לקו המשוה (3°±) אין קיץ וחורף — מוצג שם התקופה בלבד.
+      const south = this.lat < 0, nearEq = Math.abs(this.lat) <= 3;
       const t = ((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
-      if (t < 91.31) return south ? { n: 'סתיו · ניסן', c: '--ill-autumn' } : { n: 'אביב · ניסן', c: '--ill-spring' };
-      if (t < 182.62) return south ? { n: 'חורף · תמוז', c: '--ill-winter' } : { n: 'קיץ · תמוז', c: '--ill-summer' };
-      if (t < 273.94) return south ? { n: 'אביב · תשרי', c: '--ill-spring' } : { n: 'סתיו · תשרי', c: '--ill-autumn' };
-      return south ? { n: 'קיץ · טבת', c: '--ill-summer' } : { n: 'חורף · טבת', c: '--ill-winter' };
+      if (t < 91.31) return nearEq ? { n: 'תקופת ניסן', c: '--ill-spring' } : south ? { n: 'סתיו · ניסן', c: '--ill-autumn' } : { n: 'אביב · ניסן', c: '--ill-spring' };
+      if (t < 182.62) return nearEq ? { n: 'תקופת תמוז', c: '--ill-summer' } : south ? { n: 'חורף · תמוז', c: '--ill-winter' } : { n: 'קיץ · תמוז', c: '--ill-summer' };
+      if (t < 273.94) return nearEq ? { n: 'תקופת תשרי', c: '--ill-autumn' } : south ? { n: 'אביב · תשרי', c: '--ill-spring' } : { n: 'סתיו · תשרי', c: '--ill-autumn' };
+      return nearEq ? { n: 'תקופת טבת', c: '--ill-winter' } : south ? { n: 'קיץ · טבת', c: '--ill-summer' } : { n: 'חורף · טבת', c: '--ill-winter' };
     },
-    hud(Unow) {
-      const dec = A.solarDecl(this.dayY), phi = this.lat;
+    hud(Unow, sn) {
+      const dec = sn.dec, phi = this.lat;
       const altNow = Math.asin(Unow) * 180 / Math.PI;
-      const midAlt = Math.asin(A.sunHorizon(180, dec, phi).U) * 180 / Math.PI;
-      const dl = A.dayLengthHours(dec, phi), s = this.season();
+      const s = this.season();
       $('y_clock').textContent = fmtH(this.hour);
       $('y_tz').textContent = 'שעון מקומי — ' + this.cityName + ' (' + fmtOff(this.tzOff()) + ')';
       $('y_updown').textContent = altNow > 0 ? 'השמש מעל האופק ☀' : 'השמש מתחת לאופק 🌙';
@@ -434,14 +512,21 @@ window.Sims = (function () {
       $('y_zen').textContent = fmtNS(dec - phi);
       $('y_season').textContent = s.n;
       $('y_date').textContent = dayYToDateLabel(this.dayY);
-      $('y_solar').textContent = fmtH(this.solarHour());
-      // זריחה/שקיעה — מזוית השעה שבה גובה השמש 0°, מומרת לשעון האזרחי
-      const cosH = -Math.tan(phi * Math.PI / 180) * Math.tan(dec * Math.PI / 180);
-      $('y_rise').textContent = cosH <= -1 ? 'יום תמידי' : cosH >= 1 ? 'לילה תמידי'
-        : fmtH(this.civilHour(12 - Math.acos(cosH) * 180 / Math.PI / 15)) + ' / ' +
-          fmtH(this.civilHour(12 + Math.acos(cosH) * 180 / Math.PI / 15));
-      $('y_daylen').textContent = fmtH(dl);
-      $('y_mid').textContent = midAlt.toFixed(0) + '°';
+      // שעה שמשית אמיתית — מזוית השעה של השמש (חצות אמיתי = 12:00)
+      $('y_solar').textContent = fmtH(sn.H / 15 + 12);
+      // זריחה/שקיעה/אורך היום/עומק חצות — זמנים אמיתיים (Astronomy Engine,
+      // כולל שבירת אור); נפילה לחישוב הסכמטי אם החיפוש נכשל
+      const rs = this.riseSet();
+      if (rs && rs.rise && rs.set) {
+        $('y_rise').textContent = fmtH(this.civilOfDate(rs.rise)) + ' / ' + fmtH(this.civilOfDate(rs.set));
+        $('y_daylen').textContent = fmtH((((rs.set - rs.rise) / 3600000) % 24 + 24) % 24);
+      } else {
+        const cosH = -Math.tan(phi * Math.PI / 180) * Math.tan(dec * Math.PI / 180);
+        $('y_rise').textContent = cosH <= -1 ? 'יום תמידי' : cosH >= 1 ? 'לילה תמידי' : '—';
+        $('y_daylen').textContent = fmtH(A.dayLengthHours(dec, phi));
+      }
+      $('y_mid').textContent = (rs && rs.midAlt != null ? rs.midAlt
+        : Math.asin(A.sunHorizon(180, dec, phi).U) * 180 / Math.PI).toFixed(0) + '°';
     },
     faceLabel() {
       const f = (((this.viewAz + 180) % 360) + 360) % 360;
@@ -459,11 +544,17 @@ window.Sims = (function () {
       if (this._bound) return; this._bound = true;
       { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; }   // ברירת מחדל: היום והשעה הנוכחיים
       $('y_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? '⏸ השהה' : '▶ הפעל'; };
-      $('y_today').onclick = () => { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; this.playing = false; $('y_play').textContent = '▶ הפעל'; };
-      // חצות אמיתי: 12:00 בשעה השמשית מומר לשעון האזרחי — בירושלים (חורף) ~11:39,
-      // ובשעון קיץ ~12:39; לא 12:00 שעל השעון.
-      $('y_noon').onclick = () => { this.hour = ((this.civilHour(12) % 24) + 24) % 24; };
-      $('y_midnight').onclick = () => { this.hour = ((this.civilHour(0) % 24) + 24) % 24; };
+      $('y_today').onclick = () => { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; this.playing = false; $('y_play').textContent = '▶ הפעל'; loadOtzariaTimes(); };
+      // חצות אמיתי (מעבר המרידיאן, Astronomy Engine) בשעון האזרחי — בירושלים
+      // (חורף) ~11:39, ובשעון קיץ ~12:39; לא 12:00 שעל השעון.
+      $('y_noon').onclick = () => {
+        const rs = this.riseSet();
+        this.hour = rs && rs.noon ? this.civilOfDate(rs.noon) : ((this.civilHour(12) % 24) + 24) % 24;
+      };
+      $('y_midnight').onclick = () => {
+        const rs = this.riseSet();
+        this.hour = rs && rs.mid ? this.civilOfDate(rs.mid) : ((this.civilHour(0) % 24) + 24) % 24;
+      };
       $('y_speed').oninput = e => this.speed = +e.target.value;
       $('y_hour').oninput = e => { this.hour = +e.target.value; this.playing = false; $('y_play').textContent = '▶ הפעל'; };
       $('y_dayY').oninput = e => this.dayY = +e.target.value;
@@ -473,6 +564,7 @@ window.Sims = (function () {
         const Y = +$('y_yy').value, M = +$('y_mm').value, D = +$('y_dd').value;
         if (!Y || !M || !D) return;
         this.dayY = dayYFromDate(Y, M, D);
+        loadOtzariaTimes();   // במצב החדש כרטיס הלוח עוקב אחרי תאריך האיור
       };
       // מיקום הצופה: בחירת עיר קובעת רוחב+אורך; עריכה ידנית מעבירה ל"מותאם אישית"
       // מעבר מקום שומר על אותו רגע פיזי: השעון מוסט בהפרש אזורי הזמן, כך
@@ -496,8 +588,10 @@ window.Sims = (function () {
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };
       $('y_rot0').onclick = () => { this.viewAz = 90; };
       document.querySelectorAll('#view-year .seg button').forEach(b => b.onclick = () => this.dayY = +b.dataset.d);
-      // זמני היום מלוח אוצריא — נטענים בכניסה ללשונית, ורעננים בלחיצה
+      // זמני היום מלוח אוצריא — נטענים בכניסה ללשונית, ברענון, בהחלפת עיר
+      // בכרטיס, ובקביעת תאריך באיור (במצב החדש הזמנים עוקבים אחרי תאריך האיור)
       $('yo_refresh').onclick = () => loadOtzariaTimes();
+      $('yo_city').onchange = e => { otz.city = e.target.value; otz.followApp = false; loadOtzariaTimes(); };
       loadOtzariaTimes();
       // גרירת העכבר/מגע לסיבוב התצוגה (~0.5° לכל פיקסל)
       { const cnv = $('yearCanvas'); let dragX = 0, dragAz = 0, dragging = false; cnv.style.cursor = 'grab';
