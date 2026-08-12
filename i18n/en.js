@@ -95,6 +95,10 @@ window.TRANSLATIONS.en = {
   'זמני זריחת הירח ושקיעתו מוצגים ליום שמתאים לגיל הירח שבאיור (סביב היום הנוכחי), לפי אופק ירושלים — להמחשה בלבד.':
     'Moonrise/moonset are shown for the day matching the moon’s age in the diagram (near today), for the Jerusalem horizon — illustration only.',
   'הירח מכדור הארץ': 'The Moon as seen from Earth',
+  'הירח בשמים (ירושלים)': 'Moon in the sky (Jerusalem)',
+  'מיקום בשמים (ירושלים)': 'Sky position (Jerusalem)',
+  'חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל ירושלים לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.':
+    'The "Moon in the sky" window shows the Moon’s position in the sky dome over Jerusalem for the moment in the diagram, in its visible shape — the way one looks for it in sanctifying the month by sighting and for Birkas HaLevanah. The Sun is marked too, to show their proximity.',
   'מולד (ירח חדש)': 'New moon (molad)',
   'רבע ראשון': 'First quarter',
   'ירח מלא': 'Full moon',

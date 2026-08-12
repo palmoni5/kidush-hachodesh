@@ -110,6 +110,60 @@ window.Sims = (function () {
       return { rise: r ? _jlmT.format(r.date) : '—', set: s ? _jlmT.format(s.date) : '—' };
     } catch (e) { return { rise: '—', set: '—' }; }
   }
+  // מיקום הירח והשמש בכיפת השמים מעל ירושלים לרגע נתון (Astronomy Engine)
+  function moonSkyPos(date) {
+    try {
+      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.22, 0), t = AE.MakeTime(date);
+      const eqM = AE.Equator(AE.Body.Moon, t, obs, true, true);
+      const hM = AE.Horizon(t, obs, eqM.ra, eqM.dec, 'normal');
+      const eqS = AE.Equator(AE.Body.Sun, t, obs, true, true);
+      const hS = AE.Horizon(t, obs, eqS.ra, eqS.dec, 'normal');
+      return { moon: { az: hM.azimuth, alt: hM.altitude }, sun: { az: hS.azimuth, alt: hS.altitude } };
+    } catch (e) { return null; }
+  }
+  const COMPASS8 = ['צפון', 'צפון-מזרח', 'מזרח', 'דרום-מזרח', 'דרום', 'דרום-מערב', 'מערב', 'צפון-מערב'];
+  const compassName = az => COMPASS8[Math.round((((az % 360) + 360) % 360) / 45) % 8];
+
+  // חלון תצפית השמים: עיגול כיפת השמים (כמו בלשונית כוכבי הלכת) ובו הירח
+  // במיקומו הנוכחי ובצורתו הנראית, והשמש להקשר. מרכז העיגול = זניט,
+  // השפה = האופק; מזרח משמאל (מבט אל-על, כבלשונית כוכבי הלכת).
+  function drawMoonSky(ctx, cx, cy, R, pos, day) {
+    ctx.strokeStyle = cv('--ill-grid'); ctx.lineWidth = 1;
+    for (const alt of [30, 60]) {
+      const rr = (90 - alt) / 90 * R;
+      ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 2 * Math.PI); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy);
+    ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R); ctx.stroke();
+    ctx.strokeStyle = cv('--ill-horizon'); ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.stroke();
+    ctx.fillStyle = cv('--ill-text'); ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(T('צפון'), cx, cy - R - 8); ctx.fillText(T('דרום'), cx, cy + R + 8);
+    ctx.fillText(T('מזרח'), cx - R - 14, cy); ctx.fillText(T('מערב'), cx + R + 14, cy);
+    ctx.fillStyle = cv('--ill-muted'); ctx.font = '10px sans-serif';
+    ctx.fillText(T('הירח בשמים (ירושלים)'), cx, cy - R - 22);
+    if (!pos) return;
+    const place = o => {
+      const rr = (90 - Math.max(o.alt, 0)) / 90 * R, a = o.az * Math.PI / 180;
+      return { x: cx - rr * Math.sin(a), y: cy - rr * Math.cos(a) };
+    };
+    // השמש — להקשר (עמומה מתחת לאופק); הקרבה לירח מסבירה מתי הסהר נראה
+    const ps = place(pos.sun);
+    ctx.globalAlpha = pos.sun.alt > 0 ? 0.95 : 0.3;
+    sprite(ctx, IMG.sun, ps.x, ps.y, 15, 15);
+    ctx.globalAlpha = 1;
+    // הירח בצורתו הנראית; מתחת לאופק — עמום, על שפת האופק בכיוונו
+    const pm = place(pos.moon);
+    ctx.globalAlpha = pos.moon.alt > 0 ? 1 : 0.35;
+    drawPhase(ctx, pm.x, pm.y, 9, day);
+    ctx.globalAlpha = 1;
+    if (pos.moon.alt <= 0) {
+      ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
+      ctx.fillText(T('מתחת לאופק'), pm.x, pm.y + 17);
+    }
+  }
+
   // שורת הסבר עדינה (ללא רקע) למעלה — מוצגת בזמן השהיה
   function drawHint(ctx, W, txt = T('לחצו ▶ הפעל כדי להניע את הסיבוב')) {
     ctx.fillStyle = cv('--ill-muted'); ctx.font = '12px sans-serif';
@@ -293,6 +347,18 @@ window.Sims = (function () {
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(T('הירח מכדור הארץ'), vx, vy - vR - 12);
       drawPhase(ctx, vx, vy, vR, this.day);
+      // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
+      const skyDate = new Date(Date.now() + (this.day - moonAgeToday()) * 86400000);
+      const pos = moonSkyPos(skyDate);
+      if (W >= 520) {
+        const dR = Math.max(50, Math.min(W * 0.12, (H - top) * 0.16, 92));
+        const rtl = getComputedStyle(document.body).direction !== 'ltr';
+        const dx = rtl ? 24 + dR + 14 : W - 24 - dR - 14;
+        drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.day);
+      }
+      $('m_pos').textContent = !pos ? '—'
+        : pos.moon.alt > 0 ? T(compassName(pos.moon.az)) + ' · ' + pos.moon.alt.toFixed(0) + '°'
+        : T('מתחת לאופק');
       if (!this.hintDone) drawHint(ctx, W);
     },
     bind() {
