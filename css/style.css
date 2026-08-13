@@ -117,7 +117,11 @@ header.topbar {
 }
 header.topbar .brand {
   display: flex; align-items: center; gap: 9px;
-  font-size: 16px; font-weight: 600; color: var(--color-on-surface);
+  /* המפרט מבקש 16px קבועים, ואילו ולידציית העיצוב פוסלת font-size ב-px.
+     --font-size-base הוא גופן ה-UI של התוסף (15px) — theme.js אינו דורס
+     אותו בגופן הקריאה של המשתמש, ולכן הפס אינו מתנפח עם גופן גדול. */
+  font-size: calc(var(--font-size-base) + 1px);
+  font-weight: 600; color: var(--color-on-surface);
   white-space: nowrap; flex-shrink: 0;
 }
 header.topbar .brand img { width: 26px; height: 26px; }
