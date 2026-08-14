@@ -75,6 +75,20 @@ window.HebCal = (function () {
   }
   const YEAR_KIND = { 3: 'חסרה', 4: 'כסדרה', 5: 'שלמה' };
 
+  // ── סימן השנה ───────────────────────────────────────────────────────
+  // שלוש אותיות: יום ראש השנה, טיב השנה (חסרה/כסדרה/שלמה), ויום א׳ דפסח.
+  // שבת נכתבת ז׳ בסימן, ולא כמו במניין ימי השבוע שבטבלה.
+  const SIMAN_DOW = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
+  const KIND_LETTER = { 3: 'ח', 4: 'כ', 5: 'ש' };
+  const siman = (rhDow, len, pesachDow) => {
+    const s = SIMAN_DOW[rhDow] + (KIND_LETTER[len % 10] || '?') + SIMAN_DOW[pesachDow];
+    return s.slice(0, -1) + '״' + s.slice(-1);
+  };
+
+  // מחזור קטן — י״ט שנות מחזור הלבנה; מחזור גדול — כ״ח שנות מחזור החמה
+  // (זה שברכת החמה בראשיתו, ועליו נסמך גם חשבון התקופות בשרי השעות).
+  const cycleOf = (y, n) => ({ num: Math.floor((y - 1) / n) + 1, year: ((y - 1) % n) + 1, of: n });
+
   // ── המרה ללוח הלועזי ────────────────────────────────────────────────
   // עוגן: א׳ בתשרי תשפ״ה = 3.10.2024. החשבון כולו בהפרשי ימים שלמים.
   const ANCHOR_ABS = roshHashanaAbs(5785), ANCHOR_MS = Date.UTC(2024, 9, 3);
@@ -135,10 +149,19 @@ window.HebCal = (function () {
       };
     });
 
+    // א׳ דפסח — ט״ו בניסן; משמש כאות השלישית בסימן השנה
+    const nisan = months.find(x => x.name === 'ניסן');
+    const pesachAbs = nisan.startAbs + 14;
+
     return {
       year, leap, prevLeap, nextLeap: !!nextLeap,
       rh, rhNext, len, valid, kind: YEAR_KIND[len % 10],
       months, nextMolad: partsOf(nextMolad),
+      pesachAbs, pesachDow: (pesachAbs + 1) % 7,
+      siman: siman(rh.dow, len, (pesachAbs + 1) % 7),
+      // המחזורים נמנים משנת הבריאה ולכן קיימים רק לשנה אמיתית
+      cycle19: year ? cycleOf(year, 19) : null,
+      cycle28: year ? cycleOf(year, 28) : null,
     };
   }
 
@@ -187,7 +210,7 @@ window.HebCal = (function () {
   return {
     P_HOUR, P_DAY, LUNATION, DOW, MONTHS_PLAIN, MONTHS_LEAP,
     isLeap, monthsInYear, moladTishrei, moladOfMonth, partsOf,
-    roshHashana, roshHashanaAbs, yearLength, monthLengths,
+    roshHashana, roshHashanaAbs, yearLength, monthLengths, siman, cycleOf,
     absToDate, absToLocalDate, dateToAbs, hebNum, hebYearName,
     yearTable, customYear, fromGregorian, formatHebrewDate, nextRoshChodesh,
   };

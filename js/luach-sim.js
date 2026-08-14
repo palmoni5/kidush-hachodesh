@@ -99,6 +99,12 @@
     $('l_title').textContent = yearName;
     $('l_kind').textContent =
       `${T(t.leap ? 'מעוברת' : 'פשוטה')} · ${T(t.kind || '—')} · ${t.len} ${T('ימים')}`;
+    $('l_siman').textContent = t.siman;
+    // המחזורים נמנים משנת הבריאה, ולכן אין להם משמעות בשנת מעבדה
+    $('l_cycles').textContent = t.cycle19
+      ? `${T('מחזור קטן')} — ${T('שנה')} ${t.cycle19.year} ${T('מתוך')} 19 (${T('מחזור')} ${t.cycle19.num}) · ` +
+        `${T('מחזור גדול')} — ${T('שנה')} ${t.cycle28.year} ${T('מתוך')} 28 (${T('מחזור')} ${t.cycle28.num})`
+      : '';
     $('l_rh').innerHTML =
       `${T('ראש השנה ביום')} <b>${T(H.DOW[t.rh.dow])}</b> (${dechiyaPhrase(t.rh)})` +
       (t.year ? ` — ${gregFull(t.rh.abs)}` : '');
@@ -148,6 +154,11 @@
       renderSummary(t);
       renderTable(t);
       if (window.I18N && window.I18N.active) window.I18N.translateDom($('l_view'));
+      // אחרי translateDom ולא לפניו: הוא משחזר מאפייני title מן הערך שנקלט
+      // בפעם הראשונה (בניגוד לצמתי טקסט, שיש להם זיהוי כתיבה דינמית), ולכן
+      // title שנבנה בזמן ריצה על צומת קבוע היה נדרס בחזרה לעברית.
+      $('l_siman').title = `${T('סימן השנה')}: ${T(H.DOW[t.rh.dow])} · ${T(t.kind || '')} · ` +
+        `${T('א׳ דפסח')} ${T(H.DOW[t.pesachDow])}`;
     },
 
     // בשנה מעוברת השנה הבאה בהכרח פשוטה; הפקד ננעל ומשקף זאת.

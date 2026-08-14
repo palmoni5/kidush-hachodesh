@@ -408,6 +408,9 @@ window.TRANSLATIONS.en = {
   'מולד זקן ולא אד״ו ראש': 'Molad Zaken and Lo ADU Rosh',
   'ג״ט ר״ד': 'GaTaRaD',
   'ב־ט״ו־תקפ״ט': 'BeTUTaKPaT',
+  'סימן השנה': 'Year siman', 'א׳ דפסח': 'first day of Pesach',
+  'מחזור קטן': 'Minor cycle', 'מחזור גדול': 'Major cycle',
+  'מחזור': 'cycle', 'שנה': 'year', 'מתוך': 'of',
   'בחירת שנה': 'Choose a year',
   // בעברית החץ של "קודמת" פונה ימינה ושל "הבאה" שמאלה; באנגלית להפך
   '▶ קודמת': '◀ Previous', 'הבאה ◀': 'Next ▶', '🗓 השנה': '🗓 This year',
