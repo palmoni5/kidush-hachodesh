@@ -1,6 +1,11 @@
 // בדיקת manifest.json מול מגבלות הוולידטור של אוצריא, מקומית ולפני הקומיט.
 // הוולידטור ב-CI (Otzaria/otzaria-plugin-validator) הוא גם שלב הפרסום לחנות:
-// כשהוא נכשל הגרסה אינה מתפרסמת. הבדיקות כאן הן אלה שהפילו אותנו בפועל.
+// כשהוא נכשל הגרסה אינה מתפרסמת.
+//
+// זו בדיקה מהירה ובלי רשת, ואינה תחליף לוולידטור המלא. הוא נותן גם הרצה
+// מקומית, והיא הבדיקה המחייבת לפני שחרור:
+//   git clone --depth 1 https://github.com/Otzaria/otzaria-plugin-validator
+//   node otzaria-plugin-validator/src/cli.js . --publish false
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -17,12 +22,22 @@ try {
   process.exit(1);
 }
 
-check(typeof m.description === 'string' && m.description.length <= 150,
-  `תיאור קצר חייב להכיל לכל היותר 150 תווים (כרגע ${m.description ? m.description.length : 0})`);
-check(/^\d+\.\d+\.\d+$/.test(m.version || ''),
-  `version חייב להיות בתבנית x.y.z (כרגע ${JSON.stringify(m.version)})`);
+// הכללים כאן הועתקו מ-src/manifestValidator.js של הוולידטור הרשמי, כולל
+// ה-trim ותבנית ה-SemVer, כדי שהתוצאה תהיה זהה לזו של ה-CI.
+const desc = (m.description || '').trim(), name = (m.name || '').trim();
+check(desc.length <= 150, `תיאור קצר חייב להכיל לכל היותר 150 תווים (כרגע ${desc.length})`);
+check(name.length <= 14, `שם התוסף חייב להכיל לכל היותר 14 תווים (כרגע ${name.length})`);
+check(/^\d+\.\d+\.\d+(?:\+.*)?$/.test(m.version || ''),
+  `version חייב להיות בתבנית SemVer (כרגע ${JSON.stringify(m.version)})`);
 for (const f of ['id', 'name', 'entrypoint', 'icon', 'author'])
   check(m[f], `שדה חובה חסר במניפסט: ${f}`);
+
+// כותרת הטאב חייבת להיות זהה ל-name; כותרת חסרה נופלת ל-name ולכן עוברת
+const tabTitle = m.contributes && m.contributes.toolTab
+  ? (m.contributes.toolTab.title ?? m.name) : null;
+if (tabTitle !== null)
+  check((tabTitle || '').trim() === name,
+    `שם התוסף ("${m.name}") שונה מכותרת הטאב ב-contributes.toolTab.title ("${tabTitle}") — חייבים להיות זהים`);
 
 // קבצים שהמניפסט מפנה אליהם חייבים להתקיים בעץ
 for (const f of ['entrypoint', 'icon']) {
