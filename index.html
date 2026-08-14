@@ -17,6 +17,7 @@
         <button data-view="zodiac">גלגל המלקה</button>
         <button data-view="hours">שרי השעות</button>
         <button data-view="dateline">קו התאריך</button>
+        <button data-view="eclipse">ליקויי המאורות</button>
         <button data-view="system3d">מערכת תלת-מימד</button>
       </nav>
       <span class="spacer"></span>
@@ -433,6 +434,80 @@
           </div>
         </aside>
       </section>
+      <!-- ═══ ליקויי המאורות ═══ -->
+      <section class="view" id="view-eclipse">
+        <div class="stage"><canvas id="eclipseCanvas"></canvas>
+          <div class="hud">
+            <div class="big" id="e_kind">ליקוי לבנה</div>
+            <div class="row"><span>תאריך הליקוי</span><b id="e_date">—</b></div>
+            <div class="row"><span>עברי</span><b id="e_date_he">—</b></div>
+            <div class="row"><span>שעה (זמן עולמי)</span><b id="e_utc">—</b></div>
+            <div class="row"><span>אחוז הכיסוי</span><b id="e_pct">—</b></div>
+            <div class="row" id="e_locRow" style="display:none"><span>מרכז הצל</span><b id="e_loc">—</b></div>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="card">
+            <h2>תצוגה</h2>
+            <div class="segmented" id="e_modeseg">
+              <button data-emode="lunar" class="active" title="ליקוי לבנה — צל הארץ על הירח">
+                <span class="seg-title">ליקוי לבנה</span><span class="seg-sub">צל הארץ על הירח</span>
+              </button>
+              <button data-emode="solar" title="ליקוי חמה — הירח מכסה את השמש">
+                <span class="seg-title">ליקוי חמה</span><span class="seg-sub">הירח מכסה את השמש</span>
+              </button>
+              <button data-emode="globe" title="מסלול הליקוי על הגלובוס">
+                <span class="seg-title">על הגלובוס</span><span class="seg-sub">מסלול הליקוי</span>
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>בחירת ליקוי</h2>
+            <div class="ctrls">
+              <button class="btn-secondary" id="e_prev">⏮ הקודם</button>
+              <button class="btn-secondary" id="e_next">⏭ הבא</button>
+            </div>
+            <label class="field">ליקויי המאה (2001–2100)</label>
+            <select id="e_list"><option>טוען…</option></select>
+            <div class="chk"><input type="checkbox" id="e_onlyTotal" />
+              <label for="e_onlyTotal">רק ליקויים מלאים</label></div>
+          </div>
+          <div class="card">
+            <h2>בקרת זמן</h2>
+            <div class="ctrls">
+              <button class="btn-primary" id="e_play">▶ הפעל</button>
+              <button class="btn-secondary" id="e_peak">⏱ שיא הליקוי</button>
+            </div>
+            <label class="field">מהירות: <b id="e_spdL">3.0</b> דקות/שנייה</label>
+            <input type="range" id="e_speed" min="0.5" max="20" step="0.5" value="3" />
+            <label class="field">מהלך הליקוי (גרירה)</label>
+            <input type="range" id="e_scrub" min="0" max="1000" step="1" value="500" />
+          </div>
+          <div class="card" data-emode-card="solar" style="display:none">
+            <h2>מרחק הירח מן הארץ</h2>
+            <div class="chk"><input type="checkbox" id="e_dsim" />
+              <label for="e_dsim">שליטה ידנית במרחק (הדגמה)</label></div>
+            <label class="field">מרחק: <b id="e_distL">384,400</b> ק״מ</label>
+            <input type="range" id="e_dist" min="356500" max="406700" step="100" value="384400" disabled />
+            <div class="htxt" style="margin-top:6px">ככל שהירח רחוק יותר מכדור הארץ הוא נראה קטן יותר, ואינו מספיק לכסות את כל השמש — והליקוי נעשה טבעתי. קרבו את הירח וראו את הליקוי נעשה מלא.</div>
+          </div>
+          <div class="card" data-emode-card="globe" style="display:none">
+            <h2>הגלובוס</h2>
+            <div class="chk"><input type="checkbox" id="e_follow" checked />
+              <label for="e_follow">המבט עוקב אחר מרכז הצל</label></div>
+            <div class="htxt" style="margin-top:6px">גררו את הגלובוס לסיבוב. ההכהיה על פני הכדור — לפי אחוז כיסוי השמש הנראה מכל מקום; הכתם הכהה — אזור הליקוי המלא (או הטבעתי), והקו הכתום — מסלול מרכז הצל, המתקדם ממערב למזרח.</div>
+          </div>
+          <div class="card">
+            <h2>הסבר קצר</h2>
+            <div class="htxt">
+              <b>ליקוי לבנה</b> — כדור הארץ עומד בין השמש ובין הירח, ומטיל את צלו על הירח. לעולם אינו בא אלא במילוי הירח, בסביבות ט״ו בחודש.<br><br>
+              <b>ליקוי חמה</b> — הירח עומד בין כדור הארץ ובין השמש, ומסתיר אותה מיושבי הארץ. לעולם אינו בא אלא סמוך למולד, בסביבות ערב ראש חודש.<br><br>
+              המיקומים, הזמנים ואחוזי הכיסוי מחושבים במדויק (Astronomy Engine); צל הארץ מוגדל 2% כמקובל בשל האטמוספרה. להמחשה בלבד.
+            </div>
+          </div>
+        </aside>
+      </section>
+
       <!-- ═══ מערכת תלת-מימד — שמש · ארץ · ירח ═══ -->
       <section class="view" id="view-system3d">
         <div class="stage"><canvas id="sys3dCanvas"></canvas>
@@ -517,6 +592,7 @@
   <script src="js/zodiac-sim.js"></script>
   <script src="js/hours-sim.js"></script>
   <script src="js/dateline-sim.js"></script>
+  <script src="js/eclipse-sim.js"></script>
   <script src="js/system3d.js"></script>
   <script src="js/app.js"></script>
 </body>

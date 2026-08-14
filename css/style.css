@@ -168,12 +168,12 @@ canvas { display: block; }
 /* קידום הקנבס לשכבת compositor נפרדת: ב-webview של אנדרואיד קנבס שמצויר
    ברצף בתוך עמוד נגלל (מאז פריסת המובייל הנגללת ב-0.6.5) עלול לגרום
    ל-repaint של כל העמוד בכל פריים → קרטוע. הבידוד מצמצם את הציור לקנבס בלבד. */
-#moonCanvas, #yearCanvas, #planetsCanvas {
+#moonCanvas, #yearCanvas, #planetsCanvas, #eclipseCanvas {
   transform: translateZ(0);
   backface-visibility: hidden;
   contain: paint;
 }
-#yearCanvas { touch-action: none; }
+#yearCanvas, #eclipseCanvas { touch-action: none; }
 
 aside.panel {
   width: 312px; flex-shrink: 0; overflow: auto;
@@ -212,7 +212,7 @@ input:focus-visible {
 .btn-primary { background: var(--color-primary); color: var(--color-on-primary); border: none; }
 .btn-primary:hover { opacity: 0.88; }
 /* כפתור הפעל/השהה — רוחב קבוע כדי שלא ישתנה בין "▶ הפעל" ל"⏸ השהה" */
-#m_play, #y_play { width: 72px; padding-inline: 6px; text-align: center; white-space: nowrap; }
+#m_play, #y_play, #e_play { width: 72px; padding-inline: 6px; text-align: center; white-space: nowrap; }
 /* מרכוז כפתורי הבקרה בלוח הצד — מופעי הירח ומהלך השמש */
 #view-moon .ctrls, #view-year .ctrls { justify-content: center; }
 .btn-secondary {
@@ -249,8 +249,10 @@ input:focus-visible {
   transition: background 0.15s, color 0.15s;
 }
 .segmented button:first-child { border-inline-start: none; }
-.segmented button .seg-title { font-size: 0.82em; font-weight: 600; white-space: nowrap; }
-.segmented button .seg-sub   { font-size: 0.66em; opacity: 0.7; white-space: nowrap; }
+.segmented button .seg-title { font-size: 0.82em; font-weight: 600; white-space: nowrap;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.segmented button .seg-sub   { font-size: 0.66em; opacity: 0.7; white-space: nowrap;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .segmented button:hover:not(.active) { background: var(--color-secondary-subtle); }
 .segmented button.active {
   background: var(--color-secondary-container);

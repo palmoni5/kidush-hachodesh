@@ -145,7 +145,7 @@
     try {
       window.I18N.setLanguage(app && (app.language || app.locale), app && app.textDirection);
       // תוכן שנבנה באירוע (טבלאות, תוויות תלת-מימד) מתרענן דרך hook ייעודי
-      for (const k of ['moon', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'system3d'])
+      for (const k of ['moon', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'eclipse', 'system3d'])
         if (SIMS[k] && SIMS[k].onLanguage) { try { SIMS[k].onLanguage(); } catch (e) {} }
       if (window.Sims.clearFitCache) window.Sims.clearFitCache();
       invalidate();
@@ -170,7 +170,7 @@
     // הלשוניות) חייבות להיעשות לפי המטריקות הסופיות, אחרת reflow מאוחר עם טעינת
     // הגופן מקפיץ את האיור פעם אחת עם תחילת ההפעלה.
     if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
-    setView(['moon', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'system3d'].includes(start) ? start : 'moon');
+    setView(['moon', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'eclipse', 'system3d'].includes(start) ? start : 'moon');
   });
   // ביטחון נוסף: אם גופן נטען מאוחר יותר, מנקים את מטמון המידות ומציירים מחדש פעם אחת
   if (document.fonts && document.fonts.ready) {
