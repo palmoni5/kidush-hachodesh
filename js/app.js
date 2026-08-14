@@ -32,7 +32,71 @@
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
     SIMS[name].bind();
     saveLastView(name);
+    revealTab(document.querySelector('#tabs button.active'));
     invalidate();
+  }
+
+  // ── גלילת פס הלשוניות ──────────────────────────────────────────────
+  // הלשונית הפעילה עלולה לשבת מחוץ לפס הנגלל. scrollIntoView עם inline:'nearest'
+  // אינו פועל כאן בפריסת RTL, ולכן החישוב נעשה ידנית — והוא גם נייטרלי לכיוון:
+  // הגדלת scrollLeft מזיזה את התוכן שמאלה בשני הכיוונים.
+  function revealTab(btn) {
+    if (!btn || !btn.parentElement) return;
+    const bar = btn.parentElement;
+    if (bar.scrollWidth <= bar.clientWidth) return;
+    const b = btn.getBoundingClientRect(), r = bar.getBoundingClientRect(), pad = 8;
+    let d = 0;
+    if (b.left < r.left + pad) d = b.left - (r.left + pad);
+    else if (b.right > r.right - pad) d = b.right - (r.right - pad);
+    // גלילה מיידית ולא behavior:'smooth': ההנפשה אינה פועלת בחלק מן ה-webview
+    // (נבדק — גם ללא prefers-reduced-motion), והקריאה יוצאת ללא כל תזוזה.
+    if (d) bar.scrollLeft += d;
+  }
+
+  // במגע הגלילה טבעית (overflow-x). בעכבר חסרות שתי דרכים: גלגלת אנכית
+  // שתזיז אופקית, וגרירה. הגרירה מסומנת רק אחרי סף תזוזה, כדי שלחיצה
+  // רגילה על לשונית תמשיך לעבוד; מעבר לסף מבוטלת לחיצת הסיום.
+  function enableTabScroll(bar) {
+    bar.addEventListener('wheel', e => {
+      if (bar.scrollWidth <= bar.clientWidth) return;
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;   // גלילה אופקית — הדפדפן מטפל
+      // ב-RTL הקצה ההתחלתי הוא scrollLeft = 0 והתוכן נמשך שמאלה בערכים
+      // שליליים; לכן גלגול מטה, שאמור להתקדם בלשוניות, הוא הפחתה.
+      const rtl = getComputedStyle(bar).direction === 'rtl';
+      bar.scrollLeft += rtl ? -e.deltaY : e.deltaY;
+      e.preventDefault();
+    }, { passive: false });
+
+    let startX = 0, startScroll = 0, id = null, moved = false;
+    const THRESHOLD = 4;                                       // פיקסלים עד שגרירה נחשבת גרירה
+
+    bar.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return; // במגע — הגלילה המובנית עדיפה
+      if (bar.scrollWidth <= bar.clientWidth) return;
+      id = e.pointerId; startX = e.clientX; startScroll = bar.scrollLeft; moved = false;
+    });
+    bar.addEventListener('pointermove', e => {
+      if (id === null || e.pointerId !== id) return;
+      const dx = e.clientX - startX;
+      if (!moved) {
+        if (Math.abs(dx) < THRESHOLD) return;
+        moved = true;
+        bar.classList.add('dragging');
+        bar.setPointerCapture(id);
+      }
+      bar.scrollLeft = startScroll - dx;
+    });
+    const end = () => {
+      if (id === null) return;
+      if (bar.hasPointerCapture && bar.hasPointerCapture(id)) bar.releasePointerCapture(id);
+      id = null;
+      // הסרת הסימון נדחית לסוף התור, אחרי שאירוע ה-click של הגרירה כבר בוטל
+      if (moved) setTimeout(() => bar.classList.remove('dragging'), 0);
+      else bar.classList.remove('dragging');
+    };
+    bar.addEventListener('pointerup', end);
+    bar.addEventListener('pointercancel', end);
+    bar.addEventListener('dragstart', e => e.preventDefault());
   }
 
   async function saveLastView(name) {
@@ -63,6 +127,7 @@
   // ── חיווט ראשוני (לא תלוי boot) ──
   $('brandIcon').src = window.ASSETS.moon_icon;
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
+  enableTabScroll($('tabs'));
   $('bgBtn').onclick = toggleBg;
 
   // ── חצי הגדלה/הקטנה מותאמים לכל שדות המספר ──
@@ -145,7 +210,7 @@
     try {
       window.I18N.setLanguage(app && (app.language || app.locale), app && app.textDirection);
       // תוכן שנבנה באירוע (טבלאות, תוויות תלת-מימד) מתרענן דרך hook ייעודי
-      for (const k of ['moon', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'eclipse', 'system3d'])
+      for (const k of ['moon', 'luach', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'eclipse', 'system3d'])
         if (SIMS[k] && SIMS[k].onLanguage) { try { SIMS[k].onLanguage(); } catch (e) {} }
       if (window.Sims.clearFitCache) window.Sims.clearFitCache();
       invalidate();
@@ -170,7 +235,7 @@
     // הלשוניות) חייבות להיעשות לפי המטריקות הסופיות, אחרת reflow מאוחר עם טעינת
     // הגופן מקפיץ את האיור פעם אחת עם תחילת ההפעלה.
     if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
-    setView(['moon', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'eclipse', 'system3d'].includes(start) ? start : 'moon');
+    setView(['moon', 'luach', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'eclipse', 'system3d'].includes(start) ? start : 'moon');
   });
   // ביטחון נוסף: אם גופן נטען מאוחר יותר, מנקים את מטמון המידות ומציירים מחדש פעם אחת
   if (document.fonts && document.fonts.ready) {

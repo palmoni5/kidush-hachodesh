@@ -96,20 +96,18 @@
 
   // ══ ראשי חודשים — א' בחודש עברי הקרוב (מהיום והלאה) ═══════════════════
   // הנידונים ברש"י ותוס' ר"ה וב"מ: ניסן, שבט, ואדר (בשנה מעוברת — אדר ב',
-  // הסמוך לניסן). האיתור: סריקת ימים קדימה עד למציאת א' בחודש המבוקש,
-  // לפי הלוח העברי של Intl. התוצאה נשמרת במטמון.
-  const RH_MONTHS = { nisan: ['Nisan'], shevat: ['Shevat'], adar: ['Adar', 'Adar II'] };
-  const _rhFmt = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' });
+  // הסמוך לניסן). מחושב מן המולד (js/hebrew-calendar.js) ולא מלוח ה-Intl,
+  // שסוטה ממנו ביום אחד בחלק מן השנים. התוצאה נשמרת במטמון.
+  const RH_MONTHS = { nisan: ['ניסן'], shevat: ['שבט'], adar: ['אדר', 'אדר ב׳'] };
   const _rhCache = Object.create(null);
   function nextRoshChodesh(key) {
     const dayKey = key + '|' + new Date().toDateString();
     if (_rhCache[dayKey]) return _rhCache[dayKey];
-    const names = RH_MONTHS[key], start = new Date(); start.setHours(12, 0, 0, 0);
-    for (let i = 0; i < 400; i++) {
-      const d = new Date(start.getTime() + i * 86400000);
-      const p = {}; for (const x of _rhFmt.formatToParts(d)) p[x.type] = x.value;
-      if (+p.day === 1 && names.includes(p.month)) return (_rhCache[dayKey] = d);
-    }
+    const start = new Date(); start.setHours(12, 0, 0, 0);
+    try {
+      const d = window.HebCal.nextRoshChodesh(RH_MONTHS[key], start);   // חצות מקומי
+      if (d) return (_rhCache[dayKey] = d);
+    } catch (_) {}
     return null;
   }
 
@@ -132,8 +130,7 @@
   function hebDay(n)  { return toHebNum(n); }
   function hebYear(n) { return toHebNum(n % 1000); } // מוריד אלפים (5786 → 786 = תשפ"ו)
 
-  // תאריך עברי — מ-Otzaria calendar API; fallback: Intl עם לוח עברי
-  const _hebFmt = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' });
+  // תאריך עברי — מ-Otzaria calendar API; fallback: חשבון המולד שב-HebCal
   const _hebCache = new Map(); // ms → string
 
   async function fetchHebrewDate(date) {
@@ -149,12 +146,13 @@
         return str;
       }
     } catch (_) {}
-    // fallback אם Otzaria לא זמינה (למשל בפיתוח) — parse מ-Intl ומשתמש בגימטריה
+    // fallback אם Otzaria לא זמינה (למשל בפיתוח) — חשבון המולד שלנו.
+    // לוח ה-Intl שימש כאן קודם, ונזנח: הוא סוטה ביום אחד בשנים שמולד תשרי
+    // שלהן חל ביום א׳ בין שעה 15 ל-18 והשנה שלפניהן מעוברת (ראו js/hebrew-calendar.js).
     try {
-      const parts = _hebFmt.formatToParts(date);
-      const p = Object.fromEntries(parts.map(x => [x.type, x.value]));
-      const str = `${hebDay(+p.day)} ${p.month} ${hebYear(+p.year)}`;
-      _hebCache.set(ms, str); return str;
+      const str = window.HebCal.formatHebrewDate(date);
+      if (str) _hebCache.set(ms, str);
+      return str;
     } catch (_) { return ''; }
   }
 

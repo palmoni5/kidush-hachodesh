@@ -129,7 +129,17 @@ nav.tabs {
   display: flex; gap: 7px; flex-wrap: nowrap;
   flex: 1; min-width: 0; overflow-x: auto;
   scrollbar-width: none;               /* הגלילה קיימת; הפס נשאר נקי */
+  /* מספר הלשוניות גדל מעבר לרוחב הפס: גלילה במגע היא ברירת המחדל, וגרירה
+     בעכבר וגלגלת מתווספות ב-app.js. overscroll-behavior מונע מהגרירה
+     להימשך אל גלילת העמוד או אל ניווט "אחורה" של הדפדפן. */
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
 }
+/* אין scroll-behavior: smooth על הפס — הוא היה הופך גרירה וגלגלת לרפויות
+   ומשבש צבירת אירועים רצופים. ההנפשה מבוקשת נקודתית ב-scrollIntoView. */
+nav.tabs.dragging { cursor: grabbing; }
+nav.tabs.dragging button { pointer-events: none; }
 nav.tabs::-webkit-scrollbar { display: none; }
 nav.tabs button { white-space: nowrap; flex-shrink: 0; }
 nav.tabs button {
@@ -320,6 +330,59 @@ table td:first-child { opacity: 0.7; }
 .seasondot { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
   margin-inline-start: 5px; vertical-align: middle; }
 
+/* ── לשונית הלוח העברי ─────────────────────────────── */
+/* אין כאן קנבס אלא טבלה, ולכן רקע הבמה מוחלף במשטח רגיל ומיושר לראש. */
+.stage.luach-stage {
+  background: var(--color-surface-container-high);
+  display: block; overflow: auto; padding: 16px;
+}
+.luach-head { margin-bottom: 12px; }
+.luach-head .lh-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.luach-head .lh-title b { font-size: 1.15em; color: var(--color-primary); }
+.luach-head .lh-title span { font-size: 0.74em; opacity: 0.75; }
+.luach-head .lh-line { font-size: 0.78em; margin-top: 5px; }
+.luach-head .lh-line b { color: var(--color-primary); font-weight: 700; }
+.luach-head .lh-molad { font-size: 0.72em; opacity: 0.8; margin-top: 6px; }
+.luach-head .lh-molad b { opacity: 1; font-weight: 600; }
+
+.luach-warn {
+  font-size: 0.72em; line-height: 1.6; margin-bottom: 12px;
+  border: 1px solid var(--color-outline); border-inline-start-width: 3px;
+  border-inline-start-color: var(--color-primary);
+  border-radius: var(--radius-md); padding: 8px 11px;
+  background: var(--color-secondary-subtle);
+}
+.luach-warn div + div { margin-top: 5px; }
+
+/* הטבלה נבנית בשתי אוריינטציות מאותם נתונים; כאן נבחרת המתאימה למסך */
+.luach-table { overflow-x: auto; }
+.luach-table table { width: auto; min-width: 100%; font-size: 0.7em; }
+.luach-table .luach-rows { display: none; }
+.luach-table th, .luach-table td {
+  padding: 5px 7px; border: 1px solid var(--color-outline);
+  text-align: center; white-space: nowrap;
+}
+.luach-table thead th {
+  background: var(--color-surface-container-highest);
+  font-weight: 700; color: var(--color-primary); position: sticky; top: 0;
+}
+.luach-table tbody th {
+  background: var(--color-surface-container-highest);
+  font-weight: 600; text-align: start; opacity: 0.85;
+  position: sticky; inset-inline-start: 0;
+}
+.luach-table th.corner { background: var(--color-surface-container-highest); }
+.luach-table td { opacity: 1; }
+.luach-table td i { font-style: normal; opacity: 0.55; font-size: 0.9em; }
+.luach-table .mname { font-weight: 600; color: var(--color-primary); }
+
+.luach-rules div { margin-bottom: 7px; }
+.luach-rules div.hit {
+  background: var(--color-secondary-subtle); border-radius: var(--radius-md);
+  padding: 6px 8px; margin-inline: -8px;
+}
+.luach-rules .luach-order { opacity: 0.7; font-style: italic; margin-top: 10px; }
+
 /* ── HUD מעל הקנבס (פלטת איור) ─────────────────────── */
 .hud {
   position: absolute; inset-block-start: 12px; inset-inline-start: 12px;
@@ -389,6 +452,14 @@ footer {
     padding: 12px;
   }
 
+  /* הלוח העברי: טבלה ולא איור — גובה לפי התוכן, ו-13 עמודות מתהפכות לשורות */
+  .stage.luach-stage {
+    height: auto; min-height: 0; max-height: none; overflow: visible; padding: 12px;
+  }
+  .luach-table .luach-cols { display: none; }
+  .luach-table .luach-rows { display: table; width: 100%; }
+  .luach-table .luach-rows th, .luach-table .luach-rows td { padding: 6px 5px; }
+
   /* HUD צמוד אך מתרחב לתוכן (בלי חיתוך/גלישת שורות לשתי שורות) */
   .hud { min-width: 0; max-width: calc(100% - 16px); padding: 8px 11px;
     inset-block-start: 8px; inset-inline-start: 8px; }
@@ -404,6 +475,7 @@ footer {
   .view { height: 100%; }
   .view.active { flex-direction: row; }
   .stage { flex: 1; height: auto; min-height: 0; max-height: none; }
+  .stage.luach-stage { overflow: auto; }   /* body נעול לגלילה במצב זה */
   aside.panel {
     width: 46%; max-width: 300px; max-height: none; overflow: auto;
     border-top: none; border-inline-start: 1px solid var(--color-outline);

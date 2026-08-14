@@ -12,6 +12,7 @@
       <span class="brand"><img id="brandIcon" alt="" /> קידוש החודש</span>
       <nav class="tabs" id="tabs">
         <button data-view="moon" class="active">מופעי הירח</button>
+        <button data-view="luach">הלוח העברי</button>
         <button data-view="year">מהלך השמש (שנת חמה)</button>
         <button data-view="planets">כוכבי הלכת</button>
         <button data-view="zodiac">גלגל המלקה</button>
@@ -67,6 +68,89 @@
       </section>
 
       <!-- ═══ מהלך השמש — שנת חמה ═══ -->
+      <!-- ═══ הלוח העברי ═══ -->
+      <section class="view" id="view-luach">
+        <div class="stage luach-stage" id="l_view">
+          <div class="luach-head">
+            <div class="lh-title"><b id="l_title">—</b><span id="l_kind">—</span></div>
+            <div class="lh-line" id="l_rh">—</div>
+            <div class="lh-line" id="l_rhNext">—</div>
+            <div class="lh-molad"><span>מולד תשרי</span> <b id="l_moladT">—</b></div>
+          </div>
+          <div class="luach-warn" id="l_warn" style="display:none"></div>
+          <div class="luach-table" id="l_table"></div>
+        </div>
+        <aside class="panel">
+          <div class="card" id="l_yearBox">
+            <h2>בחירת שנה</h2>
+            <label class="field">שנה עברית — <b id="l_yearName">—</b></label>
+            <input type="number" id="l_year" min="1" max="9999" />
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-secondary" id="l_prev">▶ קודמת</button>
+              <button class="btn-secondary" id="l_next">הבאה ◀</button>
+              <button class="btn-primary" id="l_today">🗓 השנה</button>
+            </div>
+          </div>
+
+          <div class="card" id="l_customBox" style="display:none">
+            <h2>שנת מעבדה</h2>
+            <div class="htxt" style="margin-bottom:9px">כאן הנתונים נקבעים ביד, כדי לראות כל דחיה פועלת בנפרד. זו אינה שנה מן הלוח — צירוף שאינו קיים במציאות יסומן באזהרה למעלה.</div>
+            <label class="field">מולד תשרי — יום בשבוע</label>
+            <select id="l_dow">
+              <option value="0">יום א׳</option>
+              <option value="1">יום ב׳</option>
+              <option value="2">יום ג׳</option>
+              <option value="3">יום ד׳</option>
+              <option value="4">יום ה׳</option>
+              <option value="5">יום ו׳</option>
+              <option value="6">שבת</option>
+            </select>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px">
+              <label class="field">שעות<input type="number" id="l_h" min="0" max="23" value="9" /></label>
+              <label class="field">חלקים<input type="number" id="l_p" min="0" max="1079" value="391" /></label>
+            </div>
+            <div class="htxt" style="margin-top:6px">השעות נמנות מתחילת הלילה — שש בערב. שעה 18 היא חצות היום, ומכאן "מולד זקן".</div>
+            <div class="chk"><input type="checkbox" id="l_leap" /><label for="l_leap">השנה מעוברת</label></div>
+            <div class="chk"><input type="checkbox" id="l_prevLeap" /><label for="l_prevLeap">השנה שלפניה מעוברת</label></div>
+            <div class="chk"><input type="checkbox" id="l_nextLeap" /><label for="l_nextLeap">השנה שאחריה מעוברת</label></div>
+            <div class="htxt" id="l_nextHint" style="margin-top:6px">—</div>
+          </div>
+
+          <div class="card">
+            <div class="ctrls"><button class="btn-secondary" id="l_customBtn">🧪 שנת מעבדה</button></div>
+          </div>
+
+          <div class="card">
+            <h2>הקדמה</h2>
+            <div class="htxt">
+              כדי לקבוע לוח שנה צריך לדעת שני פרטים: מהו המולד בראש השנה הנוכחית, ואם זו שנה פשוטה או מעוברת. משנודעו אלו נודע מאליו גם המולד הצפוי בראש השנה הבא — שהרי בשנה פשוטה יחול ראש השנה הבא <b>ד׳ ימים 8 שעות ו-876 חלקים</b> אחרי מולד ראש השנה שלפניו, ובשנה מעוברת <b>5 ימים 21 שעות ו-589 חלקים</b>.<br><br>
+              מכאן נקבע אורך השנה, ולפיו חשון וכסליו: שנה <b>חסרה</b> — שניהם חסרים; <b>כסדרה</b> — חשון חסר וכסליו מלא; <b>שלמה</b> — שניהם מלאים. שאר החודשים מלאים וחסרים לסירוגין.
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>ארבע הדחיות</h2>
+            <div class="htxt luach-rules">
+              <div id="l_r1"><b>א. מולד זקן</b> — כשמולד תשרי חל משעה 18 של היום והלאה, לא יקבע בו ראש השנה והוא נדחה למחרת.</div>
+              <div id="l_r2"><b>ב. לא אד״ו ראש</b> — אם אחרי הדחיה הראשונה חל ראש השנה באחד מימים ראשון, רביעי או שישי, נדחה יום נוסף.</div>
+              <div id="l_r3"><b>ג. ג״ט ר״ד בשנה פשוטה</b> — בשנה פשוטה שמולד תשרי שלה חל ביום שלישי אחרי שעה 9 ו-204 חלקים, ראש השנה נדחה (ומכיוון שרביעי הוא מאד״ו — נדחה לחמישי).</div>
+              <div id="l_r4"><b>ד. ב־ט״ו־תקפ״ט בשנה שאחרי מעוברת</b> — אם המולד חל בשנה שאחרי מעוברת ביום שני אחרי שעה 15 ו-589 חלקים, ראש השנה נדחה.</div>
+              <div class="luach-order">סדר הבחינה מהותי: שלוש הדחיות הראשונות נבחנות על יום המולד עצמו, ורק אחריהן נבחנת אד״ו על היום שהתקבל.</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>מקורות והערות</h2>
+            <div class="htxt">
+              חשבון הלוח על סדריו — <b>רמב״ם, הלכות קידוש החודש פרקים ו׳–ח׳</b>: המולד ומניינו בפרק ו׳, קביעת החודשים בפרק ז׳, וסדר הדחיות בפרק ח׳.<br><br>
+              טעמי הדחיות ופרטיהן נתבארו גם ב<b>פרי חדש, אורח חיים סימן תכ״ח</b>.<br><br>
+              <b>ר״ח בן יומיים</b> — חודש שלפניו מלא, ראש חודשו שני ימים: ל׳ של החודש הקודם וא׳ של הבא. הטבלה מציגה את שניהם.<br><br>
+              <b>מדוע לא לפי לוח הדפדפן</b> — לוח <span dir="ltr">ca-hebrew</span> המובנה בדפדפנים סוטה מן החשבון הזה ביום אחד בשנים שמולד תשרי שלהן חל ביום א׳ בין שעה 15 לשעה 18 והשנה שלפניהן מעוברת (הקרובות: תת״ז, ו׳נ״ד), משום שהוא מקדים אד״ו לשאר הדחיות. הלוח שכאן מחושב מן המולד עצמו.
+            </div>
+          </div>
+        </aside>
+      </section>
+
       <section class="view" id="view-year">
         <div class="stage"><canvas id="yearCanvas"></canvas>
           <div class="hud">
@@ -586,11 +670,13 @@
   <script src="js/assets.js"></script>
   <script src="js/i18n.js"></script>
   <script src="i18n/en.js"></script>
+  <script src="js/hebrew-calendar.js"></script>
   <script src="js/astronomy-adapter.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/sims.js"></script>
   <script src="js/zodiac-sim.js"></script>
   <script src="js/hours-sim.js"></script>
+  <script src="js/luach-sim.js"></script>
   <script src="js/dateline-sim.js"></script>
   <script src="js/eclipse-sim.js"></script>
   <script src="js/system3d.js"></script>

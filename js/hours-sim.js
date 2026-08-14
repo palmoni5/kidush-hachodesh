@@ -98,11 +98,10 @@
       return { nm, d, h, ruler: ruler(d, Math.floor(h)) };
     });
   }
+  // מחשבון המולד (js/hebrew-calendar.js) ולא מלוח ה-Intl, שסוטה ממנו ביום
+  // אחד בחלק מן השנים — ובגבול השנה זהו הפרש של שנה שלמה בחשבון התקופות.
   function hebYearOf(date) {
-    try {
-      const s = new Intl.DateTimeFormat('en-u-ca-hebrew', { year: 'numeric' }).format(date);
-      const m = s.match(/\d+/); if (m) return +m[0];
-    } catch (_) {}
+    try { const h = window.HebCal.fromGregorian(date); if (h) return h.year; } catch (_) {}
     return 5786;
   }
   // שעה מתחילת הלילה (שעות שוות משש בערב) → שעון + מניין השעות

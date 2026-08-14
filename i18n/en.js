@@ -376,4 +376,56 @@ window.TRANSLATIONS.en = {
   'ההכהיה — לפי אחוז כיסוי השמש בכל מקום; הקו הכתום — מסלול מרכז הצל':
     'Darkening — by sun-coverage percentage at each place; orange line — shadow-center path',
   'לחצו ▶ הפעל להנעת הליקוי · בחרו ליקוי אחר בלוח הצד': 'Press ▶ Play to animate · choose another eclipse in the side panel',
+
+  // ── הלוח העברי ───────────────────────────────────────────────────────
+  // ימי השבוע הקצרים והמלאים כבר מתורגמים למעלה; כאן רק 'שבת', שחסר שם
+  // (הלוח משתמש ב'שבת' המלא ולא ב'ש׳' שבלשונית שרי השעות).
+  'הלוח העברי': 'The Hebrew Calendar',
+  'שבת': 'Sat',
+  'תשרי': 'Tishrei', 'חשון': 'Cheshvan', 'כסליו': 'Kislev', 'טבת': 'Tevet', 'שבט': 'Shevat',
+  'אדר': 'Adar', 'אדר א׳': 'Adar I', 'אדר ב׳': 'Adar II', 'ניסן': 'Nisan', 'אייר': 'Iyar',
+  'סיון': 'Sivan', 'תמוז': 'Tamuz', 'אב': 'Av', 'אלול': 'Elul',
+  'זמן המולד': 'Molad time',
+  'מלא / חסר': 'Full / lacking',
+  // לא 'מלא' סתם: המילה כבר תפוסה בלשונית הליקויים במשמעות "ליקוי מלא"
+  'חודש מלא': 'full month', 'חודש חסר': 'lacking month',
+  'ר״ח ביום בשבוע': 'Rosh Chodesh weekday',
+  'ר״ח': 'R. Chodesh',
+  'א׳ בחודש — לועזי': '1st of month — civil',
+  'לועזי': 'Civil',
+  'ראש השנה': 'Rosh Hashana',
+  'שנת': 'Year', 'שנה עברית': 'Hebrew year',
+  'פשוטה': 'regular', 'מעוברת': 'leap',
+  'חסרה': 'deficient', 'כסדרה': 'regular order', 'שלמה': 'complete',
+  'חלקים': 'parts',
+  'ראש השנה ביום': 'Rosh Hashana falls on',
+  'ראש השנה בשנה הבאה ביום': 'Next year’s Rosh Hashana falls on',
+  'מולד תשרי': 'Molad of Tishrei',
+  'יום המולד': 'the day of the molad',
+  'דחיית': 'postponement:',
+  'מולד זקן': 'Molad Zaken',
+  'לא אד״ו ראש': 'Lo ADU Rosh',
+  'מולד זקן ולא אד״ו ראש': 'Molad Zaken and Lo ADU Rosh',
+  'ג״ט ר״ד': 'GaTaRaD',
+  'ב־ט״ו־תקפ״ט': 'BeTUTaKPaT',
+  'בחירת שנה': 'Choose a year',
+  // בעברית החץ של "קודמת" פונה ימינה ושל "הבאה" שמאלה; באנגלית להפך
+  '▶ קודמת': '◀ Previous', 'הבאה ◀': 'Next ▶', '🗓 השנה': '🗓 This year',
+  '🧪 שנת מעבדה': '🧪 Sandbox year',
+  '↩ חזרה לשנה אמיתית': '↩ Back to a real year',
+  'שנת מעבדה': 'Sandbox year',
+  'מולד תשרי — יום בשבוע': 'Molad of Tishrei — weekday',
+  'השנה מעוברת': 'This year is a leap year',
+  'השנה שלפניה מעוברת': 'The preceding year is a leap year',
+  'השנה שאחריה מעוברת': 'The following year is a leap year',
+  'שנה שאחרי מעוברת היא תמיד פשוטה': 'A year following a leap year is always regular',
+  'משפיע רק כשמולד תשרי הבא חל ביום ג׳ אחרי ט׳ ר״ד':
+    'Matters only when the next molad of Tishrei falls on Tuesday after 9h 204p',
+  'הקדמה': 'Introduction',
+  'ארבע הדחיות': 'The four postponements',
+  'מקורות והערות': 'Sources and notes',
+  'אין בלוח שתי שנים מעוברות רצופות — במחזור י״ט השנים המעוברות הן ג׳ ו׳ ח׳ י״א י״ד י״ז י״ט, ואין שתיים סמוכות. הצירוף הזה אינו קיים.':
+    'The calendar has no two consecutive leap years — in the 19-year cycle the leap years are 3, 6, 8, 11, 14, 17, 19, none adjacent. This combination does not occur.',
+  'אורך השנה שהתקבל אינו מן האורכים החוקיים (353/354/355 בפשוטה, 383/384/385 במעוברת) — צירוף הנתונים שנבחר אינו נפגש בלוח.':
+    'The resulting year length is not one of the valid lengths (353/354/355 regular, 383/384/385 leap) — this combination does not occur in the calendar.',
 };
