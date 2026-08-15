@@ -406,21 +406,26 @@
     const right = cross(zv, up);
     const vM = norm(g.M);
     const offx = dot(vM, right) / g.rs * sunR, offy = dot(vM, up) / g.rs * sunR;
-    // זוהר סביב השמש (נחלש עם הכיסוי); בליקוי מלא — עטרה (קורונה)
+    // בליקוי מלא — עטרה (קורונה) סביב השמש המכוסה
     if (g.kind === 'total') {
       const cor = ctx.createRadialGradient(scx, scy, sunR * 0.9, scx, scy, sunR * 2.3);
       cor.addColorStop(0, 'rgba(235,240,255,0.85)'); cor.addColorStop(1, 'transparent');
       ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(scx, scy, sunR * 2.3, 0, 2*Math.PI); ctx.fill();
-    } else {
+    }
+    ctx.fillStyle = '#ffd24a';
+    ctx.beginPath(); ctx.arc(scx, scy, sunR, 0, 2*Math.PI); ctx.fill();
+    // הירח המסתיר — בצבע השמים: צדו הלילי אינו נראה כנגד שמי היום, ולכן מחוץ
+    // לדיסקת השמש הוא נבלע ברקע, ועל פני השמש הוא נראה כ"נגיסה" בצבע השמים
+    // שמתכהה עמם לאורך הליקוי.
+    ctx.fillStyle = skyG;
+    ctx.beginPath(); ctx.arc(scx + offx, scy - offy, moonR, 0, 2*Math.PI); ctx.fill();
+    // הזוהר האטמוספרי סביב השמש (נחלש עם הכיסוי) — פזור באוויר שלפני הצופה,
+    // ולכן נצבע מעל הירח; בליקוי מלא אין זוהר, רק העטרה שמאחור
+    if (g.kind !== 'total') {
       const gl = ctx.createRadialGradient(scx, scy, 2, scx, scy, sunR * 2.1);
       gl.addColorStop(0, `rgba(255,214,120,${0.55 * (1 - 0.8 * f)})`); gl.addColorStop(1, 'transparent');
       ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(scx, scy, sunR * 2.1, 0, 2*Math.PI); ctx.fill();
     }
-    ctx.fillStyle = '#ffd24a';
-    ctx.beginPath(); ctx.arc(scx, scy, sunR, 0, 2*Math.PI); ctx.fill();
-    // הירח המסתיר
-    ctx.fillStyle = dk > 0.85 ? '#060608' : 'rgba(16,16,22,0.985)';
-    ctx.beginPath(); ctx.arc(scx + offx, scy - offy, moonR, 0, 2*Math.PI); ctx.fill();
     ctx.restore();
     ctx.strokeStyle = cvv('--ill-line'); ctx.lineWidth = 1.2;
     roundRect(ctx, vx, vy, vw, vh, 12); ctx.stroke();

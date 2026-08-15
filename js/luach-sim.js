@@ -63,7 +63,7 @@
       ms.map(m => `<th>${T(m.name)}</th>`).join('') + '</tr></thead><tbody>' +
       `<tr>${th('זמן המולד')}${ms.map(m => cell(moladShort(m.molad), moladFull(m.molad))).join('')}</tr>` +
       `<tr>${th('מלא / חסר')}${ms.map(m => cell(m.len, T(fullWord(m)))).join('')}</tr>` +
-      `<tr>${th('ר״ח ביום בשבוע')}${ms.map(m => cell(m.rc.label ? T(m.rc.label) : rcText(m.rc))).join('')}</tr>` +
+      `<tr>${th('ר״ח ביום בשבוע')}${ms.map(m => cell(rcText(m.rc))).join('')}</tr>` +
       `<tr>${th('א׳ בחודש — לועזי')}${ms.map(m => cell(gregShort(m.startAbs), gregFull(m.startAbs))).join('')}</tr>` +
       '</tbody></table>';
 
@@ -75,7 +75,7 @@
         `<td class="mname">${T(m.name)}</td>` +
         cell(moladShort(m.molad), moladFull(m.molad)) +
         cell(`${m.len} <i>${T(fullWord(m))}</i>`) +
-        cell(m.rc.label ? T(m.rc.label) : rcText(m.rc)) +
+        cell(rcText(m.rc)) +
         cell(gregFull(m.startAbs)) + '</tr>').join('') +
       '</tbody></table>';
 
@@ -112,6 +112,9 @@
       `${T('ראש השנה בשנה הבאה ביום')} <b>${T(H.DOW[t.rhNext.dow])}</b> (${dechiyaPhrase(t.rhNext)})` +
       (t.year ? ` — ${gregFull(t.rhNext.abs)}` : '');
     $('l_moladT').textContent = moladFull(t.rh.molad);
+    // מולד תשרי הבא — הבסיס לקביעת השנה: ההפרש בין שני ימי ראש השנה
+    // (אחרי הדחיות) הוא שקובע אם השנה חסרה, כסדרה או שלמה.
+    $('l_moladTNext').textContent = moladFull(t.nextMolad);
 
     // הדגשת הדחיה שפעלה בפועל
     for (const id of ['l_r1', 'l_r2', 'l_r3', 'l_r4'])

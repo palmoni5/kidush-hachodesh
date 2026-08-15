@@ -138,10 +138,9 @@ window.HebCal = (function () {
       const m = partsOf(molad + i * LUNATION);
       const start = abs;
       // ראש חודש בן יומיים כשהחודש הקודם מלא: ל׳ שלו ואחריו א׳ של זה
+      // (תשרי תמיד בן יום אחד — אלול לעולם חסר)
       const prevFull = i > 0 && lens[i - 1] === 30;
-      const rc = i === 0
-        ? { days: [start], label: 'ראש השנה' }
-        : { days: prevFull ? [start - 1, start] : [start], label: null };
+      const rc = { days: prevFull ? [start - 1, start] : [start] };
       abs += lens[i];
       return {
         idx: i, name, len: lens[i], full: lens[i] === 30,
