@@ -337,6 +337,8 @@ window.TRANSLATIONS.en = {
   '⏭ הבא': '⏭ Next',
   'ליקויי המאה (2001–2100)': 'Eclipses of the century (2001–2100)',
   'רק ליקויים מלאים': 'Total eclipses only',
+  'רק ליקויים הנראים בארץ ישראל': 'Only eclipses visible from Israel',
+  'בא״י': 'in Israel:',
   'טוען…': 'Loading…',
   '⏱ שיא הליקוי': '⏱ Eclipse peak',
   'דקות/שנייה': 'minutes/sec',

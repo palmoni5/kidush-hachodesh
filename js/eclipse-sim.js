@@ -151,9 +151,56 @@
     return { t0: pk + (first - 6) * 60000, t1: pk + (last + 6) * 60000 };
   }
 
+  // ── נראוּת מארץ ישראל ──────────────────────────────────────────────────
+  // ליקוי לבנה נראה מכל מקום שהירח מעל האופק בו; די לבדוק את גובה הירח
+  // בירושלים בשיא ובקצות השלב החלקי. ליקוי חמה תלוי-מקום באמת, ולכן נבנית
+  // (בנגיסות, כמו הרשימה הראשית) רשימת הליקויים המקומיים לצופה בירושלים —
+  // המנוע מחזיר לכל אחד גם את סוגו המקומי ואת שיעור הכיסוי שם.
+  const IL_OBS = new AE.Observer(31.78, 35.22, 750);        // ירושלים
+  function moonUpIL(ms) {
+    const t = AE.MakeTime(new Date(ms));
+    const eq = AE.Equator(AE.Body.Moon, t, IL_OBS, true, true);
+    return AE.Horizon(t, IL_OBS, eq.ra, eq.dec, 'normal').altitude > -0.3;
+  }
+  function lunarVisibleIL(e) {
+    const pk = e.peak.date.getTime();
+    const sd = (e.sd_partial || e.sd_penum || 60) * 60000;
+    return moonUpIL(pk) || moonUpIL(pk - sd) || moonUpIL(pk + sd);
+  }
+
+  const ILS = { arr: [], done: false, started: false };     // ליקויי חמה בא״י
+  function buildILSolar() {
+    if (ILS.started || !AE) return;
+    ILS.started = true;
+    let ev;
+    try { ev = AE.SearchLocalSolarEclipse(new Date(Date.UTC(2000, 11, 20)), IL_OBS); }
+    catch (er) { ILS.done = true; return; }
+    const chunk = () => {
+      try {
+        for (let n = 0; n < 6; n++) {
+          if (ev.peak.time.date.getUTCFullYear() > 2100) { ILS.done = true; refreshList(); return; }
+          // רק כשהשמש מעל האופק בשיא (ליקוי בשקיעה גמורה אינו נראה),
+          // ורק בכיסוי של ממש — פחות מחצי אחוז אינו נראה לעין
+          if (ev.peak.altitude > 0 && ev.obscuration >= 0.005)
+            ILS.arr.push({ ms: ev.peak.time.date.getTime(), kind: ev.kind, pct: ev.obscuration });
+          ev = AE.NextLocalSolarEclipse(ev.peak.time, IL_OBS);
+        }
+      } catch (er) { ILS.done = true; }
+      refreshList();
+      if (!ILS.done) setTimeout(chunk, 0);
+    };
+    setTimeout(chunk, 0);
+  }
+  // התאמת ליקוי גלובלי לרשומה המקומית — השיאים רחוקים לכל היותר שעות ספורות
+  function ilSolarInfo(ms) {
+    for (const it of ILS.arr) if (Math.abs(it.ms - ms) < 36 * 3600000) return it;
+    return null;
+  }
+
   // ── רשימת ליקויי המאה (2001–2100) — נבנית בנגיסות כדי לא להקפיא את הממשק ──
   const LISTS = { lunar: null, solar: null };
   function buildList(type) {
+    if (type === 'solar') buildILSolar();
     if (LISTS[type]) return;
     const L = LISTS[type] = { arr: [], done: false };
     let e;
@@ -162,7 +209,10 @@
       try {
         for (let n = 0; n < 12; n++) {
           if (e.peak.date.getUTCFullYear() > 2100) { L.done = true; refreshList(); return; }
-          L.arr.push({ kind: e.kind, ms: e.peak.date.getTime(), date: e.peak.date });
+          L.arr.push({
+            kind: e.kind, ms: e.peak.date.getTime(), date: e.peak.date,
+            il: type === 'lunar' ? lunarVisibleIL(e) : null,
+          });
           e = seqNext(type, e);
         }
       } catch (er) { L.done = true; }
@@ -177,15 +227,28 @@
     const type = sim.mode === 'lunar' ? 'lunar' : 'solar';
     const L = LISTS[type];
     const only = $('e_onlyTotal') && $('e_onlyTotal').checked;
+    const onlyIL = $('e_onlyIL') && $('e_onlyIL').checked;
+    if (onlyIL && type === 'solar') buildILSolar();
     const loc = window.I18N ? window.I18N.dateLocale : 'he-IL';
     const cur = sim.einfo ? sim.einfo.peak.date.getTime() : 0;
     let html = '';
     if (L) for (const it of L.arr) {
       if (only && it.kind !== 'total') continue;
-      const lbl = it.date.toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric' }) + ' — ' + T(EK[it.kind] || it.kind);
+      // בליקוי חמה הסוג ברשימה הוא העולמי; בא״י אופן הליקוי עשוי להיות אחר
+      // (מלא בעולם — חלקי בא״י), ולכן מוצג לצדו גם המקומי עם שיעור הכיסוי.
+      let ilTag = '';
+      if (type === 'solar') {
+        const il = ilSolarInfo(it.ms);
+        if (onlyIL && !il) continue;
+        if (il) ilTag = ' · ' + T('בא״י') + ' ' +
+          (il.kind === 'total' ? T('מלא') : il.kind === 'annular' ? T('טבעתי')
+            : Math.round(il.pct * 100) + '%');
+      } else if (onlyIL && !it.il) continue;
+      const lbl = it.date.toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric' }) + ' — ' + T(EK[it.kind] || it.kind) + ilTag;
       html += `<option value="${it.ms}">${lbl}</option>`;
     }
-    if (!L || !L.done) html += `<option value="">${T('טוען…')}</option>`;
+    if (!L || !L.done || (type === 'solar' && !ILS.done && (onlyIL || ILS.started)))
+      html += `<option value="">${T('טוען…')}</option>`;
     sel.innerHTML = html;
     sel.value = String(cur);
     if (sel.value !== String(cur)) sel.selectedIndex = -1;   // הליקוי הנוכחי מסונן/מחוץ למאה
@@ -759,7 +822,22 @@
         const ms = +e.target.value; if (!ms) return;
         try { this.setEclipse(nextEcl(this.type, new Date(ms - 5 * 86400000))); } catch (er) {}
       };
-      $('e_onlyTotal').onchange = () => refreshList();
+      // שתי תיבות הסינון נשמרות לרענון ולהפעלה הבאה (באחסון התוסף של אוצריא;
+      // ב-stub הפיתוח storage.get מחזיר null ולכן ברירת המחדל — לא מסומן)
+      const persistChk = (id, key) => {
+        const el = $(id);
+        el.onchange = () => {
+          refreshList();
+          try { Otzaria.call('storage.set', { key, value: el.checked }); } catch (e) {}
+        };
+        try {
+          Otzaria.call('storage.get', { key }).then(r => {
+            if (r && r.success && !!r.data !== el.checked) { el.checked = !!r.data; refreshList(); }
+          }).catch(() => {});
+        } catch (e) {}
+      };
+      persistChk('e_onlyTotal', 'eclOnlyTotal');
+      persistChk('e_onlyIL', 'eclOnlyIL');
       $('e_dsim').onchange = e => {
         this.distOn = e.target.checked;
         $('e_dist').disabled = !this.distOn;
