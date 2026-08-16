@@ -25,6 +25,19 @@
     return wax ? 'גיבן מתמלא' : 'גיבן מתמעט';
   }
 
+  // ===== המולד האמיתי =====
+  // רגע הקיבוץ (קוניונקציה) האסטרונומי הקרוב לרגע נתון — לחלונית חישוב
+  // המולדות בלשונית הלוח. חלון של ±3.5 ימים מספיק: המרחק בין המולד הממוצע
+  // לאמיתי הוא שעות בודדות עד יממה, וקיבוצים סמוכים רחוקים כ-29.5 יום,
+  // כך שבחלון לעולם נמצא בדיוק אחד.
+  function newMoonNear(dateUTC) {
+    try {
+      const start = AE.MakeTime(new Date(dateUTC.getTime() - 3.5 * 86400000));
+      const t = AE.SearchMoonPhase(0, start, 7);
+      return t ? t.date : null;
+    } catch (_) { return null; }
+  }
+
   // ===== מהלך השמש =====
   // חישוב טהור — לא תלוי בדיוק הספרייה; נשמר כפי שהוא.
   function solarDecl(daysFromSpring) { return 23.44 * sin(360 * daysFromSpring / SOLAR_YEAR); }
@@ -71,7 +84,7 @@
 
   window.Astro = {
     SYNODIC, SOLAR_YEAR,
-    moonIllum, moonWaning, moonPhaseLabel,
+    moonIllum, moonWaning, moonPhaseLabel, newMoonNear,
     solarDecl, sunHorizon, dayLengthHours,
     computeSky,
   };

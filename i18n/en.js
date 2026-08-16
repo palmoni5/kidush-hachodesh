@@ -442,4 +442,21 @@ window.TRANSLATIONS.en = {
     'The calendar has no two consecutive leap years — in the 19-year cycle the leap years are 3, 6, 8, 11, 14, 17, 19, none adjacent. This combination does not occur.',
   'אורך השנה שהתקבל אינו מן האורכים החוקיים (353/354/355 בפשוטה, 383/384/385 במעוברת) — צירוף הנתונים שנבחר אינו נפגש בלוח.':
     'The resulting year length is not one of the valid lengths (353/354/355 regular, 383/384/385 leap) — this combination does not occur in the calendar.',
+
+  // ── חלונית חישוב המולדות ─────────────────────────────────────────────
+  'חישוב המולדות': 'Molad Calculator',
+  'חודש — בשנה המוצגת': 'Month — of the displayed year',
+  'מולד בהר״ד': 'Molad BaHaRaD',
+  'יום ב׳, 5 שעות 204 חלקים': 'Monday, 5 hours 204 parts',
+  'חודשים שעברו מאז': 'Months elapsed since',
+  'המולד (הממוצע)': 'The molad (mean)',
+  'המולד האמיתי': 'The true molad',
+  'שעון ישראל': 'Israel clock',
+  'לפנה״ס': 'BCE',
+  'האמיתי קדם לממוצע ב-{h} שעות ו-{m} דקות':
+    'The true molad precedes the mean by {h}h {m}m',
+  'האמיתי מאוחר מן הממוצע ב-{h} שעות ו-{m} דקות':
+    'The true molad follows the mean by {h}h {m}m',
+  'בשנים רחוקות מזמננו דיוק החישוב האסטרונומי פוחת, בעיקר מחמת אי-הוודאות בקצב סיבוב הארץ.':
+    'Far from the present era the astronomical computation loses precision, mainly due to uncertainty in Earth’s rotation rate.',
 };

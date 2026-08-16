@@ -390,6 +390,19 @@ table td:first-child { opacity: 0.7; }
 }
 .luach-rules .luach-order { opacity: 0.7; font-style: italic; margin-top: 10px; }
 
+/* חלונית חישוב המולדות — בגוף הדף, מתחת לטבלה השנתית */
+.luach-molad { margin-top: 14px; }
+.luach-molad h2 { margin-bottom: 4px; }
+.lm-grid { display: grid; grid-template-columns: minmax(250px, 330px) 1fr; gap: 8px 26px; align-items: start; }
+.lm-grid select { max-width: 220px; }
+.lm-out { font-size: 0.78em; line-height: 1.55; margin-top: 10px; }
+.lm-out .lm-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+.lm-out .lm-row span { opacity: 0.72; white-space: nowrap; }
+.lm-out .lm-row b { font-weight: 600; text-align: end; }
+.lm-out .lm-row b i { font-style: normal; opacity: 0.6; font-size: 0.92em; }
+.lm-out .lm-diff { margin-top: 8px; color: var(--color-primary); font-weight: 600; }
+.lm-out .lm-note { margin-top: 7px; opacity: 0.7; font-size: 0.92em; }
+
 /* ── HUD מעל הקנבס (פלטת איור) ─────────────────────── */
 .hud {
   position: absolute; inset-block-start: 12px; inset-inline-start: 12px;
@@ -465,6 +478,8 @@ footer {
   }
   .luach-table .luach-cols { display: none; }
   .luach-table .luach-rows { display: table; width: 100%; }
+  /* חלונית המולדות: במסך צר ההסבר יורד מתחת לנתונים */
+  .lm-grid { grid-template-columns: 1fr; }
   .luach-table .luach-rows th, .luach-table .luach-rows td { padding: 6px 5px; }
 
   /* HUD צמוד אך מתרחב לתוכן (בלי חיתוך/גלישת שורות לשתי שורות) */

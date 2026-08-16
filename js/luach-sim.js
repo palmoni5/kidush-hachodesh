@@ -82,6 +82,91 @@
     $('l_table').innerHTML = cols + rows;
   }
 
+  // ── חלונית חישוב המולדות ────────────────────────────────────────────
+  // המולד הממוצע — בהר״ד ועוד כ״ט י״ב תשצ״ג לכל חודש שעבר; המולד האמיתי —
+  // רגע הקיבוץ האסטרונומי (Astro.newMoonNear), מוצג בשעון ישראל.
+  // הגשר בין שני החשבונות הוא רגע לועזי אחד: יום המולד ממופה לתאריך דרך
+  // עוגן הלוח, ושעות הלוח — הנמנות משש בערב — נקראות כזמן ירושלים האמצעי
+  // (UTC+2:21), כדרך שנוקטים בחשבון המולדות.
+  const BEHERAD = H.moladTishrei(1);          // מולד תוהו — נקודת האפס של המניין
+  const JLM_MS = (2 * 60 + 21) * 60000;       // זמן ירושלים האמצעי
+
+  // רגע המולד הממוצע: local — "שעון קיר" ירושלמי לקריאה ב-getUTC*; utc — אמיתי
+  function moladInstant(m) {
+    const local = H.absToDate(m.abs).getTime() - 6 * 3600000 +
+      (m.h * 3600 + m.p * 10 / 3) * 1000;     // חלק = 10/3 שניות
+    return { local, utc: local - JLM_MS };
+  }
+
+  // תאריך לועזי מ-Date שנקרא ב-getUTC*. שנים אסטרונומיות 0 ומטה הן לפנה״ס.
+  function fmtDMY(d) {
+    const y = d.getUTCFullYear();
+    return d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.' +
+      (y <= 0 ? (1 - y) + ' ' + T('לפנה״ס') : y);
+  }
+
+  // תאריך ושעה בשעון ישראל (Asia/Jerusalem — כולל שעון קיץ בשנים שנהג,
+  // וזמן ירושלים המקומי בשנים שקדמו לשעון אזורים). fallback: UTC+2 קבוע.
+  function fmtIsrael(date) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Jerusalem', era: 'short', weekday: 'short',
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+      }).formatToParts(date);
+      const g = t => { const p = parts.find(x => x.type === t); return p ? p.value : ''; };
+      const wd = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[g('weekday')];
+      const era = /^b/i.test(g('era')) ? ' ' + T('לפנה״ס') : '';
+      // התאריך והשעה עטופים ב-ltr — בלי זה סדר שני רצפי הספרות מתהפך ב-RTL
+      return `${T(DOW_FULL[wd] || '')}, <span dir="ltr">${+g('day')}.${+g('month')}.${+g('year')}</span>${era} ${g('hour')}:${g('minute')}`;
+    } catch (_) {
+      const d = new Date(date.getTime() + 2 * 3600000);
+      const pad = n => String(n).padStart(2, '0');
+      return `${T(DOW_FULL[d.getUTCDay()])}, <span dir="ltr">${fmtDMY(d)}</span> ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+    }
+  }
+
+  function renderMolad(t) {
+    const box = $('l_moladBox');
+    if (!box || !t.year) return;                // בשנת מעבדה הכרטיס מוסתר
+    if (sim.moladIdx == null) sim.moladIdx = 0;
+
+    // רשימת החודשים תלויה בעיבור; הבחירה נשמרת לפי שם (אדר ↔ אדר א׳/ב׳ בקירוב)
+    const sel = $('lm_month');
+    let i = t.months.findIndex(x => x.name === sim._moladName);
+    if (i < 0 && sim._moladName && sim._moladName.startsWith('אדר'))
+      i = t.months.findIndex(x => x.name.startsWith('אדר'));
+    if (i < 0) i = Math.min(sim.moladIdx, t.months.length - 1);
+    sim.moladIdx = i; sim._moladName = t.months[i].name;
+    sel.innerHTML = t.months.map((m, k) => `<option value="${k}">${T(m.name)}</option>`).join('');
+    sel.value = String(i);
+
+    const m = t.months[i].molad;
+    // מניין החודשים: המרחק מבהר״ד בחלקים, מחולק באורך הלבנה — שלם בהגדרה
+    $('lm_count').textContent = Math.round((m.abs * H.P_DAY + m.t - BEHERAD) / H.LUNATION);
+
+    const inst = moladInstant(m);
+    $('lm_mean').innerHTML = `${moladFull(m)}<br>${fmtDMY(new Date(inst.local))}`;
+
+    const nm = window.Astro && window.Astro.newMoonNear
+      ? window.Astro.newMoonNear(new Date(inst.utc)) : null;
+    if (nm) {
+      $('lm_true').innerHTML = `${fmtIsrael(nm)}<br><i>(${T('שעון ישראל')})</i>`;
+      const diff = nm.getTime() - inst.utc;
+      const tot = Math.round(Math.abs(diff) / 60000);
+      $('lm_diff').textContent =
+        T(diff < 0 ? 'האמיתי קדם לממוצע ב-{h} שעות ו-{m} דקות'
+                   : 'האמיתי מאוחר מן הממוצע ב-{h} שעות ו-{m} דקות')
+          .replace('{h}', Math.floor(tot / 60)).replace('{m}', tot % 60);
+    } else {
+      $('lm_true').textContent = '—';
+      $('lm_diff').textContent = '';
+    }
+    // מחוץ לטווח 1600–2200 הדיוק האסטרונומי פוחת (אי-ודאות ΔT) — מוצגת הערה
+    const gy = new Date(inst.utc).getUTCFullYear();
+    $('lm_note').style.display = (gy < 1600 || gy > 2200) ? '' : 'none';
+  }
+
   function dechiyaPhrase(info) {
     return info.dechiya
       ? T('דחיית') + ' ' + T(DECHIYA_NAME[info.dechiya] || info.dechiya)
@@ -154,8 +239,10 @@
       if (this._sig === sig) return;
       this._sig = sig;
       const t = this.build();
+      this._t = t;                             // לחלונית המולדות (החלפת חודש בלבד)
       renderSummary(t);
       renderTable(t);
+      renderMolad(t);
       if (window.I18N && window.I18N.active) window.I18N.translateDom($('l_view'));
       // אחרי translateDom ולא לפניו: הוא משחזר מאפייני title מן הערך שנקלט
       // בפעם הראשונה (בניגוד לצמתי טקסט, שיש להם זיהוי כתיבה דינמית), ולכן
@@ -169,6 +256,8 @@
       const on = this.custom;
       $('l_customBox').style.display = on ? '' : 'none';
       $('l_yearBox').style.display = on ? 'none' : '';
+      // חלונית המולדות טעונה שנה אמיתית — למולד לועזי ולקיבוץ האסטרונומי
+      $('l_moladBox').style.display = on ? 'none' : '';
       $('l_customBtn').textContent = T(on ? '↩ חזרה לשנה אמיתית' : '🧪 שנת מעבדה');
       if (!on) return;
       const nx = $('l_nextLeap');
@@ -191,6 +280,7 @@
       if (this._bound) return; this._bound = true;
       const today = H.fromGregorian(new Date());
       if (today) this.year = today.year;
+      this.moladIdx = today ? today.monthIdx : 0;   // חלונית המולדות נפתחת על החודש הנוכחי
       this._syncYear();
       this._syncCustom();
 
@@ -200,6 +290,11 @@
         this._syncYear(); redraw();
       };
       $('l_year').onchange = e => setYear(+e.target.value || this.year);
+      $('lm_month').onchange = e => {
+        this.moladIdx = +e.target.value;
+        this._moladName = null;                    // הבחירה החדשה תיקבע לפי האינדקס
+        if (this._t) renderMolad(this._t);
+      };
       $('l_prev').onclick = () => setYear(this.year - 1);
       $('l_next').onclick = () => setYear(this.year + 1);
       $('l_today').onclick = () => {
