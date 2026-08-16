@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "com.otzaria.kidush-hachodesh",
   "name": "קידוש החודש",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "איורים אינטראקטיביים לגרמי השמיים: מופעי הירח, הלוח העברי, מהלך השמש, כוכבי הלכת, המזלות, שרי השעות, קו התאריך, ליקויי המאורות ומערכת תלת-מימדית.",
   "author": "פלמנמוני",
   "stability": "stable",
@@ -18,7 +18,8 @@
     "ui.feedback",
     "plugin.storage.read",
     "plugin.storage.write",
-    "calendar.read"
+    "calendar.read",
+    "settings.read"
   ],
   "network": {
     "enabled": false,

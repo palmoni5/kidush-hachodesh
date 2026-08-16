@@ -164,7 +164,7 @@ window.TRANSLATIONS.en = {
   '365 ימים 6 שעות': '365 days 6 hours',
   'תקופת רב אדא': 'Tekufas Rav Ada',
   "365י' 5ש' 997ח' 48ר'": '365d 5h 997ch 48r',
-  'כל תקופה': 'Each tekufah',
+  'כל תקופה (של שמואל)': 'Each tekufah (of Shmuel)',
   '91 ימים 7.5 שעות': '91 days 7.5 hours',
   'ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז וטבת (הקיצון).':
     'The four tekufos are the extreme points of the Sun’s path: Nissan/Tishrei (equinoxes), Tammuz and Teves (solstices).',
@@ -204,6 +204,8 @@ window.TRANSLATIONS.en = {
     'The ascendant is the point of the zodiac rising at that moment on the eastern horizon. The whole wheel circles the Earth once a day, so all twelve signs rise and set every day — roughly one sign every two hours.',
   'כשהאופק מוצג, הגלגל מסובב לפי הרגע והמקום: המזרח (המזל העולה) בצד שמאל, המערב (השוקע) מנגד, אמצע הרקיע למעלה, וחצי הגלגל המוצל שלמטה הוא מה שמתחת לאופק. בחרו "שעות" בבקרת הזמן והפעילו — ותראו את המזלות עולים זה אחר זה.':
     'When the horizon is shown, the wheel is rotated for the moment and place: east (the rising sign) on the left, west opposite, midheaven on top, and the shaded lower half is below the horizon. Choose "Hours" in the time controls and press Play to watch the signs rise one after another.',
+  'סדר עליית המזלות — ראו ראש השנה י״א ע״ב–י״ב ע״א וברש״י שם.':
+    'On the order in which the signs rise, see Rosh Hashanah 11b–12a with Rashi.',
   'מיקומים נוכחיים': 'Current positions',
   'מזרח · עולה': 'East · rising',
   'מערב · שוקע': 'West · setting',
@@ -232,8 +234,8 @@ window.TRANSLATIONS.en = {
   'שצ״ם חנכ״ל': 'ShaTZaM ChaNKaL',
   '— שבתאי, צדק, מאדים, חמה, נוגה, כוכב, לבנה — וחוזר חלילה. שעה ראשונה של יום ראשון היא לחמה, ומכיוון שיממה בת עשרים וארבע שעות והכוכבים שבעה (24 = 3×7+3), מתקדם שר השעה הראשונה בשלושה בכל יום — ומכאן שמות ימי השבוע בלשונות אוה״ע ושר לכל יום: א׳ חמה, ב׳ לבנה, ג׳ מאדים, ד׳ כוכב, ה׳ צדק, ו׳ נוגה, שבת שבתאי.':
     '— Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon — repeating. The first hour of Sunday belongs to the Sun, and since a day has 24 hours and the planets are seven (24 = 3×7+3), the ruler of the first hour advances by three each day — hence the weekday names in other languages, and a ruler for each day: Sun. Sun, Mon. Moon, Tue. Mars, Wed. Mercury, Thu. Jupiter, Fri. Venus, Shabbos Saturn.',
-  'ראו עירובין נ״ו ע״א ורש״י שם ד״ה ואין תקופה, בשם רבי שבתי דונולו הרופא; וראש השנה י״א ע״ב–י״ב ע״א וברש״י שם.':
-    'See Eruvin 56a and Rashi there s.v. ve-ein tekufah, citing R. Shabsai Donolo the physician; and Rosh Hashanah 11b–12a with Rashi.',
+  'ראו עירובין נ״ו ע״א ורש״י שם ד״ה ואין תקופה, בשם רבי שבתי דונולו הרופא.':
+    'See Eruvin 56a and Rashi there s.v. ve-ein tekufah, citing R. Shabsai Donolo the physician.',
   'ש=שבתאי · צ=צדק · מ=מאדים · ח=חמה · נ=נוגה · כ=כוכב · ל=לבנה':
     'Sa=Saturn · Ju=Jupiter · Ma=Mars · Su=Sun · Ve=Venus · Me=Mercury · Mo=Moon',
   'ש': 'Sa', 'צ': 'Ju', 'מ': 'Ma', 'ח': 'Su', 'נ': 'Ve', 'כ': 'Me', 'ל': 'Mo',

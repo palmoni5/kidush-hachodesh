@@ -22,8 +22,8 @@
     betutakpat: 'ב־ט״ו־תקפ״ט',
   };
   const DECHIYA_ROW = {                       // הדגשת הכלל המתאים בכרטיס ההסבר
-    zaken: 'l_r1', adu: 'l_r2', 'zaken+adu': 'l_r1',
-    gatarad: 'l_r3', betutakpat: 'l_r4', 'betutakpat+adu': 'l_r4',
+    zaken: 'l_r1', adu: 'l_r4', 'zaken+adu': 'l_r1',
+    gatarad: 'l_r2', betutakpat: 'l_r3', 'betutakpat+adu': 'l_r3',
   };
 
   // שעות הלוח נמנות מתחילת הלילה (שש בערב); כאן גם שעון היממה המקביל,
@@ -206,7 +206,7 @@
       if ($(id)) $(id).classList.remove('hit');
     const row = DECHIYA_ROW[t.rh.dechiya];
     if (row && $(row)) $(row).classList.add('hit');
-    if (t.rh.dechiya === 'zaken+adu' && $('l_r2')) $('l_r2').classList.add('hit');
+    if (String(t.rh.dechiya).endsWith('+adu') && $('l_r4')) $('l_r4').classList.add('hit');
 
     // אזהרות מצב מעבדה
     const w = $('l_warn'), msgs = [];

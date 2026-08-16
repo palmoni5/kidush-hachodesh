@@ -222,8 +222,12 @@ window.Sims = (function () {
         for (const c of cities) (groups[c.country] = groups[c.country] || []).push(c.name);
         $('yo_city').innerHTML = Object.entries(groups).map(([gr, names]) =>
           `<optgroup label="${gr}">` + names.map(n => `<option>${n}</option>`).join('') + '</optgroup>').join('');
+        // key-selected-city הוא המפתח שבו אוצריא שומרת את עיר הלוח
+        // (settings_repository.dart); הקריאה דורשת את ההרשאה settings.read.
         const cur = await g('settings.get', { key: 'key-selected-city' });
         $('yo_city').value = cur || '';
+        // גיבוי אם ההרשאה חסרה או שהמפתח ריק — ירושלים, לא העיר הראשונה ברשימה
+        if (!$('yo_city').value) $('yo_city').value = 'ירושלים';
         if (!$('yo_city').value) $('yo_city').value = cities[0].name;
         otz.city = $('yo_city').value;
         $('yo_cityRow').style.display = '';
