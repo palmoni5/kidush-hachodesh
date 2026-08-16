@@ -168,6 +168,28 @@
     return moonUpIL(pk) || moonUpIL(pk - sd) || moonUpIL(pk + sd);
   }
 
+  // ערי תצפית בארץ (מצפון לדרום). ההפרש בגודל הליקוי בתוך הארץ הוא בעיקר
+  // צפון–דרום; מזרח–מערב (ירושלים–ת״א, ~55 ק"מ) ההפרש כאחוז בודד, ולכן די באלה.
+  const IL_CITIES = {
+    safed:     { name: 'צפת',     lat: 32.965, lon: 35.496 },
+    jerusalem: { name: 'ירושלים', lat: 31.778, lon: 35.235 },
+    beersheba: { name: 'באר שבע', lat: 31.252, lon: 34.791 },
+    eilat:     { name: 'אילת',    lat: 29.558, lon: 34.948 },
+  };
+  // מראה הליקוי לצופה בעיר נתונה: וקטורי שמש/ירח טופוצנטריים (J2000, ק"מ),
+  // רדיוסים זוויתיים וכיסוי — אותו חשבון כמו בנקודת השיא, רק ממקום קבוע.
+  function cityView(g, date, city) {
+    const ov = AE.ObserverVector(AE.MakeTime(date), new AE.Observer(city.lat, city.lon, 0), false);
+    const P = [ov.x * KM_AU, ov.y * KM_AU, ov.z * KM_AU];
+    const S = sub(g.s, P), M = sub(g.m, P);
+    const dS = len(S), dM = len(M);
+    const rs = Math.asin(R_SUN / dS), rm = Math.asin(Math.min(1, R_MOON / dM));
+    const sep = Math.acos(clamp1(dot(S, M) / (dS * dM)));
+    const frac = overlapFrac(rs, rm, sep);
+    const kind = sep <= rm - rs ? 'total' : sep <= rs - rm ? 'annular' : frac > 0 ? 'partial' : 'none';
+    return { P, S, M, rs, rm, frac, kind, sunUp: dot(S, P) > 0 };
+  }
+
   const ILS = { arr: [], done: false, started: false };     // ליקויי חמה בא״י
   function buildILSolar() {
     if (ILS.started || !AE) return;
@@ -446,12 +468,15 @@
     ctx.fillStyle = cvv('--ill-muted');
     ctx.fillText(T('הירח בין הארץ לשמש — צלו נופל על הארץ'), L.x + L.w * 0.5, L.y + 6);
 
-    // ── מראה הליקוי לצופה (בנקודה הטובה ביותר על פני הארץ) ──
+    // ── מראה הליקוי לצופה: בנקודת השיא, או בעיר בארץ שנבחרה בלוח הצד ──
+    const city = IL_CITIES[sim.viewLoc];
+    const v = city ? cityView(g, sim.t, city) : g;   // אותם שדות: S,M,P,rs,rm,frac,kind
     const vw = Math.min(L.w * 0.42, L.h * 0.52), vh = vw * 0.86;
     const vx = L.x + L.w * 0.30 - vw / 2 + L.w * 0.02, vy = L.y + L.h * 0.40;
+    const night = city && !v.sunUp;                  // השמש מתחת לאופק בעיר שנבחרה
     // רקע השמים מתכהה מ-30% כיסוי ומעלה (בליקוי קטן מזה ההחשכה אינה מורגשת)
-    const f = g.frac;
-    const dk = f < 0.3 ? 0 : Math.pow((f - 0.3) / 0.7, 1.4);
+    const f = v.frac;
+    const dk = night ? 1 : f < 0.3 ? 0 : Math.pow((f - 0.3) / 0.7, 1.4);
     const skyTop = mixColor([143, 195, 234], [4, 6, 13], dk);
     const skyBot = mixColor([196, 224, 244], [8, 10, 18], dk);
     ctx.save();
@@ -459,45 +484,54 @@
     const skyG = ctx.createLinearGradient(0, vy, 0, vy + vh);
     skyG.addColorStop(0, skyTop); skyG.addColorStop(1, skyBot);
     ctx.fillStyle = skyG; ctx.fillRect(vx, vy, vw, vh);
-    // השמש והירח — רדיוסים זוויתיים אמיתיים ביחס, וההפרדה האמיתית
     const scx = vx + vw / 2, scy = vy + vh * 0.46;
     const sunR = vh * 0.20;
-    const moonR = sunR * (g.rm / g.rs);
-    // כיוון ההיסט במישור הראייה: בסיס (ימין, מעלה) סביב כיוון השמש מהצופה
-    const zv = norm(g.S), upw = norm(g.P);
-    const up = norm(sub(upw, mul(zv, dot(upw, zv))));
-    const right = cross(zv, up);
-    const vM = norm(g.M);
-    const offx = dot(vM, right) / g.rs * sunR, offy = dot(vM, up) / g.rs * sunR;
-    // בליקוי מלא — עטרה (קורונה) סביב השמש המכוסה
-    if (g.kind === 'total') {
-      const cor = ctx.createRadialGradient(scx, scy, sunR * 0.9, scx, scy, sunR * 2.3);
-      cor.addColorStop(0, 'rgba(235,240,255,0.85)'); cor.addColorStop(1, 'transparent');
-      ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(scx, scy, sunR * 2.3, 0, 2*Math.PI); ctx.fill();
-    }
-    ctx.fillStyle = '#ffd24a';
-    ctx.beginPath(); ctx.arc(scx, scy, sunR, 0, 2*Math.PI); ctx.fill();
-    // הירח המסתיר — בצבע השמים: צדו הלילי אינו נראה כנגד שמי היום, ולכן מחוץ
-    // לדיסקת השמש הוא נבלע ברקע, ועל פני השמש הוא נראה כ"נגיסה" בצבע השמים
-    // שמתכהה עמם לאורך הליקוי.
-    ctx.fillStyle = skyG;
-    ctx.beginPath(); ctx.arc(scx + offx, scy - offy, moonR, 0, 2*Math.PI); ctx.fill();
-    // הזוהר האטמוספרי סביב השמש (נחלש עם הכיסוי) — פזור באוויר שלפני הצופה,
-    // ולכן נצבע מעל הירח; בליקוי מלא אין זוהר, רק העטרה שמאחור
-    if (g.kind !== 'total') {
-      const gl = ctx.createRadialGradient(scx, scy, 2, scx, scy, sunR * 2.1);
-      gl.addColorStop(0, `rgba(255,214,120,${0.55 * (1 - 0.8 * f)})`); gl.addColorStop(1, 'transparent');
-      ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(scx, scy, sunR * 2.1, 0, 2*Math.PI); ctx.fill();
+    if (night) {
+      ctx.fillStyle = 'rgba(220,228,255,0.85)'; ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(T('השמש מתחת לאופק'), scx, scy - 9);
+      ctx.fillText(T('הליקוי אינו נראה משם ברגע זה'), scx, scy + 9);
+    } else {
+      // השמש והירח — רדיוסים זוויתיים אמיתיים ביחס, וההפרדה האמיתית
+      const moonR = sunR * (v.rm / v.rs);
+      // כיוון ההיסט במישור הראייה: בסיס (ימין, מעלה) סביב כיוון השמש מהצופה
+      const zv = norm(v.S), upw = norm(v.P);
+      const up = norm(sub(upw, mul(zv, dot(upw, zv))));
+      const right = cross(zv, up);
+      const vM = norm(v.M);
+      const offx = dot(vM, right) / v.rs * sunR, offy = dot(vM, up) / v.rs * sunR;
+      // בליקוי מלא — עטרה (קורונה) סביב השמש המכוסה
+      if (v.kind === 'total') {
+        const cor = ctx.createRadialGradient(scx, scy, sunR * 0.9, scx, scy, sunR * 2.3);
+        cor.addColorStop(0, 'rgba(235,240,255,0.85)'); cor.addColorStop(1, 'transparent');
+        ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(scx, scy, sunR * 2.3, 0, 2*Math.PI); ctx.fill();
+      }
+      ctx.fillStyle = '#ffd24a';
+      ctx.beginPath(); ctx.arc(scx, scy, sunR, 0, 2*Math.PI); ctx.fill();
+      // הירח המסתיר — בצבע השמים: צדו הלילי אינו נראה כנגד שמי היום, ולכן מחוץ
+      // לדיסקת השמש הוא נבלע ברקע, ועל פני השמש הוא נראה כ"נגיסה" בצבע השמים
+      // שמתכהה עמם לאורך הליקוי.
+      ctx.fillStyle = skyG;
+      ctx.beginPath(); ctx.arc(scx + offx, scy - offy, moonR, 0, 2*Math.PI); ctx.fill();
+      // הזוהר האטמוספרי סביב השמש (נחלש עם הכיסוי) — פזור באוויר שלפני הצופה,
+      // ולכן נצבע מעל הירח; בליקוי מלא אין זוהר, רק העטרה שמאחור
+      if (v.kind !== 'total') {
+        const gl = ctx.createRadialGradient(scx, scy, 2, scx, scy, sunR * 2.1);
+        gl.addColorStop(0, `rgba(255,214,120,${0.55 * (1 - 0.8 * f)})`); gl.addColorStop(1, 'transparent');
+        ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(scx, scy, sunR * 2.1, 0, 2*Math.PI); ctx.fill();
+      }
     }
     ctx.restore();
     ctx.strokeStyle = cvv('--ill-line'); ctx.lineWidth = 1.2;
     roundRect(ctx, vx, vy, vw, vh, 12); ctx.stroke();
     ctx.fillStyle = cvv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText(T('מראה הליקוי מן הארץ (במקום השיא)'), vx + vw / 2, vy - 6);
+    ctx.fillText(city ? T('מראה הליקוי') + ' — ' + T(city.name)
+                      : T('מראה הליקוי מן הארץ (במקום השיא)'), vx + vw / 2, vy - 6);
     // כיתוב אחוז הכיסוי — כלשון ההצעה
     const pct = Math.round(f * 100);
-    const lbl = g.kind === 'total' ? T('ליקוי מלא') + ' — 100% ' + T('כיסוי')
-      : g.kind === 'annular' ? T('ליקוי טבעתי') + ' — ' + pct + '% ' + T('כיסוי')
+    const lbl = night ? T('השמש מתחת לאופק')
+      : v.kind === 'total' ? T('ליקוי מלא') + ' — 100% ' + T('כיסוי')
+      : v.kind === 'annular' ? T('ליקוי טבעתי') + ' — ' + pct + '% ' + T('כיסוי')
       : T('כיסוי') + ': ' + pct + '%';
     ctx.fillStyle = cvv('--ill-text'); ctx.font = 'bold 13px sans-serif'; ctx.textBaseline = 'top';
     ctx.fillText(lbl, vx + vw / 2, vy + vh + 8);
@@ -718,6 +752,7 @@
     t: new Date(),
     playing: false, speed: 3,         // דקות (של זמן הליקוי) לשנייה
     distOn: false, distKm: MEAN_DIST, // הדגמת מרחק הירח (ליקוי חמה)
+    viewLoc: 'peak',                  // מקום הצופה במראה הליקוי: שיא או עיר בארץ
     gLat: 0, gLon: 0, follow: true,   // מבט הגלובוס
     hintDone: false, _bound: false,
 
@@ -838,6 +873,34 @@
       };
       persistChk('e_onlyTotal', 'eclOnlyTotal');
       persistChk('e_onlyIL', 'eclOnlyIL');
+      // גם מקום הצופה נשמר להפעלה הבאה
+      const locSel = $('e_viewLoc');
+      locSel.onchange = e => {
+        this.viewLoc = e.target.value;
+        const c = IL_CITIES[this.viewLoc];
+        if (c) {
+          // קפיצה לרגע הכיסוי המרבי בעיר שנבחרה — שיא הליקוי העולמי עשוי
+          // ליפול כשהליקוי בארץ טרם החל או כבר הסתיים
+          const simKm = this.distOn ? this.distKm : 0;
+          let best = 0, bestT = null;
+          for (let tt = this.win.t0; tt <= this.win.t1; tt += 120000) {
+            const d = new Date(tt);
+            const fr = cityView(solarGeom(d, simKm), d, c).frac;
+            if (fr > best) { best = fr; bestT = tt; }
+          }
+          if (bestT !== null) this.t = new Date(bestT);
+        }
+        window.__invalidate && window.__invalidate();
+        try { Otzaria.call('storage.set', { key: 'eclViewLoc', value: this.viewLoc }); } catch (er) {}
+      };
+      try {
+        Otzaria.call('storage.get', { key: 'eclViewLoc' }).then(r => {
+          if (r && r.success && r.data && (r.data === 'peak' || IL_CITIES[r.data])) {
+            this.viewLoc = r.data; locSel.value = r.data;
+            window.__invalidate && window.__invalidate();
+          }
+        }).catch(() => {});
+      } catch (er) {}
       $('e_dsim').onchange = e => {
         this.distOn = e.target.checked;
         $('e_dist').disabled = !this.distOn;

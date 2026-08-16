@@ -74,10 +74,11 @@
           <div class="luach-head">
             <div class="lh-title"><b id="l_title">—</b><span id="l_kind">—</span><em class="lh-siman" id="l_siman">—</em></div>
             <div class="lh-cycles" id="l_cycles">—</div>
-            <div class="lh-line" id="l_rh">—</div>
-            <div class="lh-line" id="l_rhNext">—</div>
+            <!-- סדר החשבון: קודם ידיעת המולדות, ומהן נגזרים ימי ראש השנה -->
             <div class="lh-molad"><span>מולד תשרי</span> <b id="l_moladT">—</b></div>
             <div class="lh-molad"><span>מולד תשרי הבא</span> <b id="l_moladTNext">—</b></div>
+            <div class="lh-line" id="l_rh">—</div>
+            <div class="lh-line" id="l_rhNext">—</div>
           </div>
           <div class="luach-warn" id="l_warn" style="display:none"></div>
           <div class="luach-table" id="l_table"></div>
@@ -572,6 +573,18 @@
             <input type="range" id="e_speed" min="0.5" max="20" step="0.5" value="3" />
             <label class="field">מהלך הליקוי (גרירה)</label>
             <input type="range" id="e_scrub" min="0" max="1000" step="1" value="500" />
+          </div>
+          <div class="card" data-emode-card="solar" style="display:none">
+            <h2>מקום הצופה</h2>
+            <label class="field">מראה הליקוי — מנקודת מבטו של צופה ב:</label>
+            <select id="e_viewLoc">
+              <option value="peak">מקום שיא הליקוי</option>
+              <option value="safed">צפת</option>
+              <option value="jerusalem">ירושלים</option>
+              <option value="beersheba">באר שבע</option>
+              <option value="eilat">אילת</option>
+            </select>
+            <div class="htxt" style="margin-top:6px">ההבדל בגודל הליקוי בין ערי הארץ הוא בעיקר מצפון לדרום; ההפרש בין מזרח למערב (ירושלים–תל אביב) זניח, שהארץ צרה.</div>
           </div>
           <div class="card" data-emode-card="solar" style="display:none">
             <h2>מרחק הירח מן הארץ</h2>
