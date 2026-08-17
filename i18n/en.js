@@ -275,8 +275,8 @@ window.TRANSLATIONS.en = {
     ' run parallel to the equator, measuring north and south from 0° at the equator up to 90° at the poles.',
   'הרשת שעל הגלובוס מסומנת': 'The grid on the globe is marked every',
   'בכל 15 מעלות': ' 15 degrees',
-  ', לאורך ולרוחב. במקווקו מסומנים חוג הסרטן וחוג הגדי (23.44°) ומעגלי הקוטב (66.56°).':
-    ', in both longitude and latitude. Dashed: the Tropics of Cancer and Capricorn (23.44°) and the polar circles (66.56°).',
+  ', לאורך ולרוחב. במקווקו מסומנים חוג הסרטן (23.44° צפון) וחוג הגדי (23.44° דרום), ומעגלי הקוטב — הצפוני והדרומי (66.56° צפון ודרום).':
+    ', in both longitude and latitude. Dashed: the Tropic of Cancer (23.44°N) and the Tropic of Capricorn (23.44°S), and the Arctic and Antarctic circles (66.56°N and S).',
   '15 מעלות = שעה': '15 degrees = one hour',
   '— הכדור מסתובב 360 מעלות ביממה, ונמצא שהשמש נעה מעל פניו 15 מעלות בכל שעה. מכאן שכל תנועה של 15 מעלות מזרחה הזמן מתקדם בשעה, וכל 15 מעלות מערבה הזמן מתאחר בשעה — וכל רצועה שבין שני קווי אורך שברשת היא שעה.':
     ' — the Earth turns 360° in a day, so the Sun moves 15° over it every hour. Hence every 15° eastward the time is an hour later, and every 15° westward an hour earlier — and each band between two grid meridians is one hour.',
