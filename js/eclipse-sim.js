@@ -288,7 +288,9 @@
   // ── קנבס ותמונות ───────────────────────────────────────────────────────
   const IMG = { sun: new Image(), moon: new Image(), earth: new Image(), globe: new Image() };
   IMG.sun.src = window.ASSETS.moon_sun; IMG.moon.src = window.ASSETS.moon_real;
-  IMG.earth.src = window.ASSETS.moon_earth; IMG.globe.src = window.ASSETS.globe_earth;
+  // גלובוס מסלול הליקוי: מפה שטוחה (כמו בקו התאריך) — היבשות ניכרות בה,
+  // וההכהיה לפי אחוז הכיסוי נקראת עליה בבירור.
+  IMG.earth.src = window.ASSETS.moon_earth; IMG.globe.src = window.ASSETS.globe_map;
   IMG.globe.onload = () => { _tex = null; window.__invalidate && window.__invalidate(); };
   function sprite(ctx, im, cx, cy, w, h) {
     if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - w/2, cy - h/2, w, h || w);
@@ -633,7 +635,7 @@
         // יום/לילה
         const d = Px * s0 + Py * s1 + Pz * s2;
         const t = d <= -0.05 ? 0 : d >= 0.05 ? 1 : (d + 0.05) / 0.1;
-        let shf = 0.45 + 0.95 * t;
+        let shf = 0.5 + 0.6 * t;
         // הכהיית הליקוי — דגימה בי-ליניארית מהרשת
         const fgx = (a + 1) / 2 * N, fgy = (1 - b) / 2 * N;
         const ix = Math.min(N - 1, Math.floor(fgx)), iy = Math.min(N - 1, Math.floor(fgy));

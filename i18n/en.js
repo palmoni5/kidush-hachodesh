@@ -266,16 +266,32 @@ window.TRANSLATIONS.en = {
   'קו התאריך — שיטת הגרי"מ טוקצינסקי': 'Date line — R. Y.M. Tukachinsky',
   'קו התאריך — הסכמי אומות העולם': 'Date line — international convention',
   'רשת קווי אורך ורוחב': 'Latitude/longitude grid',
+  'קווי האורך והרוחב': 'Lines of longitude and latitude',
+  'קווי האורך': 'Lines of longitude',
+  'קווי הרוחב': 'Lines of latitude',
+  "יוצאים מקוטב אל קוטב וחוצים את קו המשוה, ומודדים מזרח ומערב מקו גריניץ' (0°) עד 180° לכל צד.":
+    ' run from pole to pole across the equator, measuring east and west from the Greenwich line (0°) up to 180° each way. ',
+  'מקבילים לקו המשוה, ומודדים צפון ודרום מ-0° שבמשוה עד 90° שבקטבים.':
+    ' run parallel to the equator, measuring north and south from 0° at the equator up to 90° at the poles.',
+  'הרשת שעל הגלובוס מסומנת': 'The grid on the globe is marked every',
+  'בכל 15 מעלות': ' 15 degrees',
+  ', לאורך ולרוחב. במקווקו מסומנים חוג הסרטן וחוג הגדי (23.44°) ומעגלי הקוטב (66.56°).':
+    ', in both longitude and latitude. Dashed: the Tropics of Cancer and Capricorn (23.44°) and the polar circles (66.56°).',
+  '15 מעלות = שעה': '15 degrees = one hour',
+  '— הכדור מסתובב 360 מעלות ביממה, ונמצא שהשמש נעה מעל פניו 15 מעלות בכל שעה. מכאן שכל תנועה של 15 מעלות מזרחה הזמן מתקדם בשעה, וכל 15 מעלות מערבה הזמן מתאחר בשעה — וכל רצועה שבין שני קווי אורך שברשת היא שעה.':
+    ' — the Earth turns 360° in a day, so the Sun moves 15° over it every hour. Hence every 15° eastward the time is an hour later, and every 15° westward an hour earlier — and each band between two grid meridians is one hour.',
+  'עשרים וארבע רצועות של 15 מעלות הן עשרים וארבע שעות, היממה כולה. לפיכך המקיף את הכדור כולו מרויח או מפסיד יממה שלמה — וכאן נצרך קו התאריך, שבו מתחלף היום.':
+    'Twenty-four bands of 15° are twenty-four hours, a full day. Whoever circles the globe therefore gains or loses a whole day — and that is why a date line is needed, where the day changes.',
   'קו זמן יקום מתואם (UTC)': 'UTC line',
-  "— קו גריניץ', 0°.": '— the Greenwich line, 0°.',
+  "— קו גריניץ', 0°.": ' — the Greenwich line, 0°.',
   'קו התאריך שיטת החזו"א': 'Chazon Ish date line',
-  '— 90 מעלות מזרחית לירושלים (125.24° מזרח). כל מה שמחובר יבשית למערב מקו התאריך נדון כמו המערב, ולכן הקו נוטה אל סוף היבשת (הקו הישר העובר בתוך היבשת מסומן במקווקו).':
-    '— 90° east of Jerusalem (125.24°E). Whatever is joined by land to the west of the line follows the west, so the line bends around to the edge of the landmass (the straight line within the landmass is dashed).',
+  '— 90 מעלות מזרחית לירושלים (125.24° מזרח). כל מה שמחובר יבשתית למערב מקו התאריך נדון כמו המערב, ולכן הקו נוטה אל סוף היבשת (הקו הישר העובר בתוך היבשת מסומן במקווקו).':
+    ' — 90° east of Jerusalem (125.24°E). Whatever is joined by land to the west of the line follows the west, so the line bends around to the edge of the landmass (the straight line within the landmass is dashed).',
   'קו התאריך הגרי"מ טוקצינסקי': 'Tukachinsky date line',
-  '— 180 מעלות מירושלים (144.76° מערב). קו מקווקו תכלת — שטח בספק של הגרי"מ: מערב אלסקה, מקו התאריך שלו עד מיצר ברינג, שהסתפק אם הוא נדון כמזרח הקו (שהוא מחובר אליו יבשית) או כמערבו.':
-    '— 180° from Jerusalem (144.76°W). Dashed light-blue outline — the area R. Tukachinsky left in doubt: western Alaska, from his line to the Bering Strait, being joined by land to the line’s east.',
+  '— 180 מעלות מירושלים (144.76° מערב). קו מקווקו תכלת — שטח בספק של הגרי"מ: מערב אלסקה, מקו התאריך שלו עד מיצר ברינג, שהסתפק אם הוא נדון כמזרח הקו (שהוא מחובר אליו יבשתית) או כמערבו.':
+    ' — 180° from Jerusalem (144.76°W). Dashed light-blue outline — the area R. Tukachinsky left in doubt: western Alaska, from his line to the Bering Strait, being joined by land to the line’s east.',
   'קו התאריך הסכמי אוה"ע': 'International date line',
-  '— 180 מעלות מקו זמן יקום מתואם.': '— 180° from the UTC line.',
+  '— 180 מעלות מקו זמן יקום מתואם.': ' — 180° from the UTC line.',
   'ירושלים (35.24° מזרח).': 'Jerusalem (35.24°E).',
   'הערה: מהלך הקו לאורך חופי היבשות מצויר בקירוב, להמחשת העיקרון בלבד.':
     'Note: the line’s course along the coasts is approximate, for illustration only.',
