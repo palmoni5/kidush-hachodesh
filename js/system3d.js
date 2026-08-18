@@ -21,6 +21,7 @@
   const COS_EPS = Math.cos(EPS), SIN_EPS = Math.sin(EPS);
 
   function orbitR(au) { return AU_K * Math.sqrt(au); }
+  const UP = new THREE.Vector3(0, 1, 0);
 
   // כוכבי הלכת (מבט הליוצנטרי) — au לקנה-מידה, period (ימים) לדגימת מסלול אמיתי, צבע, רדיוס
   const PLANETS = [
@@ -70,9 +71,27 @@
 
   const EK = { total: 'מלא', partial: 'חלקי', penumbral: 'צל-קדמי', annular: 'טבעתי', hybrid: 'היברידי' };
 
+  // ── קבועים פיזיקליים לחישוב הצללים (ק"מ) ───────────────────────────────
+  // רדיוס הארץ מוגדל ב-2% — כמנהג חשבון הליקויים (תיקון דנז'ון לאטמוספרה,
+  // המרחיבה בפועל את צל הארץ). האומברה והפנומברה נגזרות מיחסי המשולשים.
+  const KM_AU = 149597870.7, KM_SUN = 695700, KM_EARTH = 6378.14 * 1.02, KM_MOON = 1737.4;
+
+  // חרוט האומברה המצויר: רדיוס בבסיס (אצל הארץ) וגובה עד קדקוד החרוט.
+  // הגובה נבחר כך שברדיוס מסלול הירח המצויר (MOON_VIS) יהיה רוחב האומברה
+  // כפליים מרדיוס הירח המצויר — קרוב ליחס האמיתי (≈2.7) בקנה-מידה הדחוס.
+  const CONE_R = 1.6, CONE_H = 24;
+  const coneRadiusAt = x => CONE_R * Math.max(0, 1 - x / CONE_H);
+
   // ── מצב פנימי ──────────────────────────────────────────────────────────
   let inited = false, renderer, scene, camera, controls;
-  let sun, earth, moon, light, ambient, earthOrbit, moonOrbit, earthMoonLine, shadowCone;
+  let sun, earth, moon, light, ambient, earthOrbit, moonOrbit, earthMoonLine;
+  let shadowCone, penumbraCone, moonCone;
+  // יוניפורמים של צל הארץ על הירח (ביחידות רדיוס-ירח, במרחב-הגוף של הירח)
+  const moonU = {
+    uAxis:  { value: new THREE.Vector3(0, 1, 0) },   // ציר הצל
+    uOff:   { value: new THREE.Vector3() },          // מהציר אל מרכז הירח
+    uUmbra: { value: 0 }, uPen: { value: 0 }, uOn: { value: 0 },
+  };
   const labels = {};
   let curW = 0, curH = 0;
   let ecCache = null;
@@ -198,8 +217,32 @@
       new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex('globe_earth'), roughness: 1, metalness: 0 }));
     scene.add(earth);
 
-    moon = new THREE.Mesh(new THREE.SphereGeometry(R_MOON, 40, 40),
-      new THREE.MeshStandardMaterial({ color: 0xcccccc, map: tex('moon_real'), roughness: 1, metalness: 0 }));
+    // הירח — חומר סטנדרטי שהוזרק לו הצל של הארץ (ליקוי לבנה). התאורה לבדה
+    // אינה יכולה להחשיך אותו: מבחינת המנוע האור מגיע ישירות מהשמש, ואין
+    // חסימה. לכן הצל מחושב אנליטית (ראו moonShadow) ומוחל בשיידר על הפיקסלים
+    // שנופלים בתוך חרוט הצל — כך נראית קשת הצל העגולה על הצד המואר.
+    const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, map: tex('moon_real'), roughness: 1, metalness: 0 });
+    moonMat.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, moonU);
+      const decl = [
+        'varying vec3 vEclPos;',
+        'uniform vec3 uAxis;', 'uniform vec3 uOff;',
+        'uniform float uUmbra;', 'uniform float uPen;', 'uniform float uOn;', '',
+      ].join('\n');
+      sh.vertexShader = 'varying vec3 vEclPos;\n' + sh.vertexShader.replace(
+        '#include <begin_vertex>', '#include <begin_vertex>\n  vEclPos = position;');
+      sh.fragmentShader = decl + sh.fragmentShader.replace('#include <tonemapping_fragment>', `
+  if (uOn > 0.5) {
+    vec3 p = vEclPos / ${R_MOON.toFixed(4)};              // ביחידות רדיוס-ירח
+    vec3 q = p - uAxis * dot(p, uAxis) + uOff;            // מציר הצל אל הנקודה
+    float d = length(q);
+    float lit = smoothstep(uUmbra, uPen, d);              // 0=אומברה, 1=מחוץ לצל
+    vec3 copper = vec3(1.0, 0.30, 0.11);                  // אודם הליקוי המלא
+    gl_FragColor.rgb *= mix(copper, vec3(1.0), lit) * mix(0.26, 1.0, lit * lit);
+  }
+#include <tonemapping_fragment>`);
+    };
+    moon = new THREE.Mesh(new THREE.SphereGeometry(R_MOON, 40, 40), moonMat);
     scene.add(moon);
 
     earthOrbit = helioOrbit(AE.Body.Earth, EARTH_PERIOD, 0x88aaff); scene.add(earthOrbit);
@@ -209,11 +252,26 @@
       new THREE.LineDashedMaterial({ color: 0xffcc55, dashSize: 1.5, gapSize: 1.5, transparent: true, opacity: 0.5 }));
     scene.add(earthMoonLine);
 
-    // חרוט צל הארץ (אומברה) — לכיוון מנוגד לשמש; הירח המלא הנכנס אליו = ליקוי לבנה
+    // חרוט צל הארץ (אומברה) — לכיוון מנוגד לשמש; הירח המלא הנכנס אליו = ליקוי לבנה.
+    // מצוירת רק הדופן האחורית (BackSide): כך גוף שנמצא בתוך החרוט נראה כמות
+    // שהוא ואינו מתכהה פעמיים — פעם מן החישוב ופעם מן הדופן הקדמית שלפניו.
     shadowCone = new THREE.Mesh(
-      new THREE.ConeGeometry(1.1, 12, 28, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0x101018, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false }));
-    shadowCone.visible = false; scene.add(shadowCone);
+      new THREE.ConeGeometry(CONE_R, CONE_H, 32, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0x101018, transparent: true, opacity: 0.42, side: THREE.BackSide, depthWrite: false }));
+    scene.add(shadowCone);
+
+    // הפנומברה — צל חלקי המתרחב מן הארץ. ירח שנכנס אליה בלבד מעומעם קלות
+    // (ליקוי צל-קדמי), וכשהוא נכנס לאומברה נראית קשת הצל החדה.
+    penumbraCone = new THREE.Mesh(
+      new THREE.CylinderGeometry(CONE_R * 2.25, CONE_R, CONE_H, 32, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0x2a2a3a, transparent: true, opacity: 0.13, side: THREE.BackSide, depthWrite: false }));
+    scene.add(penumbraCone);
+
+    // חרוט צל הירח — קדקודו מגיע בקושי אל הארץ; היכן שהוא פוגע בה = ליקוי חמה
+    moonCone = new THREE.Mesh(
+      new THREE.ConeGeometry(R_MOON * 0.98, MOON_VIS * 1.06, 26, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0x101018, transparent: true, opacity: 0.45, side: THREE.BackSide, depthWrite: false }));
+    scene.add(moonCone);
 
     // כוכבי לכת — כדורים מוארים + טבעת מסלול + תווית
     for (const p of PLANETS) {
@@ -265,8 +323,30 @@
     return ecCache;
   }
 
+  // ניווט בין ליקויים — Astronomy Engine מחפש רק קדימה, ולכן "הליקוי הקודם"
+  // נמצא בסריקה קדימה מנקודה שלפני התאריך (400 יום מספיקים: בכל שנה יש
+  // לפחות שני ליקויי חמה, ולבנה — כולל צל-קדמי — לרוב שניים עד שלושה),
+  // ולקיחת האחרון שקדם לרגע הנוכחי.
+  const GUARD = 60000;    // דקה — כדי שהליקוי שכבר מוצג לא ייתפס כ"הבא"/"הקודם"
+  function seekEcl(t, lunar) {
+    try { return lunar ? AE.SearchLunarEclipse(t) : AE.SearchGlobalSolarEclipse(t); } catch (e) { return null; }
+  }
+  function nextEcl(date, lunar) {
+    return seekEcl(new Date(date.getTime() + GUARD), lunar);
+  }
+  function prevEcl(date, lunar) {
+    const lim = date.getTime() - GUARD;
+    let cur = seekEcl(new Date(date.getTime() - 400 * 86400000), lunar), last = null;
+    for (let i = 0; i < 40 && cur; i++) {
+      if (cur.peak.date.getTime() >= lim) break;
+      last = cur;
+      try { cur = lunar ? AE.NextLunarEclipse(cur.peak) : AE.NextGlobalSolarEclipse(cur.peak); } catch (e) { break; }
+    }
+    return last;
+  }
+
   // ── עדכון הסצנה לרגע-זמן ולמבט נוכחי ──────────────────────────────────
-  function update(date, mode, showPlanets) {
+  function update(date, mode, showPlanets, showCones) {
     const time = AE.MakeTime(date);
     const geoMoon = v3(AE.GeoVector(AE.Body.Moon, time, false));
     const geoSun  = v3(AE.GeoVector(AE.Body.Sun,  time, false));
@@ -313,14 +393,51 @@
     earthMoonLine.geometry.setFromPoints([pEarth, pMoon]);
     earthMoonLine.computeLineDistances();
 
-    // חרוט הצל — רק במבט גאוצנטרי, לכיוון מנוגד לשמש
-    if (mode === 'geo') {
-      const antiSun = dirSun.clone().negate();
-      shadowCone.position.copy(pEarth).add(antiSun.clone().multiplyScalar(6));
-      shadowCone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), antiSun);
-      shadowCone.visible = true;
-    } else {
-      shadowCone.visible = false;
+    // חרוטי הצל — בשני המבטים כאחד (הצל קיים תמיד; המבט אינו משנה דבר).
+    // ציר צל הארץ הוא הקו שמן השמש דרך הארץ, כלומר הכיוון המנוגד לשמש.
+    const antiSun = dirSun.clone().negate();
+    shadowCone.position.copy(pEarth).addScaledVector(antiSun, CONE_H / 2);
+    shadowCone.quaternion.setFromUnitVectors(UP, antiSun);
+    penumbraCone.position.copy(shadowCone.position);
+    penumbraCone.quaternion.copy(shadowCone.quaternion);
+    // צל הירח — לכיוון המנוגד לשמש כפי שהוא מן הירח (וקטור שמש→ירח האמיתי)
+    const moonAnti = geoMoon.clone().sub(geoSun).normalize();
+    moonCone.position.copy(pMoon).addScaledVector(moonAnti, MOON_VIS * 0.53);
+    moonCone.quaternion.setFromUnitVectors(UP, moonAnti);
+    shadowCone.visible = penumbraCone.visible = moonCone.visible = showCones;
+
+    // ── צל הארץ על הירח (ליקוי לבנה) ────────────────────────────────────
+    // גאומטריה אמיתית בק"מ: רוחב האומברה והפנומברה במרחק הירח, ומרחק מרכז
+    // הירח מציר הצל. היחסים מומרים לקנה-המידה של החרוט המצויר, כך שהצל על
+    // הירח והחרוט שעל המסך מתחילים ונגמרים באותו רגע.
+    const proj = geoMoon.dot(antiSun);                      // רכיב לאורך ציר הצל (AU)
+    let ecl = null;
+    if (proj > 0) {
+      const perp = geoMoon.clone().addScaledVector(antiSun, -proj);   // מהציר אל הירח
+      const sepKm = perp.length() * KM_AU;
+      const dsKm = geoSun.length() * KM_AU, dmKm = geoMoon.length() * KM_AU;
+      const uKm = KM_EARTH - dmKm * (KM_SUN - KM_EARTH) / dsKm;       // רדיוס האומברה
+      const pKm = KM_EARTH + dmKm * (KM_SUN + KM_EARTH) / dsKm;       // רדיוס הפנומברה
+      const k = coneRadiusAt(MOON_VIS * (proj / (geoMoon.length() || 1))) / uKm;  // יחידות-ציור לק"מ
+      const uSep = sepKm * k / R_MOON, uUmb = uKm * k / R_MOON, uPen = pKm * k / R_MOON;
+      if (uSep < uPen + 1) {
+        moonU.uOn.value = 1;
+        moonU.uUmbra.value = uUmb; moonU.uPen.value = uPen;
+        const inv = moon.quaternion.clone().invert();
+        moonU.uAxis.value.copy(antiSun).applyQuaternion(inv);
+        moonU.uOff.value.copy(perp).normalize().multiplyScalar(uSep).applyQuaternion(inv);
+        // גודל הליקוי (מגניטודה) — לפי הגאומטריה האמיתית, לא לפי הציור
+        ecl = { umbral: (uKm + KM_MOON - sepKm) / (2 * KM_MOON),
+                penumbral: (pKm + KM_MOON - sepKm) / (2 * KM_MOON) };
+      } else moonU.uOn.value = 0;
+    } else moonU.uOn.value = 0;
+
+    const en = $('s_eclNow');
+    if (en) {
+      en.textContent = !ecl || ecl.penumbral <= 0 ? '—'
+        : ecl.umbral >= 1 ? T('ליקוי לבנה מלא')
+        : ecl.umbral > 0 ? T('ליקוי לבנה חלקי') + ' · ' + Math.round(ecl.umbral * 100) + '%'
+        : T('צל-קדמי (פנומברה)');
     }
 
     // כוכבי לכת — בשני המבטים. הליוצנטרי: HelioVector ממרכז השמש.
@@ -367,6 +484,7 @@
     date: new Date(),
     mode: 'helio',
     showPlanets: false,
+    showCones: true,
     playing: false,
     speed: 1,
     _bound: false,
@@ -377,7 +495,7 @@
       if (typeof THREE === 'undefined') return;
       if (!inited) init();
       resize();
-      update(this.date, this.mode, this.showPlanets);
+      update(this.date, this.mode, this.showPlanets, this.showCones);
       renderer.render(scene, camera);
 
       const sd = $('s_date');
@@ -431,10 +549,20 @@
       document.querySelectorAll('#view-system3d .segmented button').forEach(b => { b.onclick = () => this._setMode(b.dataset.cam); });
       const pc = $('s_planets');
       if (pc) pc.onchange = () => { this.showPlanets = pc.checked; if (this.mode === 'helio') this._reframe(); };
-      const jl = $('s_jumpLun');
-      if (jl) jl.onclick = () => { try { const e = AE.SearchLunarEclipse(this.date); this.date = e.peak.date; this.playing = false; $('s_play').textContent = T('▶ הפעל'); this._syncDate(); } catch (er) {} };
-      const js = $('s_jumpSol');
-      if (js) js.onclick = () => { try { const e = AE.SearchGlobalSolarEclipse(this.date); this.date = e.peak.date; this.playing = false; $('s_play').textContent = T('▶ הפעל'); this._syncDate(); } catch (er) {} };
+      const cc = $('s_cones');
+      if (cc) { cc.checked = this.showCones; cc.onchange = () => { this.showCones = cc.checked; }; }
+      // ארבעה כפתורי ניווט: קודם/הבא לכל אחד מסוגי הליקוי, בנפרד
+      const jump = (id, lunar, back) => {
+        const b = $(id); if (!b) return;
+        b.onclick = () => {
+          const e = back ? prevEcl(this.date, lunar) : nextEcl(this.date, lunar);
+          if (!e) return;
+          this.date = e.peak.date;
+          this.playing = false; $('s_play').textContent = T('▶ הפעל'); this._syncDate();
+        };
+      };
+      jump('s_lunPrev', true, true);  jump('s_lunNext', true, false);
+      jump('s_solPrev', false, true); jump('s_solNext', false, false);
     },
   };
 

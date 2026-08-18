@@ -44,12 +44,21 @@
             <div class="ctrls">
               <button class="btn-primary" id="m_play">▶ הפעל</button>
               <button class="btn-secondary" id="m_today">🗓 הירח היום</button>
-              <button class="btn-secondary" id="m_reset">↺ מולד</button>
             </div>
             <label class="field">מהירות: <b id="m_spdL">2.0</b> ימים/שנייה</label>
             <input type="range" id="m_speed" min="0.2" max="20" step="0.1" value="2" />
             <label class="field">יום בחודש (גרירה)</label>
             <input type="range" id="m_scrub" min="0" max="29.53" step="0.01" value="0" />
+            <label class="field">רגעים בחודש</label>
+            <div class="ctrls">
+              <button class="btn-secondary" id="m_jNew">🌑 מולד</button>
+              <button class="btn-secondary" id="m_jFull">🌕 ניגוד (ירח במילואו)</button>
+            </div>
+            <div class="ctrls" style="margin-top:6px">
+              <button class="btn-secondary" id="m_j3">ג׳ ימים מן המולד</button>
+              <button class="btn-secondary" id="m_j7">ז׳ ימים מן המולד</button>
+            </div>
+            <div class="htxt" style="margin-top:6px">מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.</div>
           </div>
           <div class="card">
             <h2>מקרא</h2>
@@ -657,6 +666,7 @@
             <div class="row"><span>עברי</span><b id="s_date_he">—</b></div>
             <div class="row"><span>מופע הירח</span><b id="s_phase">—</b></div>
             <div class="row"><span>אחוז מואר</span><b id="s_pct">—</b></div>
+            <div class="row"><span>מצב ליקוי</span><b id="s_eclNow">—</b></div>
           </div>
         </div>
         <aside class="panel">
@@ -699,12 +709,18 @@
           <div class="card">
             <h2>ליקויים</h2>
             <div class="row"><span>ליקוי לבנה הבא</span><b id="s_eclLun">—</b></div>
-            <div class="row"><span>ליקוי חמה הבא</span><b id="s_eclSol">—</b></div>
-            <div class="ctrls" style="margin-top:8px">
-              <button class="btn-secondary" id="s_jumpLun">⏭ ליקוי לבנה</button>
-              <button class="btn-secondary" id="s_jumpSol">⏭ ליקוי חמה</button>
+            <div class="ctrls" style="margin-top:6px">
+              <button class="btn-secondary" id="s_lunPrev">⏮ לבנה קודם</button>
+              <button class="btn-secondary" id="s_lunNext">ליקוי לבנה הבא ⏭</button>
             </div>
-            <div class="htxt" style="margin-top:6px">חרוט הצל של הארץ מוצג במבט הגאוצנטרי. ירח מלא הנכנס אליו = ליקוי לבנה.</div>
+            <div class="row" style="margin-top:10px"><span>ליקוי חמה הבא</span><b id="s_eclSol">—</b></div>
+            <div class="ctrls" style="margin-top:6px">
+              <button class="btn-secondary" id="s_solPrev">⏮ חמה קודם</button>
+              <button class="btn-secondary" id="s_solNext">ליקוי חמה הבא ⏭</button>
+            </div>
+            <div class="chk" style="margin-top:10px"><input type="checkbox" id="s_cones" checked />
+              <label for="s_cones">הצג חרוטי צל</label></div>
+            <div class="htxt" style="margin-top:6px">חרוט הצל של הארץ מוצג בשני המבטים כאחד — הצל קיים תמיד, ונקודת המבט אינה משנה בו דבר. ירח מלא הנכנס אליו = ליקוי לבנה, ואז נראה צל הארץ מכהה את הצד המואר של הלבנה (עומק ההכהיה והאודם מחושבים מן הגאומטריה האמיתית). סביבו מצויר בעמעום גם חרוט הפנומברה — צל חלקי, ובו נעשה ליקוי צל-קדמי. חרוט הצל של הירח קדקודו מגיע בקושי אל הארץ, ובמולד — כשהוא פוגע בה — נעשה ליקוי חמה ליושבי אותו מקום.</div>
           </div>
           <div class="card">
             <h2>מקרא</h2>

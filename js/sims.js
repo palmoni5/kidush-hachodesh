@@ -369,7 +369,12 @@ window.Sims = (function () {
       if (this._bound) return; this._bound = true;
       this.day = moonAgeToday();   // ברירת מחדל: מצב הירח היום
       $('m_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
-      $('m_reset').onclick = () => { this.day = 0; };
+      // קפיצה לרגעי המחזור: מולד (קיבוץ), ניגוד (מילוי), וזמני ברכת הלבנה
+      const jump = (id, day) => { const b = $(id); if (b) b.onclick = () => { this.day = day; this.playing = false; $('m_play').textContent = T('▶ הפעל'); }; };
+      jump('m_jNew', 0);
+      jump('m_jFull', A.SYNODIC / 2);
+      jump('m_j3', 3);
+      jump('m_j7', 7);
       $('m_today').onclick = () => { this.day = moonAgeToday(); this.playing = false; $('m_play').textContent = T('▶ הפעל'); };
       $('m_speed').oninput = e => { this.speed = +e.target.value; $('m_spdL').textContent = this.speed.toFixed(1); };
       $('m_scrub').oninput = e => { this.day = +e.target.value; this.playing = false; $('m_play').textContent = T('▶ הפעל'); };
