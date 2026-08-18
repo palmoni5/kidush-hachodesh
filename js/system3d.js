@@ -331,8 +331,16 @@
   function seekEcl(t, lunar) {
     try { return lunar ? AE.SearchLunarEclipse(t) : AE.SearchGlobalSolarEclipse(t); } catch (e) { return null; }
   }
+  // "הבא" — SearchLunarEclipse מחזירה את הליקוי שקדקודו בסביבת רגע החיפוש, ולכן
+  // חיפוש מן הליקוי המוצג עצמו (ואפילו דקה אחריו) החזיר שוב את אותו ליקוי והכפתור
+  // נתקע. לכן מדלגים עם Next* עד שהתוצאה מאוחרת ממש מן התאריך המוצג.
   function nextEcl(date, lunar) {
-    return seekEcl(new Date(date.getTime() + GUARD), lunar);
+    const lim = date.getTime() + GUARD;
+    let e = seekEcl(date, lunar);
+    for (let i = 0; i < 4 && e && e.peak.date.getTime() < lim; i++) {
+      try { e = lunar ? AE.NextLunarEclipse(e.peak) : AE.NextGlobalSolarEclipse(e.peak); } catch (er) { return null; }
+    }
+    return e;
   }
   function prevEcl(date, lunar) {
     const lim = date.getTime() - GUARD;
