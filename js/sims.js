@@ -95,9 +95,12 @@ window.Sims = (function () {
     else { ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, w / 2, 0, 2 * Math.PI); ctx.fill(); }
   }
   // גיל הירח היום (ימים מאז מולד) לפי מולד ידוע — 6.1.2000 18:14 UT
-  function moonAgeToday() {
-    const refNew = Date.UTC(2000, 0, 6, 18, 14, 0);
-    return ((((Date.now() - refNew) / 86400000) % A.SYNODIC) + A.SYNODIC) % A.SYNODIC;
+  const REF_NEW = Date.UTC(2000, 0, 6, 18, 14, 0);   // מולד ממוצע ידוע
+  function moonAgeAt(ms) {
+    const a = ((((ms - REF_NEW) / 86400000) % A.SYNODIC) + A.SYNODIC) % A.SYNODIC;
+    // שגיאת צף זעירה מתחת לאפס מתעטפת לסוף החודש (29.5299…) — מיושרת לאפס,
+    // שלא יוצג "יום 30" מיד אחרי קפיצה למולד
+    return a >= A.SYNODIC - 1e-7 ? 0 : a;
   }
   // זריחת/שקיעת הירח בירושלים ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
   const _jlmT = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
@@ -161,6 +164,10 @@ window.Sims = (function () {
     if (pos.moon.alt <= 0) {
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
       ctx.fillText(T('מתחת לאופק'), pm.x, pm.y + 17);
+    } else if (pos.sun.alt > 0) {
+      // הלבנה מעל האופק אך החמה זורחת — באור היום אינה נראית לעין
+      ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
+      ctx.fillText(T('אור יום — אינה נראית לעין'), cx, cy + R + 20);
     }
   }
 
@@ -284,10 +291,15 @@ window.Sims = (function () {
   }
 
   // ════════════════ מופעי הירח ════════════════
+  // מקור האמת של האיור הוא רגע אמיתי (t, מילישניות) — ולא גיל הירח בלבד:
+  // כך יש לכל מצב תאריך ושעה של ממש, וכפתורי ג׳/ז׳ מן המולד קופצים אל הרגע
+  // האמיתי בחודש, שרואים בו שהוא יום או לילה. day נגזר מ-t בכל ציור.
   const moon = {
-    day: 0, speed: 2, playing: false, hintDone: false, _bound: false,
-    step(dt) { if (this.playing) this.day = (this.day + this.speed * dt) % A.SYNODIC; },
+    t: Date.now(), day: 0, speed: 2, playing: false, hintDone: false, _bound: false,
+    step(dt) { if (this.playing) this.t += this.speed * dt * 86400000; },
     draw() {
+      this.day = moonAgeAt(this.t);
+      const simDate = new Date(this.t);
       const { ctx, W, H } = fit($('moonCanvas'));
       ctx.clearRect(0, 0, W, H);
       // עדכון ה-HUD תחילה: hudInset מודד את גובה ה-HUD, ולכן יש לעדכן את תוכנו
@@ -297,12 +309,21 @@ window.Sims = (function () {
       $('m_day').textContent = Math.floor(this.day % A.SYNODIC) + 1;
       $('m_pct').textContent = pct + '%';
       $('m_phase').textContent = T(A.moonPhaseLabel(this.day));
-      // זריחת/שקיעת הירח — ליום שגיל הירח שלו הוא היום המוצג (יחסית להיום).
-      // החיפוש יקר, ולכן מחושב רק כשהיום המוצג משתנה בפועל (רבע יום).
-      const rsKey = Math.floor(this.day * 4);
+      // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
+      $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+      $('m_clock').textContent = simDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      // התאריך העברי מחושב אסינכרונית — רק כשהיום האזרחי מתחלף
+      const heKey = simDate.getFullYear() * 10000 + simDate.getMonth() * 100 + simDate.getDate();
+      if (this._heKey !== heKey && window.HebrewDate) {
+        this._heKey = heKey;
+        window.HebrewDate(simDate).then(s => { if (s && this._heKey === heKey) $('m_date_he').textContent = s; });
+      }
+      // זריחת/שקיעת הירח — ליממה של התאריך המוצג.
+      // החיפוש יקר, ולכן מחושב רק כשהיום המוצג משתנה בפועל (רבע יממה).
+      const rsKey = Math.floor(this.t / 21600000);
       if (this._rsKey !== rsKey) {
         this._rsKey = rsKey;
-        const d = new Date(Date.now() + (this.day - moonAgeToday()) * 86400000);
+        const d = new Date(this.t);
         d.setHours(0, 0, 0, 0);
         this._rs = moonRiseSet(d);
       }
@@ -352,34 +373,62 @@ window.Sims = (function () {
       ctx.fillText(T('הירח מכדור הארץ'), vx, vy - vR - 12);
       drawPhase(ctx, vx, vy, vR, this.day);
       // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
-      const skyDate = new Date(Date.now() + (this.day - moonAgeToday()) * 86400000);
-      const pos = moonSkyPos(skyDate);
+      const pos = moonSkyPos(simDate);
       if (W >= 520) {
         const dR = Math.max(50, Math.min(W * 0.12, (H - top) * 0.16, 92));
         const rtl = getComputedStyle(document.body).direction !== 'ltr';
         const dx = rtl ? 24 + dR + 14 : W - 24 - dR - 14;
         drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.day);
       }
+      // לבנה מעל האופק בשעות היום — מעל האופק, אך אור החמה מסתירה מן העין
+      const daylight = pos && pos.sun.alt > 0 && pos.moon.alt > 0;
       $('m_pos').textContent = !pos ? '—'
         : pos.moon.alt > 0 ? T(compassName(pos.moon.az)) + ' · ' + pos.moon.alt.toFixed(0) + '°'
+          + (daylight ? ' — ' + T('ביום אינה נראית לעין') : '')
         : T('מתחת לאופק');
       if (!this.hintDone) drawHint(ctx, W);
     },
     bind() {
       if (this._bound) return; this._bound = true;
-      this.day = moonAgeToday();   // ברירת מחדל: מצב הירח היום
+      this.t = Date.now();   // ברירת מחדל: מצב הירח עכשיו
+      this.day = moonAgeAt(this.t);
+      this._syncDate();
+      const stop = () => { this.playing = false; $('m_play').textContent = T('▶ הפעל'); };
       $('m_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
-      // קפיצה לרגעי המחזור: מולד (קיבוץ), ניגוד (מילוי), וזמני ברכת הלבנה
-      const jump = (id, day) => { const b = $(id); if (b) b.onclick = () => { this.day = day; this.playing = false; $('m_play').textContent = T('▶ הפעל'); }; };
+      // קפיצה לרגעי המחזור: מולד (קיבוץ), ניגוד (מילוי), וזמני ברכת הלבנה.
+      // הקפיצה היא אל הרגע האמיתי שגיל הירח בו הוא המבוקש — בחודש המוצג,
+      // ובסוף החודש (כשהרגע שעבר רחוק מחצי חודש) אל החודש הקרוב הבא.
+      const jump = (id, target) => { const b = $(id); if (b) b.onclick = () => {
+        let diff = target - moonAgeAt(this.t);
+        if (diff <= -A.SYNODIC / 2) diff += A.SYNODIC;
+        this.t += diff * 86400000;
+        stop(); this._syncDate();
+      }; };
       jump('m_jNew', 0);
       jump('m_jFull', A.SYNODIC / 2);
       jump('m_j3', 3);
       jump('m_j7', 7);
-      $('m_today').onclick = () => { this.day = moonAgeToday(); this.playing = false; $('m_play').textContent = T('▶ הפעל'); };
+      $('m_today').onclick = () => { this.t = Date.now(); stop(); this._syncDate(); };
       $('m_speed').oninput = e => { this.speed = +e.target.value; $('m_spdL').textContent = this.speed.toFixed(1); };
-      $('m_scrub').oninput = e => { this.day = +e.target.value; this.playing = false; $('m_play').textContent = T('▶ הפעל'); };
+      // גרירת "יום בחודש" — מזיזה את הרגע בתוך החודש המוצג
+      $('m_scrub').oninput = e => { this.t += (+e.target.value - moonAgeAt(this.t)) * 86400000; stop(); this._syncDate(); };
+      $('m_go').onclick = () => {
+        const y = +$('m_yy').value, m = +$('m_mm').value, d = +$('m_dd').value;
+        if (!y || !m || !d) return;
+        this.t = new Date(y, m - 1, d, +$('m_hh').value || 0, +$('m_mi').value || 0, 0).getTime();
+        stop();
+      };
     },
-    sync() { if (document.activeElement !== $('m_scrub')) $('m_scrub').value = (this.day % A.SYNODIC).toFixed(2); },
+    _syncDate() {
+      const d = new Date(this.t);
+      const set = (id, v) => { const el = $(id); if (el && !window.__fieldLocked(el)) el.value = v; };
+      set('m_dd', d.getDate()); set('m_mm', d.getMonth() + 1); set('m_yy', d.getFullYear());
+      set('m_hh', d.getHours()); set('m_mi', d.getMinutes());
+    },
+    sync() {
+      if (document.activeElement !== $('m_scrub')) $('m_scrub').value = (this.day % A.SYNODIC).toFixed(2);
+      this._syncDate();
+    },
   };
   function shade(ctx, cx, cy, r, sunX, sunY) {
     const a = Math.atan2(cy - sunY, cx - sunX);

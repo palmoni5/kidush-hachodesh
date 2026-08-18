@@ -90,6 +90,8 @@ window.TRANSLATIONS.en = {
   'ז׳ ימים מן המולד': '7 days after the molad',
   'מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.':
     'Molad (new moon) = Sun and Moon in conjunction, and the Moon is unseen. Opposition = Sun and Moon on opposite sides of Earth — a full moon (when lunar eclipses occur). Three days after the molad is the start of the time for Birkat HaLevanah in the Ashkenazi custom, and seven days in the Sephardi custom.',
+  'הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש הקרוב. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.':
+    'The buttons jump the date and time (shown above) to the exact moment of these milestones in the nearest month. When that moment falls in daytime the moon is not visible to the eye — even when above the horizon — except near sunset or right after sunrise; advance the time to evening (via the date fields or by playing) to see it in the sky window.',
   'יום בחודש (גרירה)': 'Day of month (drag)',
   'שמש — מקור האור': 'Sun — the source of light',
   'ירח — מקיף את הארץ': 'Moon — orbiting Earth',
@@ -98,13 +100,17 @@ window.TRANSLATIONS.en = {
     '(= 29 days, 12 hours and 793 chalakim = the time between one molad and the next).',
   'הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.':
     'The lit side always faces the Sun; from Earth only part of it is seen — hence the phases.',
-  'זמני זריחת הירח ושקיעתו מוצגים ליום שמתאים לגיל הירח שבאיור (סביב היום הנוכחי), לפי אופק ירושלים — להמחשה בלבד.':
-    'Moonrise/moonset are shown for the day matching the moon’s age in the diagram (near today), for the Jerusalem horizon — illustration only.',
+  'זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק ירושלים — להמחשה בלבד.':
+    'Moonrise/moonset are shown for the date displayed in the diagram, for the Jerusalem horizon — illustration only.',
   'הירח מכדור הארץ': 'The Moon as seen from Earth',
   'הירח בשמים (ירושלים)': 'Moon in the sky (Jerusalem)',
+  'ביום אינה נראית לעין': 'not visible to the eye by day',
+  'אור יום — אינה נראית לעין': 'daylight — not visible to the eye',
   'מיקום בשמים (ירושלים)': 'Sky position (Jerusalem)',
   'חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל ירושלים לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.':
     'The "Moon in the sky" window shows the Moon’s position in the sky dome over Jerusalem for the moment in the diagram, in its visible shape — the way one looks for it in sanctifying the month by sighting and for Birkas HaLevanah. The Sun is marked too, to show their proximity.',
+  'לבנה שמעל האופק בשעות היום אינה נראית לעין מפני אור החמה, אלא בסמוך לשקיעה או אחר הזריחה — וראו רש"י שבת קנ"ו ע"א ד"ה אכיל לא דיליה: "כלבנה המסגת גבול החמה למשול אף ביום".':
+    'A moon above the horizon in daytime is not visible to the eye because of the sunlight, except near sunset or right after sunrise — see Rashi, Shabbos 156a s.v. achil lo dilei: “like the moon that oversteps the sun’s bound, to rule even by day.”',
   'מולד (ירח חדש)': 'New moon (molad)',
   'רבע ראשון': 'First quarter',
   'ירח מלא': 'Full moon',

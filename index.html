@@ -30,6 +30,9 @@
       <section class="view active" id="view-moon">
         <div class="stage"><canvas id="moonCanvas"></canvas>
           <div class="hud">
+            <div class="row"><span>תאריך</span><b id="m_date">—</b></div>
+            <div class="row"><span>עברי</span><b id="m_date_he">—</b></div>
+            <div class="row"><span>שעה</span><b id="m_clock">—</b></div>
             <div class="row"><span>יום בחודש</span><b id="m_day">1</b></div>
             <div class="row"><span>אחוז הירח הנראה</span><b id="m_pct">0%</b></div>
             <div class="row"><span>זריחת הירח (ירושלים)</span><b id="m_rise">—</b></div>
@@ -49,7 +52,18 @@
             <input type="range" id="m_speed" min="0.2" max="20" step="0.1" value="2" />
             <label class="field">יום בחודש (גרירה)</label>
             <input type="range" id="m_scrub" min="0" max="29.53" step="0.01" value="0" />
-            <label class="field">רגעים בחודש</label>
+            <label class="field">הכנס תאריך ושעה</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+              <label class="field">יום<input type="number" id="m_dd" min="1" max="31" /></label>
+              <label class="field">חודש<input type="number" id="m_mm" min="1" max="12" /></label>
+              <label class="field">שנה<input type="number" id="m_yy" /></label>
+              <label class="field">שעה<input type="number" id="m_hh" min="0" max="23" /></label>
+              <label class="field">דקות<input type="number" id="m_mi" min="0" max="59" /></label>
+            </div>
+            <div class="ctrls" style="margin-top:8px">
+              <button class="btn-primary" id="m_go">הצג</button>
+            </div>
+            <label class="field" style="margin-top:8px">רגעים בחודש</label>
             <div class="ctrls">
               <button class="btn-secondary" id="m_jNew">🌑 מולד</button>
               <button class="btn-secondary" id="m_jFull">🌕 ניגוד (ירח במילואו)</button>
@@ -59,6 +73,7 @@
               <button class="btn-secondary" id="m_j7">ז׳ ימים מן המולד</button>
             </div>
             <div class="htxt" style="margin-top:6px">מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.</div>
+            <div class="htxt" style="margin-top:6px">הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש הקרוב. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.</div>
           </div>
           <div class="card">
             <h2>מקרא</h2>
@@ -69,8 +84,9 @@
               חודש הלבנה (סינודי) = 29.53 יום<br>
               (= כ"ט יום י"ב שעות ותשצ"ג חלקים = הזמן שבין מולד למולד).<br><br>
               הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.<br><br>
-              זמני זריחת הירח ושקיעתו מוצגים ליום שמתאים לגיל הירח שבאיור (סביב היום הנוכחי), לפי אופק ירושלים — להמחשה בלבד.<br><br>
-              חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל ירושלים לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.
+              זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק ירושלים — להמחשה בלבד.<br><br>
+              חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל ירושלים לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.<br><br>
+              לבנה שמעל האופק בשעות היום אינה נראית לעין מפני אור החמה, אלא בסמוך לשקיעה או אחר הזריחה — וראו רש"י שבת קנ"ו ע"א ד"ה אכיל לא דיליה: "כלבנה המסגת גבול החמה למשול אף ביום".
             </div>
           </div>
         </aside>
