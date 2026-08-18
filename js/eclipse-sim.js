@@ -823,8 +823,9 @@
       const pct = g ? Math.round((this.type === 'lunar' ? g.umbra : g.frac) * 100) : 0;
       const ep = $('e_pct'); if (ep) ep.textContent = pct + '%';
       const elc = $('e_loc'); if (elc && loc) elc.textContent = fmtLat(loc.lat) + ' · ' + fmtLon(loc.lon);
-      // תאריך עברי — פעם ביום מוצג
-      const hk = Math.floor(this.einfo.peak.date.getTime() / 86400000);
+      // תאריך עברי — פעם ביום עברי מוצג (מתחלף בשקיעה, לא בחצות)
+      const heD = window.HebrewDate && window.HebrewDate.civilDay ? window.HebrewDate.civilDay(this.einfo.peak.date) : this.einfo.peak.date;
+      const hk = heD.getFullYear() * 10000 + heD.getMonth() * 100 + heD.getDate();
       if (this._heKey !== hk && window.HebrewDate) {
         this._heKey = hk;
         window.HebrewDate(this.einfo.peak.date).then(s => { const e = $('e_date_he'); if (e && s) e.textContent = s; });

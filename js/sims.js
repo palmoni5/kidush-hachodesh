@@ -312,8 +312,9 @@ window.Sims = (function () {
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
       $('m_clock').textContent = simDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-      // התאריך העברי מחושב אסינכרונית — רק כשהיום האזרחי מתחלף
-      const heKey = simDate.getFullYear() * 10000 + simDate.getMonth() * 100 + simDate.getDate();
+      // התאריך העברי מחושב אסינכרונית — רק כשהיום העברי מתחלף (בשקיעה)
+      const heD = window.HebrewDate && window.HebrewDate.civilDay ? window.HebrewDate.civilDay(simDate) : simDate;
+      const heKey = heD.getFullYear() * 10000 + heD.getMonth() * 100 + heD.getDate();
       if (this._heKey !== heKey && window.HebrewDate) {
         this._heKey = heKey;
         window.HebrewDate(simDate).then(s => { if (s && this._heKey === heKey) $('m_date_he').textContent = s; });

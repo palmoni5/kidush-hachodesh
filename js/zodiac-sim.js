@@ -130,19 +130,44 @@
   function hebDay(n)  { return toHebNum(n); }
   function hebYear(n) { return toHebNum(n % 1000); } // מוריד אלפים (5786 → 786 = תשפ"ו)
 
-  // תאריך עברי — מ-Otzaria calendar API; fallback: חשבון המולד שב-HebCal
-  const _hebCache = new Map(); // ms → string
-
-  async function fetchHebrewDate(date) {
-    const ms = date.getTime();
-    if (_hebCache.has(ms)) return _hebCache.get(ms);
+  // תאריך עברי — מ-Otzaria calendar API; fallback: חשבון המולד שב-HebCal.
+  // היום העברי מתחיל בשקיעה: משקיעת החמה במקום הצופה (ברירת מחדל — ירושלים)
+  // שייך הרגע ליום האזרחי שלמחרת. באזורים קוטביים, שאין בהם שקיעה, נסוגים
+  // לגבול חצות האזרחי.
+  const civilKey = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  const _setCache = new Map(); // יום אזרחי|lat|lon → Date|null (חיפוש AE יקר)
+  function sunsetOf(date, lat, lon) {
+    const key = civilKey(date) + '|' + lat.toFixed(2) + '|' + lon.toFixed(2);
+    if (_setCache.has(key)) return _setCache.get(key);
+    let set = null;
     try {
-      const iso = date.toISOString().slice(0, 10);
+      const noon = new Date(date); noon.setHours(12, 0, 0, 0);
+      const e = AE.SearchRiseSet(AE.Body.Sun, new AE.Observer(lat, lon, 0), -1, AE.MakeTime(noon), 1);
+      if (e) set = e.date;
+    } catch (_) {}
+    _setCache.set(key, set);
+    return set;
+  }
+  // היום האזרחי שהתאריך העברי שלו הוא תאריכו של הרגע הנתון
+  function hebCivilDay(date, lat, lon) {
+    const set = sunsetOf(date, lat === undefined ? 31.78 : lat, lon === undefined ? 35.22 : lon);
+    return set && date >= set ? new Date(date.getTime() + 86400000) : date;
+  }
+
+  const _hebCache = new Map(); // יום אזרחי אפקטיבי (civilKey) → string
+
+  async function fetchHebrewDate(date, lat, lon) {
+    const d = hebCivilDay(date, lat, lon);
+    const key = civilKey(d);
+    if (_hebCache.has(key)) return _hebCache.get(key);
+    try {
+      // תאריך מקומי דווקא — toISOString הוא UTC, ובקיץ הזיז את גבול היום ל-3:00
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const res = await Otzaria.call('calendar.getJewishDate', { date: iso });
       if (res && res.success && res.data) {
         const { day, monthName, year } = res.data;
         const str = `${hebDay(day)} ${monthName} ${hebYear(year)}`;
-        _hebCache.set(ms, str);
+        _hebCache.set(key, str);
         return str;
       }
     } catch (_) {}
@@ -150,8 +175,8 @@
     // לוח ה-Intl שימש כאן קודם, ונזנח: הוא סוטה ביום אחד בשנים שמולד תשרי
     // שלהן חל ביום א׳ בין שעה 15 ל-18 והשנה שלפניהן מעוברת (ראו js/hebrew-calendar.js).
     try {
-      const str = window.HebCal.formatHebrewDate(date);
-      if (str) _hebCache.set(ms, str);
+      const str = window.HebCal.formatHebrewDate(d);
+      if (str) _hebCache.set(key, str);
       return str;
     } catch (_) { return ''; }
   }
@@ -359,11 +384,11 @@
       if (hud) hud.textContent = this.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day:'numeric', month:'long', year:'numeric' });
       const hudHe = $('z_date_he');
       if (hudHe) {
-        const ms = this.date.getTime();
-        if (_hebCache.has(ms)) {
-          hudHe.textContent = _hebCache.get(ms);
+        const key = civilKey(hebCivilDay(this.date, this.lat, this.lon));
+        if (_hebCache.has(key)) {
+          hudHe.textContent = _hebCache.get(key);
         } else {
-          fetchHebrewDate(this.date).then(s => { if (hudHe) hudHe.textContent = s; });
+          fetchHebrewDate(this.date, this.lat, this.lon).then(s => { if (hudHe) hudHe.textContent = s; });
         }
       }
       updateLegend(this.date);
@@ -437,8 +462,10 @@
     },
   };
 
-  // חשיפת מעצב התאריך העברי (גימטריה + מטמון + נפילה ל-Intl) לשימוש משותף
+  // חשיפת מעצב התאריך העברי (גימטריה + מטמון + גבול יום בשקיעה) לשימוש משותף.
+  // civilDay חשוף לקוראים הממטמנים לפי מפתח-יום — שיתחלף להם בשקיעה ולא בחצות.
   window.HebrewDate = fetchHebrewDate;
+  window.HebrewDate.civilDay = hebCivilDay;
 
   // ══ הרשמה ב-window.Sims ════════════════════════════════════════════════
   window.Sims.zodiac = zodiac;

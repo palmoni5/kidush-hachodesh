@@ -207,7 +207,7 @@
       $('h_ruler').style.color = p.color;
       $('h_dayruler').textContent = T(dayRuler(s.d).he);
       const he = $('h_date_he');
-      if (he && window.HebrewDate) window.HebrewDate(this.date).then(x => { he.textContent = x; });
+      if (he && window.HebrewDate) window.HebrewDate(this.date, this.lat, this.lon).then(x => { he.textContent = x; });
     },
 
     tekufotTable(hy) {
