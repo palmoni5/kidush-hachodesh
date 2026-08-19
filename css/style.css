@@ -51,6 +51,14 @@
   --ill-summer:     #ffb24d;
   --ill-autumn:     #e07a4d;
   --ill-winter:     #5fa8ff;
+  /* גלגל המזלות: רקע הדיסקה והחלל הפנימי (zodiac-sim קורא אותם עם fallback —
+     עד כה לא הוגדרו כלל, והגלגל נשאר כהה גם ברקע בהיר בעוד הטקסט מתחלף לכהה) */
+  --ill-bg:         #060616;
+  --ill-space:      #04040e;
+  /* צללי הליקויים (אומברה/פנומברה) — בכהה מעט בהירים מהרקע כדי שייראו,
+     בבהיר כהים ורכים (הערכים הקשיחים הקודמים נעלמו בכהה וצרמו בבהיר) */
+  --ill-umbra:      rgba(132, 152, 205, 0.22);
+  --ill-penumbra:   rgba(118, 140, 195, 0.11);
 
   /* --- פלטת איור בהירה (ערכים; מוחלים ע"י body.ill-light) --- */
   --ill-sky-top-l:    #d7e6ff;
@@ -64,6 +72,10 @@
   --ill-night-l:      rgba(38, 48, 72, 0.62);
   --ill-sun-glow-l:   rgba(255, 170, 40, 0.50);
   --ill-ray-l:        rgba(210, 150, 30, 0.40);
+  --ill-bg-l:         #e7eefb;
+  --ill-space-l:      #f6f9ff;
+  --ill-umbra-l:      rgba(30, 36, 60, 0.30);
+  --ill-penumbra-l:   rgba(52, 66, 108, 0.12);
 
   /* --- חוצצים וצללים --- */
   --scrim:          rgba(0, 0, 0, 0.40);
@@ -83,6 +95,10 @@ body.ill-light {
   --ill-night:      var(--ill-night-l);
   --ill-sun-glow:   var(--ill-sun-glow-l);
   --ill-ray:        var(--ill-ray-l);
+  --ill-bg:         var(--ill-bg-l);
+  --ill-space:      var(--ill-space-l);
+  --ill-umbra:      var(--ill-umbra-l);
+  --ill-penumbra:   var(--ill-penumbra-l);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -184,6 +200,13 @@ canvas { display: block; }
   contain: paint;
 }
 #yearCanvas, #eclipseCanvas { touch-action: none; }
+/* מחוות אופקיות מעל האיורים והלוח נצרכות בעמוד ואינן מחלחלות אל האפליקציה
+   המארחת — שפירשה החלקה אגבית כבקשת מעבר בין כרטיסיות. pan-y משאיר את
+   הגלילה האנכית (פריסת המובייל הנגללת) ופוסל את הפירוש האופקי בלבד. */
+#moonCanvas, #zodiacCanvas, #hoursCanvas, #datelineCanvas, #planetsCanvas { touch-action: pan-y; }
+aside.panel { touch-action: pan-y; }
+/* פס הלשוניות נגלל אופקית בעצמו — החלקה עליו שייכת לו ולא למארח */
+nav.tabs { touch-action: pan-x; }
 
 aside.panel {
   width: 312px; flex-shrink: 0; overflow: auto;

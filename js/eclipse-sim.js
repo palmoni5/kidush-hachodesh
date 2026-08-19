@@ -344,9 +344,9 @@
     // חרוט הצל של הארץ: פנומברה (רחב, בהיר) + אומברה (צר, כהה) עד מעבר לירח
     const coneX = mxBase + L.w * 0.06;
     const rUpx = Math.max(1, g.rU * kap), rPpx = g.rP * kap, ePx = R_EARTH * kap;
-    ctx.fillStyle = 'rgba(70,90,140,0.13)';
+    ctx.fillStyle = cvv('--ill-penumbra');
     ctx.beginPath(); ctx.moveTo(ex, ay - ePx); ctx.lineTo(coneX, ay - rPpx); ctx.lineTo(coneX, ay + rPpx); ctx.lineTo(ex, ay + ePx); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(10,12,22,0.42)';
+    ctx.fillStyle = cvv('--ill-umbra');
     ctx.beginPath(); ctx.moveTo(ex, ay - ePx); ctx.lineTo(coneX, ay - rUpx); ctx.lineTo(coneX, ay + rUpx); ctx.lineTo(ex, ay + ePx); ctx.closePath(); ctx.fill();
     // גופים
     const gGlow = ctx.createRadialGradient(sx, ay, 2, sx, ay, 40);
@@ -364,10 +364,10 @@
     const cx1 = L.x + L.w * 0.34, cy1 = L.y + L.h * 0.60;
     const Rp = Math.min(L.w * 0.27, L.h * 0.30);
     const k2 = Rp / g.rP;                           // ק"מ→פיקסל של מישור הצל
-    ctx.fillStyle = 'rgba(70,90,140,0.13)';
+    ctx.fillStyle = cvv('--ill-penumbra');
     ctx.beginPath(); ctx.arc(cx1, cy1, Rp, 0, 2*Math.PI); ctx.fill();
     ctx.strokeStyle = cvv('--ill-grid'); ctx.lineWidth = 1; ctx.stroke();
-    ctx.fillStyle = 'rgba(10,12,22,0.55)';
+    ctx.fillStyle = cvv('--ill-umbra');
     ctx.beginPath(); ctx.arc(cx1, cy1, Math.max(2, g.rU * k2), 0, 2*Math.PI); ctx.fill();
     // נתיב הירח לאורך חלון הליקוי
     ctx.strokeStyle = cvv('--ill-line'); ctx.setLineDash([3, 4]); ctx.beginPath();
@@ -446,7 +446,7 @@
     const umbLenPx = (R_MOON * g.D / (R_SUN - R_MOON)) * (gapPx / distKm);   // אורך האומברה בקנה המרחק
     const apexT = Math.min(umbLenPx / (ex - mx || 1), 1.35);
     const apexX = mx + (ex - mx) * apexT, apexY = myq + (eyq - myq) * apexT;
-    ctx.fillStyle = 'rgba(8,10,20,0.55)';
+    ctx.fillStyle = cvv('--ill-umbra');
     ctx.beginPath(); ctx.moveTo(mx, myq - mPx); ctx.lineTo(apexX, apexY); ctx.lineTo(mx, myq + mPx); ctx.closePath(); ctx.fill();
     if (umbLenPx < ex - mx) {                        // הצל אינו מגיע — טבעתי: אנטומברה מקווקוות
       ctx.strokeStyle = 'rgba(120,130,170,0.55)'; ctx.setLineDash([3, 4]); ctx.lineWidth = 1;
@@ -456,7 +456,7 @@
     }
     // פנומברה — מתרחבת מן הירח עד מישור הארץ (רדיוס rPs בקנה הארץ)
     const penPx = Math.max(10, g.rPs * kap);
-    ctx.fillStyle = 'rgba(70,90,140,0.16)';
+    ctx.fillStyle = cvv('--ill-penumbra');
     ctx.beginPath(); ctx.moveTo(mx, myq - mPx); ctx.lineTo(ex, eyq - penPx); ctx.lineTo(ex, eyq + penPx); ctx.lineTo(mx, myq + mPx); ctx.closePath(); ctx.fill();
     // גופים
     const gGlow = ctx.createRadialGradient(sx, ay, 2, sx, ay, 44);
@@ -502,10 +502,14 @@
       const right = cross(zv, up);
       const vM = norm(v.M);
       const offx = dot(vM, right) / v.rs * sunR, offy = dot(vM, up) / v.rs * sunR;
-      // בליקוי מלא — עטרה (קורונה) סביב השמש המכוסה
-      if (v.kind === 'total') {
+      // העטרה (קורונה) — נגלית בהדרגה בשניות שלפני הכיסוי המלא ונעלמת בהדרגה
+      // אחריו, לפי הקרבה הזוויתית למגע השני (ולא בבת אחת עם התחלפות ה-kind,
+      // שקפצה ממצב "שמש חומה בזוהר" למצב "עטרה מלאה" בפריים אחד)
+      const corT = v.kind === 'total' ? 1
+        : Math.max(0, Math.min(1, 1 - (v.sep - (v.rm - v.rs)) / (0.25 * v.rs)));
+      if (corT > 0.01) {
         const cor = ctx.createRadialGradient(scx, scy, sunR * 0.9, scx, scy, sunR * 2.3);
-        cor.addColorStop(0, 'rgba(235,240,255,0.85)'); cor.addColorStop(1, 'transparent');
+        cor.addColorStop(0, `rgba(235,240,255,${(0.85 * corT).toFixed(3)})`); cor.addColorStop(1, 'transparent');
         ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(scx, scy, sunR * 2.3, 0, 2*Math.PI); ctx.fill();
       }
       ctx.fillStyle = '#ffd24a';
@@ -515,11 +519,14 @@
       // שמתכהה עמם לאורך הליקוי.
       ctx.fillStyle = skyG;
       ctx.beginPath(); ctx.arc(scx + offx, scy - offy, moonR, 0, 2*Math.PI); ctx.fill();
-      // הזוהר האטמוספרי סביב השמש (נחלש עם הכיסוי) — פזור באוויר שלפני הצופה,
-      // ולכן נצבע מעל הירח; בליקוי מלא אין זוהר, רק העטרה שמאחור
+      // הזוהר האטמוספרי סביב השמש — פזור באוויר שלפני הצופה, ולכן נצבע מעל הירח.
+      // הוא דועך פעמיים: עם הכיסוי (פחות שמש = פחות אור), וגם עם התכהות השמים
+      // (1−dk) — בלי הדעיכה השנייה הזוהר הצהוב נצבע מעל שמים כמעט שחורים בשלב
+      // העמוק, השמש נראתה כתם חום, והוא נעלם בבת אחת ברגע המלאוּת.
       if (v.kind !== 'total') {
+        const glA = 0.55 * (1 - 0.8 * f) * (1 - dk);
         const gl = ctx.createRadialGradient(scx, scy, 2, scx, scy, sunR * 2.1);
-        gl.addColorStop(0, `rgba(255,214,120,${0.55 * (1 - 0.8 * f)})`); gl.addColorStop(1, 'transparent');
+        gl.addColorStop(0, `rgba(255,214,120,${glA.toFixed(3)})`); gl.addColorStop(1, 'transparent');
         ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(scx, scy, sunR * 2.1, 0, 2*Math.PI); ctx.fill();
       }
     }
@@ -717,7 +724,6 @@
     if (g.central && Math.abs(g.rUs) > 8) {
       const aN = norm(sub(ECL_N, mul(g.axis, dot(ECL_N, g.axis))));
       const aE = cross(aN, g.axis);
-      ctx.fillStyle = g.rUs > 0 ? 'rgba(3,3,8,0.8)' : 'rgba(25,26,42,0.62)';
       ctx.beginPath(); let first = true;
       for (let k = 0; k <= 26; k++) {
         const th = k / 26 * 2 * Math.PI, rr = Math.abs(g.rUs);
@@ -728,7 +734,13 @@
         const p = proj(ll.lat, ll.lon);
         first ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); first = false;
       }
-      ctx.closePath(); ctx.fill();
+      ctx.closePath();
+      // הקו הכתום של המסלול עובר תמיד בתוך הכתם, ומבעד למילוי השקוף-חלקית הוא
+      // צבע את הכתם חום במקום שחור (בכתם קטן — כמעט כולו). לכן תחילה מצייר-מחדש
+      // את הגלובוס בתחום הכתם (מוחק את הקו שם), ורק אז ממלא את הצל.
+      if (buf) { ctx.save(); ctx.clip(); ctx.drawImage(buf, cx - R, cy - R, 2 * R, 2 * R); ctx.restore(); }
+      ctx.fillStyle = g.rUs > 0 ? 'rgba(3,3,8,0.8)' : 'rgba(25,26,42,0.62)';
+      ctx.fill();
     }
     // סמן מרכז הצל
     const cp = proj(center.lat, center.lon);

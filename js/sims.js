@@ -151,19 +151,28 @@ window.Sims = (function () {
       const rr = (90 - Math.max(o.alt, 0)) / 90 * R, a = o.az * Math.PI / 180;
       return { x: cx - rr * Math.sin(a), y: cy - rr * Math.cos(a) };
     };
+    // גוף מתחת לאופק מוצמד לשפת האופק בכיוונו (אזימוט) — אך עמוק מתחת לאופק,
+    // ליד הנדיר, האזימוט מתהפך במהירות והגוף המוצמד "רץ" לאורך השפה פי עשרות
+    // מקצבו האמיתי. לכן עמוק מן הסף הוא מוסתר, ורק סמוך לזריחה/שקיעה נראה בשפה.
+    const HIDE_ALT = -14;
     // השמש — להקשר (עמומה מתחת לאופק); הקרבה לירח מסבירה מתי הסהר נראה
-    const ps = place(pos.sun);
-    ctx.globalAlpha = pos.sun.alt > 0 ? 0.95 : 0.3;
-    sprite(ctx, IMG.sun, ps.x, ps.y, 15, 15);
-    ctx.globalAlpha = 1;
-    // הירח בצורתו הנראית; מתחת לאופק — עמום, על שפת האופק בכיוונו
+    if (pos.sun.alt > HIDE_ALT) {
+      const ps = place(pos.sun);
+      ctx.globalAlpha = pos.sun.alt > 0 ? 0.95 : 0.3;
+      sprite(ctx, IMG.sun, ps.x, ps.y, 15, 15);
+      ctx.globalAlpha = 1;
+    }
+    // הירח בצורתו הנראית; מעט מתחת לאופק — עמום, על שפת האופק בכיוונו
     const pm = place(pos.moon);
-    ctx.globalAlpha = pos.moon.alt > 0 ? 1 : 0.35;
-    drawPhase(ctx, pm.x, pm.y, 9, day);
-    ctx.globalAlpha = 1;
+    if (pos.moon.alt > HIDE_ALT) {
+      ctx.globalAlpha = pos.moon.alt > 0 ? 1 : 0.35;
+      drawPhase(ctx, pm.x, pm.y, 9, day);
+      ctx.globalAlpha = 1;
+    }
     if (pos.moon.alt <= 0) {
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
-      ctx.fillText(T('מתחת לאופק'), pm.x, pm.y + 17);
+      if (pos.moon.alt > HIDE_ALT) ctx.fillText(T('מתחת לאופק'), pm.x, pm.y + 17);
+      else { ctx.textBaseline = 'middle'; ctx.fillText(T('מתחת לאופק'), cx, cy); }
     } else if (pos.sun.alt > 0) {
       // הלבנה מעל האופק אך החמה זורחת — באור היום אינה נראית לעין
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';

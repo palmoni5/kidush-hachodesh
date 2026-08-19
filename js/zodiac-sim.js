@@ -33,6 +33,14 @@
   const _cc = Object.create(null);
   const cv = n => { if (_cc[n] === undefined) _cc[n] = getComputedStyle(document.body).getPropertyValue(n).trim() || ''; return _cc[n]; };
   function clearColorCache() { for (const k in _cc) delete _cc[k]; }
+  // ברקע האיור הבהיר צבעי הגופים הבהירים (ירח #c8c8c8 וכד') נבלעים — התוויות
+  // מוכהות; הדיסקות עצמן נשארות בצבען (יש להן זוהר והן ניכרות גם כך)
+  const isLight = () => document.body.classList.contains('ill-light');
+  function shadeHex(hex, f) {
+    const n = parseInt(hex.slice(1, 7), 16), m = v => Math.round(v * f);
+    return `rgb(${m((n >> 16) & 255)},${m((n >> 8) & 255)},${m(n & 255)})`;
+  }
+  const labelCol = c => isLight() ? shadeHex(c, 0.58) : c;
 
   // מטמון מידות קנבס
   const _fc = new Map();
@@ -283,7 +291,7 @@
     ctx.beginPath(); ctx.moveTo(cx, cy);
     ctx.lineTo(cx + (innerR - 2) * Math.cos(a0), cy + (innerR - 2) * Math.sin(a0)); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(255,200,80,0.7)';
+    ctx.fillStyle = isLight() ? 'rgba(146,108,18,0.9)' : 'rgba(255,200,80,0.7)';
     ctx.font = `${Math.max(8, fontSize - 2)}px sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(T('0° טלה'), cx + (innerR - 22) * Math.cos(a0), cy + (innerR - 22) * Math.sin(a0));
@@ -350,7 +358,7 @@
       const dx = x - cx, dy = y - cy, d = Math.sqrt(dx * dx + dy * dy) || 1;
       const lfs = Math.max(8, Math.min(10, maxR * 0.06));
       ctx.font = `bold ${lfs}px sans-serif`;
-      ctx.fillStyle = body.color;
+      ctx.fillStyle = labelCol(body.color);
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(T(body.he), x + (dx / d) * (body.r + 13), y + (dy / d) * (body.r + 13));
     }

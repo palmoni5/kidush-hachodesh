@@ -85,7 +85,8 @@
   // ── מצב פנימי ──────────────────────────────────────────────────────────
   let inited = false, renderer, scene, camera, controls;
   let sun, earth, moon, light, ambient, earthOrbit, moonOrbit, earthMoonLine;
-  let shadowCone, penumbraCone, moonCone;
+  let shadowCone, penumbraCone, moonCone, stars;
+  let lastLight = null;   // ערכת הרקע (בהיר/כהה) שהסצנה מכוונת אליה כעת
   // יוניפורמים של צל הארץ על הירח (ביחידות רדיוס-ירח, במרחב-הגוף של הירח)
   const moonU = {
     uAxis:  { value: new THREE.Vector3(0, 1, 0) },   // ציר הצל
@@ -103,13 +104,23 @@
     return new THREE.TextureLoader().load(url, () => { try { window.__invalidate(); } catch (e) {} });
   }
 
+  // הכהיית צבע hex (מחרוזת/מספר) — לרקע האיור הבהיר, שבו הצבעים הבהירים נבלעים
+  function shadeHexStr(hex, f) {
+    const n = parseInt(hex.slice(1, 7), 16), m = v => Math.round(v * f);
+    return `rgb(${m((n >> 16) & 255)},${m((n >> 8) & 255)},${m(n & 255)})`;
+  }
+  const shadeNum = (c, f) =>
+    (Math.round(((c >> 16) & 255) * f) << 16) | (Math.round(((c >> 8) & 255) * f) << 8) | Math.round((c & 255) * f);
+  const isLight = () => document.body.classList.contains('ill-light');
+
   // התווית מציירת את התרגום העדכני של המקור העברי; paintLabel מאפשר
   // רענון בעת החלפת שפה (repaintLabels) בלי לבנות את הספרייט מחדש.
   function paintLabel(sp) {
     const cv = sp.userData.cv, c = cv.getContext('2d');
     c.clearRect(0, 0, 256, 64);
     c.font = 'bold 40px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = sp.userData.color; c.fillText(T(sp.userData.src), 128, 32);
+    c.fillStyle = isLight() ? shadeHexStr(sp.userData.color, 0.55) : sp.userData.color;
+    c.fillText(T(sp.userData.src), 128, 32);
     sp.material.map.needsUpdate = true;
   }
   function makeLabel(text, color, scale) {
@@ -200,7 +211,7 @@
     controls.enableDamping = false;
     controls.addEventListener('change', () => { try { window.__invalidate(); } catch (e) {} });
 
-    scene.add(starfield());
+    stars = starfield(); scene.add(stars);
 
     light = new THREE.PointLight(0xffffff, 2.8, 0, 0); scene.add(light);
     ambient = new THREE.AmbientLight(0xffffff, 0.07); scene.add(ambient);
@@ -289,6 +300,28 @@
     for (const k in labels) scene.add(labels[k]);
 
     inited = true;
+  }
+
+  // התאמת הסצנה לרקע האיור (בהיר/כהה). הצבעים המקוריים כוונו לרקע כהה בלבד:
+  // ברקע בהיר חרוטי הצל הכהים צרמו, הכוכבים הלבנים והקווים הבהירים נעלמו —
+  // ובכהה החרוטים (שצבעם היה כהה כמעט כרקע) לא נראו כלל. כאן כל ערכה מקבלת
+  // גוונים משלה: בכהה הצללים בהירים מעט מהרקע, בבהיר — כהים ורכים.
+  function applyIllTheme() {
+    const l = isLight();
+    if (l === lastLight) return;
+    lastLight = l;
+    stars.visible = !l;
+    shadowCone.material.color.setHex(l ? 0x2c3350 : 0x8a9cc8);
+    shadowCone.material.opacity = l ? 0.22 : 0.30;
+    penumbraCone.material.color.setHex(l ? 0x3a4468 : 0x9cb0dc);
+    penumbraCone.material.opacity = l ? 0.10 : 0.12;
+    moonCone.material.color.setHex(l ? 0x2c3350 : 0x8a9cc8);
+    moonCone.material.opacity = l ? 0.28 : 0.35;
+    earthOrbit.material.color.setHex(l ? 0x3558b8 : 0x88aaff);
+    moonOrbit.material.color.setHex(l ? 0x5a6480 : 0xaaaaaa);
+    earthMoonLine.material.color.setHex(l ? 0x9a7414 : 0xffcc55);
+    for (const p of PLANETS) p.ringObj.material.color.setHex(l ? shadeNum(p.color, 0.62) : p.color);
+    repaintLabels();
   }
 
   function resize() {
@@ -502,6 +535,7 @@
     draw() {
       if (typeof THREE === 'undefined') return;
       if (!inited) init();
+      applyIllTheme();
       resize();
       update(this.date, this.mode, this.showPlanets, this.showCones);
       renderer.render(scene, camera);
