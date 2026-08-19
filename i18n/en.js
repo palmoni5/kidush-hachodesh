@@ -90,10 +90,12 @@ window.TRANSLATIONS.en = {
   '🌕 ניגוד (ירח במילואו)': '🌕 Opposition (full moon)',
   'ג׳ ימים מן המולד': '3 days after the molad',
   'ז׳ ימים מן המולד': '7 days after the molad',
+  'החודש הקודם': 'Previous month',
+  'החודש הבא': 'Next month',
   'מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.':
     'Molad (new moon) = Sun and Moon in conjunction, and the Moon is unseen. Opposition = Sun and Moon on opposite sides of Earth — a full moon (when lunar eclipses occur). Three days after the molad is the start of the time for Birkat HaLevanah in the Ashkenazi custom, and seven days in the Sephardi custom.',
-  'הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש הקרוב. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.':
-    'The buttons jump the date and time (shown above) to the exact moment of these milestones in the nearest month. When that moment falls in daytime the moon is not visible to the eye — even when above the horizon — except near sunset or right after sunrise; advance the time to evening (via the date fields or by playing) to see it in the sky window.',
+  'הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש המוצג — חודש הלבנה שהתאריך שבאיור נמצא בתוכו, מן המולד ועד המולד הבא. כפתורי "החודש הקודם" ו"החודש הבא" מעבירים את התצוגה חודש לבנה שלם אחורה או קדימה. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.':
+    'The buttons jump the date and time (shown above) to the exact moment of these milestones in the displayed month — the lunar month containing the date in the illustration, from one molad to the next. The "Previous month" and "Next month" buttons shift the view a whole lunar month back or forward. When that moment falls in daytime the moon is not visible to the eye — even when above the horizon — except near sunset or right after sunrise; advance the time to evening (via the date fields or by playing) to see it in the sky window.',
   'יום בחודש (גרירה)': 'Day of month (drag)',
   'שמש — מקור האור': 'Sun — the source of light',
   'ירח — מקיף את הארץ': 'Moon — orbiting Earth',

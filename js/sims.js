@@ -297,6 +297,10 @@ window.Sims = (function () {
   const moon = {
     t: Date.now(), day: 0, speed: 2, playing: false, hintDone: false, _bound: false,
     step(dt) { if (this.playing) this.t += this.speed * dt * 86400000; },
+    // תחילת החודש המוצג — רגע המולד (הממוצע) שהרגע הנוכחי בתוך חודשו.
+    // נגזר מ-t עצמו, ולכן החודש מתחלף רק כש-t חוצה מולד (הפעלה, תאריך ידני,
+    // "הירח היום") או בכפתורי החודש הקודם/הבא — לא בלחיצות על רגעי החודש.
+    _monthT0() { return this.t - moonAgeAt(this.t) * 86400000; },
     draw() {
       this.day = moonAgeAt(this.t);
       const simDate = new Date(this.t);
@@ -398,22 +402,29 @@ window.Sims = (function () {
       const stop = () => { this.playing = false; $('m_play').textContent = T('▶ הפעל'); };
       $('m_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
       // קפיצה לרגעי המחזור: מולד (קיבוץ), ניגוד (מילוי), וזמני ברכת הלבנה.
-      // הקפיצה היא אל הרגע האמיתי שגיל הירח בו הוא המבוקש — בחודש המוצג,
-      // ובסוף החודש (כשהרגע שעבר רחוק מחצי חודש) אל החודש הקרוב הבא.
+      // כל הקפיצות מעוגנות לחודש המוצג (_monthT0) ואינן זולגות לחודש הבא —
+      // גם בלחיצות חוזרות בכל סדר שהוא. מעבר חודש נעשה בכפתורי החודש בלבד.
       const jump = (id, target) => { const b = $(id); if (b) b.onclick = () => {
-        let diff = target - moonAgeAt(this.t);
-        if (diff <= -A.SYNODIC / 2) diff += A.SYNODIC;
-        this.t += diff * 86400000;
+        this.t = this._monthT0() + target * 86400000;
         stop(); this._syncDate();
       }; };
       jump('m_jNew', 0);
       jump('m_jFull', A.SYNODIC / 2);
       jump('m_j3', 3);
       jump('m_j7', 7);
+      // מעבר מפורש בין חודשים — הזזה בחודש סינודי שלם: היום בחודש נשמר,
+      // וכפתורי הרגעים מכוונים מעתה אל החודש החדש
+      const shiftMonth = (id, dir) => { const b = $(id); if (b) b.onclick = () => {
+        this.t += dir * A.SYNODIC * 86400000;
+        stop(); this._syncDate();
+      }; };
+      shiftMonth('m_prevM', -1);
+      shiftMonth('m_nextM', +1);
       $('m_today').onclick = () => { this.t = Date.now(); stop(); this._syncDate(); };
       $('m_speed').oninput = e => { this.speed = +e.target.value; $('m_spdL').textContent = this.speed.toFixed(1); };
-      // גרירת "יום בחודש" — מזיזה את הרגע בתוך החודש המוצג
-      $('m_scrub').oninput = e => { this.t += (+e.target.value - moonAgeAt(this.t)) * 86400000; stop(); this._syncDate(); };
+      // גרירת "יום בחודש" — מציבה את הרגע בתוך החודש המוצג; טווח המחוון
+      // (0–29.53) קצר מהחודש הסינודי, ולכן גם קצהו אינו גולש למולד הבא
+      $('m_scrub').oninput = e => { this.t = this._monthT0() + (+e.target.value) * 86400000; stop(); this._syncDate(); };
       $('m_go').onclick = () => {
         const y = +$('m_yy').value, m = +$('m_mm').value, d = +$('m_dd').value;
         if (!y || !m || !d) return;
