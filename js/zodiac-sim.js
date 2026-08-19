@@ -148,17 +148,45 @@
     _setCache.set(key, set);
     return set;
   }
+  // עלות השחר (החמה 16.1° מתחת לאופק) ביום האזרחי של הרגע — במטמון
+  const _dawnCache = new Map();
+  function dawnOf(date, lat, lon) {
+    const key = civilKey(date) + '|' + lat.toFixed(2) + '|' + lon.toFixed(2);
+    if (_dawnCache.has(key)) return _dawnCache.get(key);
+    let dawn = null;
+    try {
+      const midnight = new Date(date); midnight.setHours(0, 0, 0, 0);
+      const e = AE.SearchAltitude(AE.Body.Sun, new AE.Observer(lat, lon, 0), +1, AE.MakeTime(midnight), 1, -16.1);
+      if (e) dawn = e.date;
+    } catch (_) {}
+    _dawnCache.set(key, dawn);
+    return dawn;
+  }
   // היום האזרחי שהתאריך העברי שלו הוא תאריכו של הרגע הנתון
   function hebCivilDay(date, lat, lon) {
     const set = sunsetOf(date, lat === undefined ? 31.78 : lat, lon === undefined ? 35.22 : lon);
     return set && date >= set ? new Date(date.getTime() + 86400000) : date;
   }
+  // לילה לעניין "אור ל־": מהשקיעה ועד עלות השחר האדם בתחילת יום המחרת,
+  // ובלוח (כבלוח השנה של אוצריא) נכתב "אור לז׳ אלול" — שלא יתבלבל בתאריך.
+  function isNight(date, lat, lon) {
+    const la = lat === undefined ? 31.78 : lat, lo = lon === undefined ? 35.22 : lon;
+    const set = sunsetOf(date, la, lo);
+    if (set && date >= set) return true;                 // מהשקיעה עד חצות
+    const dawn = dawnOf(date, la, lo);
+    return !!(dawn && date < dawn);                      // מחצות עד עלות השחר
+  }
+  // מפתח תצוגה: היום האזרחי האפקטיבי + דגל הלילה — לקוראים הממטמנים לפי יום,
+  // כדי שהחיווי יתרענן גם בשקיעה (חילוף התאריך) וגם בעלות השחר (נפילת "אור ל־")
+  const hebDisplayKey = (date, lat, lon) =>
+    civilKey(hebCivilDay(date, lat, lon)) + (isNight(date, lat, lon) ? '|N' : '');
 
-  const _hebCache = new Map(); // יום אזרחי אפקטיבי (civilKey) → string
+  const _hebCache = new Map(); // hebDisplayKey → string
 
   async function fetchHebrewDate(date, lat, lon) {
     const d = hebCivilDay(date, lat, lon);
-    const key = civilKey(d);
+    const night = isNight(date, lat, lon);
+    const key = civilKey(d) + (night ? '|N' : '');
     if (_hebCache.has(key)) return _hebCache.get(key);
     try {
       // תאריך מקומי דווקא — toISOString הוא UTC, ובקיץ הזיז את גבול היום ל-3:00
@@ -166,7 +194,7 @@
       const res = await Otzaria.call('calendar.getJewishDate', { date: iso });
       if (res && res.success && res.data) {
         const { day, monthName, year } = res.data;
-        const str = `${hebDay(day)} ${monthName} ${hebYear(year)}`;
+        const str = (night ? T('אור ל') : '') + `${hebDay(day)} ${monthName} ${hebYear(year)}`;
         _hebCache.set(key, str);
         return str;
       }
@@ -175,7 +203,8 @@
     // לוח ה-Intl שימש כאן קודם, ונזנח: הוא סוטה ביום אחד בשנים שמולד תשרי
     // שלהן חל ביום א׳ בין שעה 15 ל-18 והשנה שלפניהן מעוברת (ראו js/hebrew-calendar.js).
     try {
-      const str = window.HebCal.formatHebrewDate(d);
+      let str = window.HebCal.formatHebrewDate(d);
+      if (str && night) str = T('אור ל') + str;
       if (str) _hebCache.set(key, str);
       return str;
     } catch (_) { return ''; }
@@ -384,7 +413,7 @@
       if (hud) hud.textContent = this.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day:'numeric', month:'long', year:'numeric' });
       const hudHe = $('z_date_he');
       if (hudHe) {
-        const key = civilKey(hebCivilDay(this.date, this.lat, this.lon));
+        const key = hebDisplayKey(this.date, this.lat, this.lon);
         if (_hebCache.has(key)) {
           hudHe.textContent = _hebCache.get(key);
         } else {
@@ -462,10 +491,12 @@
     },
   };
 
-  // חשיפת מעצב התאריך העברי (גימטריה + מטמון + גבול יום בשקיעה) לשימוש משותף.
-  // civilDay חשוף לקוראים הממטמנים לפי מפתח-יום — שיתחלף להם בשקיעה ולא בחצות.
+  // חשיפת מעצב התאריך העברי (גימטריה + מטמון + גבול יום בשקיעה + "אור ל־"
+  // בלילה) לשימוש משותף. key חשוף לקוראים הממטמנים לפי מפתח-יום — שיתחלף
+  // להם בשקיעה ובעלות השחר, ולא בחצות.
   window.HebrewDate = fetchHebrewDate;
   window.HebrewDate.civilDay = hebCivilDay;
+  window.HebrewDate.key = hebDisplayKey;
 
   // ══ הרשמה ב-window.Sims ════════════════════════════════════════════════
   window.Sims.zodiac = zodiac;

@@ -12,6 +12,8 @@ window.TRANSLATIONS.en = {
   'שרי השעות': 'Hour Rulers',
   'קו התאריך': 'Date Line',
   'מערכת תלת-מימד': '3D System',
+  // קידומת התאריך העברי בלילה (מהשקיעה עד עלות השחר): "אור לז׳ אלול"
+  'אור ל': 'Eve of ',
   '☀ רקע בהיר': '☀ Light background',
   '🌙 רקע כהה': '🌙 Dark background',
   '▶ הפעל': '▶ Play',
@@ -388,8 +390,8 @@ window.TRANSLATIONS.en = {
     'The farther the Moon is from Earth, the smaller it appears — too small to cover the whole Sun, so the eclipse becomes annular. Bring the Moon closer and watch the eclipse become total.',
   'הגלובוס': 'Globe',
   'המבט עוקב אחר מרכז הצל': 'View follows the shadow center',
-  'גררו את הגלובוס לסיבוב. ההכהיה על פני הכדור — לפי אחוז כיסוי השמש הנראה מכל מקום; הכתם הכהה — אזור הליקוי המלא (או הטבעתי), והקו הכתום — מסלול מרכז הצל, המתקדם ממערב למזרח.':
-    'Drag the globe to rotate. The darkening reflects the sun-coverage percentage seen from each place; the dark spot is the zone of totality (or annularity), and the orange line is the shadow-center path, advancing west to east.',
+  'גררו את הגלובוס לסיבוב. ההכהיה על פני הכדור — לפי אחוז כיסוי השמש הנראה מכל מקום; הכתם הכהה — אזור הליקוי המלא (או הטבעתי), והקו הכתום — מסלול מרכז הצל, המתקדם בדרך כלל ממערב למזרח.':
+    'Drag the globe to rotate. The darkening reflects the sun-coverage percentage seen from each place; the dark spot is the zone of totality (or annularity), and the orange line is the shadow-center path, usually advancing west to east.',
   'הסבר קצר': 'In brief',
   'ליקוי לבנה — כדור הארץ עומד בין השמש ובין הירח, ומטיל את צלו על הירח. לעולם אינו בא אלא במילוי הירח, בסביבות ט״ו בחודש.':
     'Lunar eclipse — the Earth stands between the Sun and the Moon, casting its shadow on the Moon. It only occurs at full moon, around the 15th of the month.',
