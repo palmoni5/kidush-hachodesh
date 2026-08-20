@@ -476,8 +476,10 @@ window.TRANSLATIONS.en = {
   'השנה שלפניה מעוברת': 'The preceding year is a leap year',
   'השנה שאחריה מעוברת': 'The following year is a leap year',
   'שנה שאחרי מעוברת היא תמיד פשוטה': 'A year following a leap year is always regular',
-  'משפיע רק כשמולד תשרי הבא חל ביום ג׳ אחרי ט׳ ר״ד':
-    'Matters only when the next molad of Tishrei falls on Tuesday after 9h 204p',
+  'משפיע רק כשמולד תשרי חל ביום ב׳ אחרי ט״ו תקפ״ט ולפני י״ח':
+    'Matters only when the molad of Tishrei falls on Monday after 15h 589p and before 18h',
+  'משפיע רק כשמולד תשרי הבא חל ביום ג׳ אחרי ט׳ ר״ד ולפני י״ח':
+    'Matters only when the next molad of Tishrei falls on Tuesday after 9h 204p and before 18h',
   'הקדמה': 'Introduction',
   'ארבע הדחיות': 'The four postponements',
   'מקורות והערות': 'Sources and notes',

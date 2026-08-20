@@ -59,11 +59,17 @@
   function enableTabScroll(bar) {
     bar.addEventListener('wheel', e => {
       if (bar.scrollWidth <= bar.clientWidth) return;
-      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;   // גלילה אופקית — הדפדפן מטפל
-      // ב-RTL הקצה ההתחלתי הוא scrollLeft = 0 והתוכן נמשך שמאלה בערכים
-      // שליליים; לכן גלגול מטה, שאמור להתקדם בלשוניות, הוא הפחתה.
-      const rtl = getComputedStyle(bar).direction === 'rtl';
-      bar.scrollLeft += rtl ? -e.deltaY : e.deltaY;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        // מחווה אופקית: הטיפול הנטיבי ב-deltaX על מיכל RTL הפוך בחלק מן
+        // ה-webview, ולכן המיפוי התקני נעשה כאן ידנית — deltaX חיובי הוא
+        // גלילה ויזואלית ימינה, כלומר הגדלת scrollLeft, בשני הכיוונים.
+        bar.scrollLeft += e.deltaX;
+      } else {
+        // ב-RTL הקצה ההתחלתי הוא scrollLeft = 0 והתוכן נמשך שמאלה בערכים
+        // שליליים; לכן גלגול מטה, שאמור להתקדם בלשוניות, הוא הפחתה.
+        const rtl = getComputedStyle(bar).direction === 'rtl';
+        bar.scrollLeft += rtl ? -e.deltaY : e.deltaY;
+      }
       e.preventDefault();
     }, { passive: false });
 
