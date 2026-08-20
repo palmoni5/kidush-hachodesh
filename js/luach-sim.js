@@ -260,9 +260,14 @@
       $('l_moladBox').style.display = on ? 'none' : '';
       $('l_customBtn').textContent = T(on ? '↩ חזרה לשנה אמיתית' : '🧪 שנת מעבדה');
       if (!on) return;
-      const nx = $('l_nextLeap');
+      const pv = $('l_prevLeap'), nx = $('l_nextLeap');
+      if (this.c.leap) { this.c.prevLeap = false; pv.checked = false; pv.disabled = true; }
+      else pv.disabled = false;
       if (this.c.leap) { this.c.nextLeap = false; nx.checked = false; nx.disabled = true; }
       else nx.disabled = false;
+      $('l_prevHint').textContent = this.c.leap
+        ? T('שנה שלפני מעוברת היא תמיד פשוטה')
+        : T('משפיע רק כשמולד תשרי חל ביום ב׳ אחרי ט״ו תקפ״ט ולפני י״ח');
       $('l_nextHint').textContent = this.c.leap
         ? T('שנה שאחרי מעוברת היא תמיד פשוטה')
         : T('משפיע רק כשמולד תשרי הבא חל ביום ג׳ אחרי ט׳ ר״ד ולפני י״ח');
