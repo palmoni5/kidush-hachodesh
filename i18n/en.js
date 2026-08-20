@@ -504,4 +504,31 @@ window.TRANSLATIONS.en = {
     'The true molad follows the mean by {h}h {m}m',
   'בשנים רחוקות מזמננו דיוק החישוב האסטרונומי פוחת, בעיקר מחמת אי-הוודאות בקצב סיבוב הארץ.':
     'Far from the present era the astronomical computation loses precision, mainly due to uncertainty in Earth’s rotation rate.',
+
+  // ── ממיר השעה היממתית ────────────────────────────────────────────────
+  'ממיר שעה אזרחית ⇄ שעה יממתית': 'Civil ⇄ Calendar-Day Time Converter',
+  'כיוון ההמרה': 'Conversion direction',
+  'משעה אזרחית לשעה יממתית': 'Civil clock → hours and parts',
+  'משעה יממתית לשעה אזרחית': 'Hours and parts → civil clock',
+  'תאריך עברי': 'Hebrew date',
+  'שניות': 'Seconds',
+  'השעה בשעון ישראל. שעה 18:00 ואילך מתפרשת כליל התאריך הנבחר.':
+    'Time on the Israel clock. 18:00 onward is read as the night of the chosen date.',
+  'השעות נמנות מתחילת הלילה של התאריך הנבחר — תתר״פ חלקים לשעה.':
+    'Hours are counted from nightfall of the chosen date — 1080 parts per hour.',
+  'הרגע בשעון ישראל': 'The moment, Israel clock',
+  'תוס׳ — שעות זמניות': 'Tosafot — seasonal hours',
+  'תוס׳ — שעות שוות': 'Tosafot — equal hours',
+  'הגרי״מ טוקצינסקי — חצות אמיתי': 'R. Y. M. Tukachinsky — true noon',
+  'הגר״י מרצבך — חצות ממוצע': 'R. Y. Merzbach — mean noon',
+  'שיטה א׳ בתוס׳ עירובין נ״ו ע״א: היממה משקיעה לשקיעה, י״ב שעות ללילה וי״ב ליום':
+    'First view in Tosafot, Eruvin 56a: the day runs sunset to sunset, 12 hours for the night and 12 for the day',
+  'שיטה ב׳ בתוס׳ שם: היממה משקיעה לשקיעה, בשעות שוות':
+    'Second view in Tosafot there: the day runs sunset to sunset, in equal hours',
+  'הלבוש סי׳ תכ״ח: היממה משש שעות אחר חצות; לפי החצות האמיתי של כל יום':
+    'Levush §428: the day begins six hours after noon; per each day’s true noon',
+  'הלבוש סי׳ תכ״ח: היממה משש שעות אחר חצות; לפי החצות הממוצע — תחילת היממה 17:39 בשעון החורף':
+    'Levush §428: the day begins six hours after noon; per mean noon — the day always starts at 17:39 standard time',
+  'בשנים רחוקות מזמננו דיוק חישובי הזריחה, השקיעה והחצות פוחת, בעיקר מחמת אי-הוודאות בקצב סיבוב הארץ.':
+    'Far from the present era the sunrise, sunset and noon computations lose precision, mainly due to uncertainty in Earth’s rotation rate.',
 };

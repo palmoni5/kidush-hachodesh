@@ -426,6 +426,15 @@ table td:first-child { opacity: 0.7; }
 .lm-out .lm-diff { margin-top: 8px; color: var(--color-primary); font-weight: 600; }
 .lm-out .lm-note { margin-top: 7px; opacity: 0.7; font-size: 0.92em; }
 
+/* ממיר השעה היממתית — שדות התאריך והשעה בשורה אחת */
+.lc-row { display: flex; gap: 7px; margin-top: 4px; }
+.lc-row > * { flex: 1; min-width: 0; }
+.lc-row select { max-width: none; }
+.lc-time { margin-top: 8px; }
+.lc-hint { margin-top: 5px; font-size: 0.8em; opacity: 0.75; }
+#l_convBox .lm-note { margin-top: 7px; opacity: 0.7; font-size: 0.72em; }
+#l_convBox .lm-out .lm-row span { white-space: normal; }
+
 /* ── HUD מעל הקנבס (פלטת איור) ─────────────────────── */
 .hud {
   position: absolute; inset-block-start: 12px; inset-inline-start: 12px;
