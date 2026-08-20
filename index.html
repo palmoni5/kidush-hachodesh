@@ -755,6 +755,47 @@
         </aside>
       </section>
     </main>
+
+    <!-- שורת הדיווח — בתחתית העמוד, כקישור ולא ככפתור בסרגל -->
+    <footer class="appfoot">
+      נתקלתם בתקלה, בטעות בחישוב או שיש לכם הצעה?
+      <button type="button" id="reportLink" class="linklike">שלחו דיווח למפתח התוסף</button>
+    </footer>
+
+    <!-- ═══ דיווח למפתח התוסף (feedback.report) ═══ -->
+    <!-- הדיווח נשלח לאתר אוצריא, שמזהה את מפתח התוסף ומעביר לו אותו. אוצריא
+         מציגה דיאלוג אישור משלה לפני השליחה — החלון הזה רק אוסף את הפרטים. -->
+    <div class="ovl" id="reportOvl" hidden>
+      <div class="ovl-card" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+        <h2 id="reportTitle">דיווח על התוסף</h2>
+        <p class="ovl-note">הדיווח נשלח לאתר אוצריא ומועבר למפתח התוסף. לפני השליחה תוצג בקשת אישור עם תצוגה מקדימה של הטקסט.</p>
+        <label class="ovl-field">
+          <span>סוג הדיווח</span>
+          <select id="rp_type">
+            <option value="bug">תקלה בתוסף</option>
+            <option value="crash">קריסה</option>
+            <option value="content">טעות בתוכן או בחישוב</option>
+            <option value="other">אחר (הצעה, שאלה)</option>
+          </select>
+        </label>
+        <label class="ovl-field">
+          <span>פירוט הדיווח</span>
+          <textarea id="rp_details" rows="6" maxlength="4800" placeholder="מה קרה? באיזה איור? מה ציפית שיקרה?"></textarea>
+        </label>
+        <div class="ovl-count"><bdi dir="ltr"><span id="rp_count">0</span> / 4800</bdi></div>
+        <label class="ovl-field" id="rp_emailField">
+          <span>כתובת מייל לחזרה (לא חובה)</span>
+          <input type="email" id="rp_email" placeholder="you@example.com" autocomplete="email" />
+        </label>
+        <p class="ovl-hint" id="rp_savedMail" hidden>לדיווח תצורף כתובת המייל השמורה בהגדרות דיווח השגיאות של אוצריא.</p>
+        <label class="chk"><input type="checkbox" id="rp_ctx" checked /> לצרף את שם האיור הפעיל ואת גרסת התוסף</label>
+        <div class="ovl-actions">
+          <button class="btn-secondary" id="rp_cancel">ביטול</button>
+          <button class="btn-primary" id="rp_send">שלח דיווח</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="vendor/astronomy.browser.min.js"></script>
@@ -773,6 +814,7 @@
   <script src="js/dateline-sim.js"></script>
   <script src="js/eclipse-sim.js"></script>
   <script src="js/system3d.js"></script>
+  <script src="js/report.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
