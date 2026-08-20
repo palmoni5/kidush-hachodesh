@@ -4,6 +4,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  pull-requests: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -12,3 +15,5 @@ jobs:
       - uses: Otzaria/otzaria-plugin-validator@v1
         with:
           publish: 'false'
+          pr-comment: 'true'
+          github-token: ${{ github.token }}
