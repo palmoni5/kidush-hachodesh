@@ -376,6 +376,159 @@
     ctx.fillText(T('ארץ'), cx, cy + eR + 4);
   }
 
+  // ══ מבט הצופה — רצועת המזלות על פני הרקיע ═══════════════════════════════
+  // הצופה עומד על הארץ במרכז, האופק סביבו, ורצועת גלגל המזלות נטויה על פני
+  // הרקיע — נטייתה צפונה ודרומה נראית מול קו המשווה השמימי המסומן לצדה.
+  // הסיבוב היומי (הפעלה ב"שעות") מרים את המזלות מן האופק המזרחי, והשמש
+  // והכוכבים נישאים עם הרצועה. גרירה מסובבת את המבט סביב הצופה.
+  const BETA_V = 24;                     // הגבהת נקודת המבט — כמו באיור מהלך השמש
+  const HALF_BAND = 9;                   // חצי רוחב הרצועה במעלות (תחום נדודי הלבנה והכוכבים)
+  const CE = Math.cos(EPS * RAD), SE = Math.sin(EPS * RAD);
+  const COMPASS8 = ['צפון', 'צפון-מזרח', 'מזרח', 'דרום-מזרח', 'דרום', 'דרום-מערב', 'מערב', 'צפון-מערב'];
+  // צבעי האלמנטים כבסיס rgba פתוח — האלפא נקבעת לפי מעל/מתחת לאופק והדגשת מזל השמש
+  const ELEM_V = ['rgba(200,70,30,', 'rgba(60,160,60,', 'rgba(50,130,210,', 'rgba(30,180,190,'];
+
+  function drawObserver(ctx, W, H, date, st, hz) {
+    ctx.clearRect(0, 0, W, H);
+    const L = window.Sims.stageLayout(document.getElementById('zodiacCanvas'), W, H);
+    const cx = L.x + L.w / 2, cy = L.y + L.h / 2 + 8;
+    const R = Math.min(L.w * 0.44, L.h * 0.42);
+    const av = st.viewAz * RAD, bv = BETA_V * RAD;
+    const cosA = Math.cos(av), sinA = Math.sin(av), cosB = Math.cos(bv), sinB = Math.sin(bv);
+    // היטל וקטור אופק (מזרח,צפון,מעלה) למסך — כהיטל שבאיור מהלך השמש
+    const proj = v => {
+      const N2 = v.E * sinA + v.N * cosA;
+      return { x: cx - R * (v.E * cosA - v.N * sinA), y: cy - R * (v.U * cosB - N2 * sinB) };
+    };
+    let gast = 0; try { gast = AE.SiderealTime(AE.MakeTime(date)); } catch (_) {}
+    const th = rev360(gast * 15 + st.lon);                       // זמן הכוכבים המקומי
+    const phi = st.lat * RAD, sphi = Math.sin(phi), cphi = Math.cos(phi);
+    // נקודה על גלגל המזלות (אורך lam, רוחב bet במעלות) → וקטור אופק:
+    // מלקה → משווני (סיבוב בנטיית המלקה) → זווית שעה ונטייה → (E,N,U)
+    const hor = (lam, bet) => {
+      const cl = Math.cos(lam * RAD), sl = Math.sin(lam * RAD);
+      const cb = Math.cos(bet * RAD), sb = Math.sin(bet * RAD);
+      const x = cb * cl, y = cb * sl * CE - sb * SE, z = cb * sl * SE + sb * CE;
+      const Hh = th * RAD - Math.atan2(y, x);                    // זווית השעה
+      const dxy = Math.hypot(x, y);                              // קוסינוס הנטייה (z=סינוס)
+      const cH = Math.cos(Hh), sH = Math.sin(Hh);
+      return { E: -dxy * sH, N: cphi * z - sphi * dxy * cH, U: sphi * z + cphi * dxy * cH };
+    };
+    const lineBase = isLight() ? 'rgba(40,40,40,' : 'rgba(255,255,255,';
+
+    // ── משטח הארץ (האופק) ──
+    const yR = R * sinB;
+    ctx.fillStyle = isLight() ? 'rgba(140,120,80,0.16)' : 'rgba(110,150,110,0.10)';
+    ctx.beginPath(); ctx.ellipse(cx, cy, R, yR, 0, 0, 2 * PI); ctx.fill();
+    ctx.strokeStyle = cv('--ill-horizon') || '#8a8a8a'; ctx.lineWidth = 2; ctx.stroke();
+    // רוחות השמים
+    ctx.fillStyle = cv('--ill-text') || '#e0e0e0'; ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const [az, lbl] of [[0, 'צפון'], [90, 'מזרח'], [180, 'דרום'], [270, 'מערב']]) {
+      const r = az * RAD, p = proj({ E: 1.13 * Math.sin(r), N: 1.13 * Math.cos(r), U: 0 });
+      ctx.fillText(T(lbl), p.x, p.y);
+    }
+    // הצופה במרכז
+    ctx.fillStyle = cv('--ill-text') || '#e0e0e0';
+    ctx.beginPath(); ctx.arc(cx, cy, 3, 0, 2 * PI); ctx.fill();
+    ctx.fillStyle = cv('--ill-muted') || '#999'; ctx.font = '10px sans-serif'; ctx.textBaseline = 'top';
+    ctx.fillText(T('צופה'), cx, cy + 5);
+
+    // ── קו המשווה השמימי — הרצועה נטויה ממנו צפונה ודרומה ──
+    ctx.setLineDash([3, 5]); ctx.lineWidth = 1;
+    let prevP = null, prevU = 0;
+    for (let Hd = 0; Hd <= 360.01; Hd += 5) {
+      const cH = Math.cos(Hd * RAD), sH = Math.sin(Hd * RAD);
+      const v = { E: -sH, N: -sphi * cH, U: cphi * cH };          // נטייה 0
+      const p = proj(v);
+      if (prevP) {
+        ctx.strokeStyle = lineBase + (v.U + prevU > 0 ? '0.34)' : '0.12)');
+        ctx.beginPath(); ctx.moveTo(prevP.x, prevP.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      }
+      prevP = p; prevU = v.U;
+    }
+    ctx.setLineDash([]);
+    { const p = proj({ E: 0, N: -sphi, U: cphi });                // הקודקוד העליון (בדרום)
+      ctx.fillStyle = lineBase + '0.5)'; ctx.font = '10px sans-serif'; ctx.textBaseline = 'bottom';
+      ctx.fillText(T('משווה השמים'), p.x, p.y - 4); }
+
+    // ── רצועת המזלות ──
+    const lons = getLongitudes(date);
+    const sunSign = Math.floor(rev360(lons.sun) / 30);
+    for (let i = 0; i < 12; i++) {
+      const base = ELEM_V[ELEM_I[i]];
+      for (let s = 0; s < 5; s++) {
+        const l0 = i * 30 + s * 6, l1 = l0 + 6;
+        const q = [hor(l0, -HALF_BAND), hor(l0, HALF_BAND), hor(l1, HALF_BAND), hor(l1, -HALF_BAND)];
+        const up = q[0].U + q[1].U + q[2].U + q[3].U > 0;
+        const col = base + (up ? (i === sunSign ? '0.62)' : '0.34)') : (i === sunSign ? '0.20)' : '0.10)'));
+        ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 1;
+        ctx.beginPath();
+        const pp = q.map(proj);
+        ctx.moveTo(pp[0].x, pp[0].y);
+        for (let k = 1; k < 4; k++) ctx.lineTo(pp[k].x, pp[k].y);
+        ctx.closePath(); ctx.fill(); ctx.stroke();               // stroke סוגר תפרים בין המקטעים
+      }
+      // קו הגבול שבין מזל למזל
+      const g0 = hor(i * 30, -HALF_BAND), g1 = hor(i * 30, HALF_BAND);
+      const p0 = proj(g0), p1 = proj(g1);
+      ctx.strokeStyle = lineBase + (g0.U + g1.U > 0 ? '0.45)' : '0.14)'); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+    }
+    // מסלול השמש (אמצע הרצועה — המלקה עצמה)
+    prevP = null; prevU = 0;
+    for (let l = 0; l <= 360.01; l += 4) {
+      const v = hor(l, 0), p = proj(v);
+      if (prevP) {
+        ctx.strokeStyle = 'rgba(255,200,80,' + (v.U + prevU > 0 ? '0.55)' : '0.16)');
+        ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(prevP.x, prevP.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      }
+      prevP = p; prevU = v.U;
+    }
+    // שמות המזלות — על אמצע הרצועה; מזל השמש מודגש
+    const fs = Math.max(9, Math.min(12, R * 0.055));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (let i = 0; i < 12; i++) {
+      const v = hor(i * 30 + 15, 0), p = proj(v);
+      ctx.globalAlpha = v.U > 0 ? 1 : 0.35;
+      ctx.font = (i === sunSign ? 'bold ' : '') + fs + 'px sans-serif';
+      ctx.fillStyle = cv('--ill-text') || '#e0e0e0';
+      ctx.fillText(T(SIGNS[i]), p.x, p.y);
+      ctx.globalAlpha = 1;
+    }
+    // המזל העולה — נקודת החיתוך של המלקה עם האופק המזרחי
+    if (hz) {
+      const p = proj(hor(hz.asc, 0));
+      ctx.fillStyle = '#7ee081';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 2 * PI); ctx.fill();
+      ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(T('המזל העולה'), p.x, p.y - 5);
+    }
+    // ── גרמי השמים על הרצועה ──
+    for (const body of BODIES) {
+      const v = hor(rev360(lons[body.key] ?? 0), 0), p = proj(v);
+      const up = v.U > 0, r = body.key === 'sun' ? body.r + 2 : body.r;
+      ctx.globalAlpha = up ? 1 : 0.3;
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3);
+      glow.addColorStop(0, body.color + 'bb'); glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(p.x, p.y, r * 3, 0, 2 * PI); ctx.fill();
+      ctx.fillStyle = body.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 2 * PI); ctx.fill();
+      ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = labelCol(body.color);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(T(body.he), p.x, p.y + r + 3);
+      ctx.globalAlpha = 1;
+    }
+    // כותרת המבט + רמז גרירה
+    ctx.fillStyle = cv('--ill-muted') || '#999'; ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const f = rev360(st.viewAz + 180);
+    ctx.fillText(T('מבט אל') + ' ' + T(COMPASS8[Math.round(f / 45) % 8]) + ' · ' + T('גררו לסיבוב המבט'),
+      L.x + L.w / 2, L.y + 6);
+  }
+
   // ══ פאנל מיקומים ══════════════════════════════════════════════════════
   function updateLegend(date) {
     const el = document.getElementById('z_legend'); if (!el) return;
@@ -404,6 +557,8 @@
     RANGE: { day: { min: 0.1, max: 30, step: 0.1 }, hour: { min: 0.02, max: 6, step: 0.02 } },
     unit: 'hour',             // 'hour' — עליית המזלות ביממה (ברירת מחדל); 'day' — מהלך המזלות בשנה
     horizon: true,
+    view: 'wheel',            // 'wheel' — מבט-על על הגלגל; 'observer' — הרצועה ברקיע מעל הצופה
+    viewAz: 270,              // כיוון המבט במבט הצופה (270 = פנים אל המזרח, כיוון הזריחה)
     lat: 31.78, lon: 35.22,
     _bound: false,
 
@@ -412,9 +567,13 @@
     draw() {
       const c = $('zodiacCanvas'); if (!c) return;
       const { ctx, W, H } = fit(c);
-      const hz = this.horizon ? horizonPoints(this.date, this.lat, this.lon) : null;
-      drawWheel(ctx, W, H, this.date, hz);
+      // במבט הצופה האופק הוא עצם האיור — נקודות האופק מחושבות תמיד
+      const hz = (this.horizon || this.view === 'observer') ? horizonPoints(this.date, this.lat, this.lon) : null;
+      if (this.view === 'observer') drawObserver(ctx, W, H, this.date, this, hz);
+      else drawWheel(ctx, W, H, this.date, this.horizon ? hz : null);
       $('z_clock').textContent = this.date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      const zs = $('z_sun');
+      if (zs) { const sl = getLongitudes(this.date).sun; zs.textContent = T(signOf(sl)) + ' ' + Math.floor(rev360(sl) % 30) + '°'; }
       $('z_asc').textContent = hz ? T(signOf(hz.asc)) + ' ' + Math.floor(hz.asc % 30) + '°' : '—';
       $('z_mc').textContent  = hz ? T(signOf(hz.mc))  + ' ' + Math.floor(hz.mc  % 30) + '°' : '—';
       const hud = $('z_date');
@@ -496,6 +655,23 @@
         this._setUnit(b.dataset.unit);
       });
       this._setUnit('hour');
+      // מבט-על על הגלגל ⇄ מבט הצופה על הרקיע
+      const cnv = $('zodiacCanvas');
+      document.querySelectorAll('#view-zodiac [data-zview]').forEach(b => b.onclick = () => {
+        document.querySelectorAll('#view-zodiac [data-zview]').forEach(x => x.classList.toggle('active', x === b));
+        this.view = b.dataset.zview;
+        const obs = this.view === 'observer';
+        const row = $('z_gazeRow'); if (row) row.style.display = obs ? '' : 'none';
+        cnv.style.cursor = obs ? 'grab' : '';
+      });
+      const gaze = (id, az) => { const b = $(id); if (b) b.onclick = () => { this.viewAz = az; }; };
+      gaze('z_gazeE', 270);   // פנים אל המזרח — המזלות עולים מלפנים
+      gaze('z_gazeS', 0);     // פנים אל הדרום — הרצועה נמתחת ממזרח (משמאל) למערב
+      // גרירה לסיבוב המבט סביב הצופה (~0.5° לפיקסל) — פעילה במבט הצופה בלבד
+      { let dragging = false, dragX = 0, dragAz = 0;
+        cnv.onpointerdown = e => { if (this.view !== 'observer') return; dragging = true; dragX = e.clientX; dragAz = this.viewAz; cnv.setPointerCapture(e.pointerId); cnv.style.cursor = 'grabbing'; };
+        cnv.onpointermove = e => { if (!dragging) return; this.viewAz = rev360(dragAz + (e.clientX - dragX) * 0.5); window.__invalidate && window.__invalidate(); };
+        cnv.onpointerup = cnv.onpointercancel = () => { if (!dragging) return; dragging = false; cnv.style.cursor = 'grab'; }; }
     },
   };
 

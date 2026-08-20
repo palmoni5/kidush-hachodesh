@@ -316,6 +316,13 @@
             </div>
           </div>
           <div class="card">
+            <h2>מדוע מסלול השמש נודד בין קיץ לחורף?</h2>
+            <div style="position:relative;height:200px;margin-top:4px"><canvas id="seasonsCanvas"></canvas></div>
+            <div class="htxt" id="ss_now" style="margin-top:6px">—</div>
+            <div class="htxt" style="margin-top:6px">ציר הסיבוב של כדור הארץ נטוי כ־23.44° ממאונך למישור מסלולו סביב השמש, וכיוונו קבוע בחלל — הוא מצביע תמיד אל אותה נקודה בשמים. לכן בתקופת תמוז חצי הכדור הצפוני רכון אל השמש והיא נראית גבוה (מעל קו ההיפוך הצפוני), בתקופת טבת הוא רכון ממנה והלאה והיא נמוכה (מעל קו ההיפוך הדרומי), ובניסן ותשרי הציר ניצב לכיוון השמש — והיא מעל קו המשווה. לחצו על כפתורי התקופות או גררו את "יום מתקופת ניסן" — והארץ תנוע במסלולה.</div>
+            <div class="htxt" style="margin-top:6px">ובמבט מן הארץ, כדרך חז״ל והרמב״ם: השמש מהלכת בגלגל הנוטה (גלגל המזלות), שחציו נוטה צפונה וחציו דרומה מקו המשווה — ולכן מסלולה היומי שבאיור הגדול נודד צפונה ודרומה במשך השנה. את הגלגל הנטוי עצמו רואים ב"מבט הצופה" שבלשונית גלגל המזלות.</div>
+          </div>
+          <div class="card">
             <h2>מיקום הצופה</h2>
             <label class="field">עיר</label>
             <select id="y_city">
@@ -382,11 +389,24 @@
             <div class="row"><span>תאריך</span><b id="z_date">—</b></div>
             <div class="row"><span>עברי</span><b id="z_date_he">—</b></div>
             <div class="row"><span>שעה</span><b id="z_clock">—</b></div>
+            <div class="row"><span>השמש במזל</span><b id="z_sun">—</b></div>
             <div class="row"><span>מזל עולה (במזרח)</span><b id="z_asc">—</b></div>
             <div class="row"><span>מזל באמצע הרקיע</span><b id="z_mc">—</b></div>
           </div>
         </div>
         <aside class="panel">
+          <div class="card">
+            <h2>מבט</h2>
+            <div class="seg seg-2">
+              <button data-zview="wheel" class="active">מבט־על על הגלגל</button>
+              <button data-zview="observer">מבט הצופה (הרקיע)</button>
+            </div>
+            <div class="ctrls" style="margin-top:8px;display:none" id="z_gazeRow">
+              <button class="btn-secondary" id="z_gazeE">🌅 מבט למזרח</button>
+              <button class="btn-secondary" id="z_gazeS">מבט מהצד (לדרום)</button>
+            </div>
+            <div class="htxt" style="margin-top:6px">במבט הצופה אתם עומדים על הארץ: רצועת המזלות נטויה על פני הרקיע — חציה נוטה צפונה וחציה דרומה מקו המשווה השמימי. גררו את האיור לסיבוב המבט, בחרו "שעות" והפעילו — ותראו את המזלות עולים מן המזרח והשמש נישאת עמם.</div>
+          </div>
           <div class="card">
             <h2>בקרת זמן</h2>
             <div class="ctrls">

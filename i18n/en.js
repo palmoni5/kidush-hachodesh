@@ -175,6 +175,13 @@ window.TRANSLATIONS.en = {
   '↻ רענן מהלוח': '↻ Refresh from calendar',
   'זמנים הלכתיים מחושבי לוח אוצריא (כולל גובה המקום), לתאריך המוצג באיור ולעיר שנבחרה כאן. ברירת המחדל — העיר הנבחרת באפליקציה, והיא מתעדכנת עם שינויה שם.':
     'Halachic times computed by the Otzaria calendar (including elevation), for the date shown in the diagram and the city chosen here. Default: the city selected in the app, updating live when it changes.',
+  'מדוע מסלול השמש נודד בין קיץ לחורף?': 'Why does the Sun’s path wander between summer and winter?',
+  'ציר הסיבוב של כדור הארץ נטוי כ־23.44° ממאונך למישור מסלולו סביב השמש, וכיוונו קבוע בחלל — הוא מצביע תמיד אל אותה נקודה בשמים. לכן בתקופת תמוז חצי הכדור הצפוני רכון אל השמש והיא נראית גבוה (מעל קו ההיפוך הצפוני), בתקופת טבת הוא רכון ממנה והלאה והיא נמוכה (מעל קו ההיפוך הדרומי), ובניסן ותשרי הציר ניצב לכיוון השמש — והיא מעל קו המשווה. לחצו על כפתורי התקופות או גררו את "יום מתקופת ניסן" — והארץ תנוע במסלולה.':
+    'Earth’s rotation axis is tilted about 23.44° from the perpendicular to its orbital plane, and its direction is fixed in space — it always points at the same spot in the sky. So at Tekufas Tammuz the northern hemisphere leans toward the Sun and it appears high (over the northern tropic); at Tekufas Teves it leans away and the Sun is low (over the southern tropic); and at Nissan and Tishrei the axis is side-on to the Sun — which then stands over the equator. Press the tekufah buttons or drag "Day from Tekufas Nissan" to move the Earth along its orbit.',
+  'ובמבט מן הארץ, כדרך חז״ל והרמב״ם: השמש מהלכת בגלגל הנוטה (גלגל המזלות), שחציו נוטה צפונה וחציו דרומה מקו המשווה — ולכן מסלולה היומי שבאיור הגדול נודד צפונה ודרומה במשך השנה. את הגלגל הנטוי עצמו רואים ב"מבט הצופה" שבלשונית גלגל המזלות.':
+    'And as seen from the Earth, in the manner of Chazal and the Rambam: the Sun travels along the inclined wheel (the zodiac), half of which leans north and half south of the equator — which is why its daily path in the main diagram drifts north and south through the year. The tilted wheel itself is shown in the "Observer view" of the Zodiac Wheel tab.',
+  'השמש עומדת כעת מעל קו רוחב': 'The Sun now stands over latitude',
+  'קו המשווה': 'the equator',
   'שנת החמה — הלכה': 'The solar year — Halachah',
   'תקופת שמואל': 'Tekufas Shmuel',
   '365 ימים 6 שעות': '365 days 6 hours',
@@ -227,6 +234,19 @@ window.TRANSLATIONS.en = {
   'מערב · שוקע': 'West · setting',
   'אמצע הרקיע': 'Midheaven',
   '0° טלה': '0° Aries',
+  'מבט': 'View',
+  'מבט־על על הגלגל': 'Top-down wheel',
+  'מבט הצופה (הרקיע)': 'Observer view (sky)',
+  '🌅 מבט למזרח': '🌅 Face east',
+  'מבט מהצד (לדרום)': 'Side view (face south)',
+  'במבט הצופה אתם עומדים על הארץ: רצועת המזלות נטויה על פני הרקיע — חציה נוטה צפונה וחציה דרומה מקו המשווה השמימי. גררו את האיור לסיבוב המבט, בחרו "שעות" והפעילו — ותראו את המזלות עולים מן המזרח והשמש נישאת עמם.':
+    'In the observer view you stand on the Earth: the zodiac band arcs tilted across the sky — half of it leaning north and half south of the celestial equator. Drag the drawing to turn your gaze, choose "Hours" and press Play to watch the signs rise in the east with the sun carried along.',
+  'השמש במזל': 'Sun in sign',
+  'צופה': 'Observer',
+  'משווה השמים': 'Celestial equator',
+  'המזל העולה': 'Rising sign',
+  'מבט אל': 'Facing',
+  'גררו לסיבוב המבט': 'drag to rotate the view',
 
   // ── שרי השעות ────────────────────────────────────────────────────────
   'יום בשבוע': 'Day of week',

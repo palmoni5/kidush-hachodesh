@@ -90,6 +90,23 @@ window.Sims = (function () {
     }
     return c;
   }
+  // התאמת מידות לקנבס משני היושב בכרטיס שבפאנל (ולא בבמה) — המזעריות
+  // הגדולות של fit() (280×240) היו גולשות מגבולות הכרטיס הצר.
+  function fitInset(canvas) {
+    let c = _fitCache.get(canvas);
+    if (!c) {
+      const r = canvas.parentElement.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const W = Math.max(180, r.width), H = Math.max(140, r.height);
+      const ctx = canvas.getContext('2d');
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c = { ctx, W, H };
+      _fitCache.set(canvas, c);
+    }
+    return c;
+  }
   function sprite(ctx, im, cx, cy, w, h) {
     if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h);
     else { ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, w / 2, 0, 2 * Math.PI); ctx.fill(); }
@@ -641,6 +658,66 @@ window.Sims = (function () {
       }
       if (!this.hintDone) drawHint(ctx, W, 'גררו לסיבוב · ▶ הפעל להנעה');
       this.hud(v.U, sn);
+      this.drawSeasons(dec);
+    },
+    // ── מדוע מסלול השמש נודד? — איור עזר בפאנל ─────────────────────────
+    // מבט-על אלכסוני על מסלול הארץ סביב השמש: ציר הסיבוב נטוי 23.44°
+    // וכיוונו קבוע בחלל, ולכן בתקופת תמוז החצי הצפוני רכון אל השמש ובטבת
+    // ממנה והלאה. הארץ מוצבת לפי היום שבאיור הגדול ונעה עמו.
+    drawSeasons(dec) {
+      const c = $('seasonsCanvas'); if (!c) return;
+      const { ctx, W, H } = fitInset(c);
+      ctx.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2 + 4;
+      const a = Math.min(W * 0.38, 130), b = a * 0.40;
+      // מסלול הארץ (סכמטי)
+      ctx.strokeStyle = cv('--ill-line'); ctx.lineWidth = 1; ctx.setLineDash([4, 5]);
+      ctx.beginPath(); ctx.ellipse(cx, cy, a, b, 0, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+      // מיקום על המסלול לפי היום בשנה — תקופת תמוז מימין, ששם הציר
+      // (הקבוע) רכון אל השמש; ניסן למעלה, תשרי למטה, טבת משמאל
+      const pos = d => {
+        const w = 2 * Math.PI * (d - 91.31) / A.SOLAR_YEAR;
+        return { x: cx + a * Math.cos(w), y: cy + b * Math.sin(w) };
+      };
+      // השמש במרכז
+      const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, 32);
+      g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 32, 0, 2 * Math.PI); ctx.fill();
+      sprite(ctx, IMG.sun, cx, cy, 26, 26);
+      // ארבע התקופות על המסלול
+      ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (const [d, n] of [[0, 'ניסן'], [91.31, 'תמוז'], [182.62, 'תשרי'], [273.94, 'טבת']]) {
+        const p = pos(d);
+        ctx.fillStyle = cv('--ill-muted');
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI); ctx.fill();
+        ctx.fillText(T(n), p.x + (p.x - cx) / a * 22, p.y + (p.y - cy) / b * 13);
+      }
+      // הארץ במקומה של היום המוצג + קו אל השמש + הצללת צד הלילה
+      const p = pos(((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR), er = 11;
+      ctx.strokeStyle = cv('--ill-ray'); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.x, p.y); ctx.stroke();
+      sprite(ctx, IMG.earth, p.x, p.y, 2 * er, 2 * er);
+      shade(ctx, p.x, p.y, er, cx, cy);
+      // ציר הסיבוב — נטוי 23.44° מהאנך, מצביע תמיד לאותו כיוון (שמאלה-מעלה)
+      const tt = 23.44 * Math.PI / 180, ux = -Math.sin(tt), uy = -Math.cos(tt);
+      ctx.strokeStyle = cv('--ill-text'); ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(p.x - ux * er * 1.7, p.y - uy * er * 1.7);
+      ctx.lineTo(p.x + ux * er * 1.7, p.y + uy * er * 1.7);
+      ctx.stroke();
+      // קו המשווה של הכדור — ניצב לציר
+      ctx.strokeStyle = cv('--ill-muted'); ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(p.x + uy * er * 0.95, p.y - ux * er * 0.95);
+      ctx.lineTo(p.x - uy * er * 0.95, p.y + ux * er * 0.95);
+      ctx.stroke();
+      ctx.fillStyle = cv('--ill-text'); ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(T('צפון'), p.x + ux * er * 1.7, p.y + uy * er * 1.7 - 2);
+      // השורה החיה שמתחת לאיור: קו הרוחב שהשמש ניצבת מעליו כעת
+      const el = $('ss_now');
+      if (el) el.textContent = T('השמש עומדת כעת מעל קו רוחב') + ' ' + fmtNS(dec) +
+        (Math.abs(dec) < 0.05 ? ' — ' + T('קו המשווה') : '');
     },
     season() {
       // מדרום לקו המשוה העונות מהופכות: תקופת תמוז שם חורף ותקופת טבת קיץ.
