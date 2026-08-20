@@ -421,6 +421,8 @@ window.TRANSLATIONS.en = {
   'ההבדל בגודל הליקוי בין ערי הארץ הוא בעיקר מצפון לדרום; ההפרש בין מזרח למערב (ירושלים–תל אביב) זניח, שהארץ צרה.':
     'The difference in eclipse magnitude between cities in Israel is mainly north–south; the east–west difference (Jerusalem–Tel Aviv) is negligible, as the country is narrow.',
   'מכוסה': 'covered',
+  'החמה מנגד, מתחת לאופק': 'The sun is opposite, below the horizon',
+  'אור החמה הנשבר באוויר מאדים את הירח': 'Sunlight refracted through the air reddens the Moon',
   'ליקוי מלא': 'Total eclipse',
   'ליקוי טבעתי': 'Annular eclipse',
   'כיסוי': 'coverage',

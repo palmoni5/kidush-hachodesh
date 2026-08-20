@@ -399,6 +399,27 @@
     const pct = Math.round(g.umbra * 100);
     ctx.fillStyle = cvv('--ill-text'); ctx.font = 'bold 13px sans-serif'; ctx.textBaseline = 'top';
     ctx.fillText(pct + '% ' + T('מכוסה'), cx2, cy2 + R2 + 8);
+
+    // החמה באופק: הצופה בליקוי לבנה עומד בלילה — החמה מנגד לירח, מתחת לאופק,
+    // ובליקוי מלא אורה הנשבר באוויר שסביב הארץ הוא שמאדים את הירח לגוון חום.
+    // קו האופק והחמה המעומעמת מציירים זאת, שיובן מנין הגוון (מצויר רק אם יש מקום).
+    const yH = cy2 + R2 + 32;
+    if (yH + 38 < L.y + L.h) {
+      const hw = Math.max(R2 * 1.4, 56);
+      ctx.fillStyle = 'rgba(22,28,44,0.55)';
+      ctx.fillRect(cx2 - hw, yH, 2 * hw, 22);
+      ctx.fillStyle = 'rgba(255,210,74,0.30)';                    // החמה — מעומעמת
+      ctx.beginPath(); ctx.arc(cx2, yH + 14, 9, 0, 2*Math.PI); ctx.fill();
+      ctx.strokeStyle = cvv('--ill-horizon'); ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(cx2 - hw, yH); ctx.lineTo(cx2 + hw, yH); ctx.stroke();
+      const red = Math.max(0, Math.min(1, (g.umbra - 0.88) / 0.12));   // כבשיא שב-shadeMoon
+      const cap = red > 0 ? T('אור החמה הנשבר באוויר מאדים את הירח') : T('החמה מנגד, מתחת לאופק');
+      ctx.font = '9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillStyle = red > 0 ? `rgba(224,122,77,${(0.6 + 0.4 * red).toFixed(2)})` : cvv('--ill-muted');
+      // הצמדה לגבולות הקנבס — בקנבס צר הכיתוב עלול להיחתך בשוליים
+      const cw = ctx.measureText(cap).width;
+      ctx.fillText(cap, Math.max(cw/2 + 2, Math.min(L.x + L.w - cw/2 - 2, cx2)), yH + 26);
+    }
     return g;
   }
 
@@ -470,12 +491,21 @@
     ctx.fillStyle = cvv('--ill-muted');
     ctx.fillText(T('הירח בין הארץ לשמש — צלו נופל על הארץ'), L.x + L.w * 0.5, L.y + 6);
 
-    // ── מראה הליקוי לצופה: בנקודת השיא, או בעיר בארץ שנבחרה בלוח הצד ──
+    // ── מראה הליקוי לצופה: במקום השיא, או בעיר בארץ שנבחרה בלוח הצד ──
+    // "מקום השיא" הוא מקום קבוע: הנקודה הגאוגרפית של הליקוי הגדול ביותר. עד כה
+    // נקודת המבט נבחרה מחדש בכל רגע (הנקודה המכוסה ביותר בעולם באותו רגע) — היא
+    // נדדה עם הצל, והירח נראה נכנס ויוצא מאותו צד של השמש. מנקודה קבועה הוא
+    // חוצה את פני השמש מצד אל צד, כפי שרואה צופה אמיתי העומד במקומו.
+    if (!sim._peakLoc || sim._peakLoc.key !== sim.win.t0) {
+      const efp = earthFixed(sim.einfo.peak.date);
+      const ll = efLatLon(shadowGeom(efp.s, efp.m).P);
+      sim._peakLoc = { key: sim.win.t0, lat: ll.lat, lon: ll.lon };
+    }
     const city = IL_CITIES[sim.viewLoc];
-    const v = city ? cityView(g, sim.t, city) : g;   // אותם שדות: S,M,P,rs,rm,frac,kind
+    const v = cityView(g, sim.t, city || sim._peakLoc);   // שדות: S,M,P,rs,rm,frac,kind,sunUp
     const vw = Math.min(L.w * 0.42, L.h * 0.52), vh = vw * 0.86;
     const vx = L.x + L.w * 0.30 - vw / 2 + L.w * 0.02, vy = L.y + L.h * 0.40;
-    const night = city && !v.sunUp;                  // השמש מתחת לאופק בעיר שנבחרה
+    const night = !v.sunUp;                          // השמש מתחת לאופק במקום הצופה
     // רקע השמים מתכהה מ-30% כיסוי ומעלה (בליקוי קטן מזה ההחשכה אינה מורגשת)
     const f = v.frac;
     const dk = night ? 1 : f < 0.3 ? 0 : Math.pow((f - 0.3) / 0.7, 1.4);
@@ -488,20 +518,34 @@
     ctx.fillStyle = skyG; ctx.fillRect(vx, vy, vw, vh);
     const scx = vx + vw / 2, scy = vy + vh * 0.46;
     const sunR = vh * 0.20;
+    // השמש והירח — רדיוסים זוויתיים אמיתיים ביחס, וההפרדה האמיתית
+    const moonR = sunR * (v.rm / v.rs);
+    // כיוון ההיסט במישור הראייה: בסיס (ימין, מעלה) סביב כיוון השמש מהצופה
+    const zv = norm(v.S), upw = norm(v.P);
+    const up = norm(sub(upw, mul(zv, dot(upw, zv))));
+    const right = cross(zv, up);
+    const vM = norm(v.M);
+    const offx = dot(vM, right) / v.rs * sunR, offy = dot(vM, up) / v.rs * sunR;
     if (night) {
+      // השמש מתחת לאופק בעיר שנבחרה — במקום חלון ריק, מצוירים קו האופק ורצועת
+      // הקרקע, והשמש המלוקה נראית מבעדם במעומעם במקומה שמתחת לאופק. כך ההנפשה
+      // נשארת רציפה, ורואים כל העת היכן הליקוי אוחז — גם כשאינו נראה מן העיר.
+      const hy = vy + vh * 0.42, sy2 = hy + sunR * 1.05;
+      ctx.fillStyle = 'rgba(22,28,44,0.60)';
+      ctx.fillRect(vx, hy, vw, vy + vh - hy);
+      // השמש והנגיסה — בצבעים מעומעמים מראש (מבעד לאובך הקרקע)
+      ctx.fillStyle = 'rgba(255,210,74,0.30)';
+      ctx.beginPath(); ctx.arc(scx, sy2, sunR, 0, 2*Math.PI); ctx.fill();
+      ctx.fillStyle = 'rgba(10,13,22,0.85)';
+      ctx.beginPath(); ctx.arc(scx + offx, sy2 - offy, moonR, 0, 2*Math.PI); ctx.fill();
+      // קו האופק — מעל השמש המעומעמת
+      ctx.strokeStyle = cvv('--ill-horizon'); ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(vx, hy); ctx.lineTo(vx + vw, hy); ctx.stroke();
       ctx.fillStyle = 'rgba(220,228,255,0.85)'; ctx.font = '12px sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(T('השמש מתחת לאופק'), scx, scy - 9);
-      ctx.fillText(T('הליקוי אינו נראה משם ברגע זה'), scx, scy + 9);
+      ctx.fillText(T('השמש מתחת לאופק'), scx, vy + vh * 0.15);
+      ctx.fillText(T('הליקוי אינו נראה משם ברגע זה'), scx, vy + vh * 0.15 + 18);
     } else {
-      // השמש והירח — רדיוסים זוויתיים אמיתיים ביחס, וההפרדה האמיתית
-      const moonR = sunR * (v.rm / v.rs);
-      // כיוון ההיסט במישור הראייה: בסיס (ימין, מעלה) סביב כיוון השמש מהצופה
-      const zv = norm(v.S), upw = norm(v.P);
-      const up = norm(sub(upw, mul(zv, dot(upw, zv))));
-      const right = cross(zv, up);
-      const vM = norm(v.M);
-      const offx = dot(vM, right) / v.rs * sunR, offy = dot(vM, up) / v.rs * sunR;
       // העטרה (קורונה) — נגלית בהדרגה בשניות שלפני הכיסוי המלא ונעלמת בהדרגה
       // אחריו, לפי הקרבה הזוויתית למגע השני (ולא בבת אחת עם התחלפות ה-kind,
       // שקפצה ממצב "שמש חומה בזוהר" למצב "עטרה מלאה" בפריים אחד)
