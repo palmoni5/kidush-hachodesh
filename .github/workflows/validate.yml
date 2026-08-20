@@ -1,0 +1,14 @@
+name: Validate plugin
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Otzaria/otzaria-plugin-validator@v1
+        with:
+          publish: 'false'
