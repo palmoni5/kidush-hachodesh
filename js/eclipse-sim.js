@@ -496,10 +496,14 @@
     // נקודת המבט נבחרה מחדש בכל רגע (הנקודה המכוסה ביותר בעולם באותו רגע) — היא
     // נדדה עם הצל, והירח נראה נכנס ויוצא מאותו צד של השמש. מנקודה קבועה הוא
     // חוצה את פני השמש מצד אל צד, כפי שרואה צופה אמיתי העומד במקומו.
-    if (!sim._peakLoc || sim._peakLoc.key !== sim.win.t0) {
+    // המקום תלוי גם במרחק המדומה: באפוגיאון ציר הצל עובר במקום אחר, ומהנקודה
+    // של המרחק האמיתי היה נראה רק ליקוי חלקי במקום המעבר מלא↔טבעתי.
+    const pkKey = sim.win.t0 + ':' + simKm;
+    if (!sim._peakLoc || sim._peakLoc.key !== pkKey) {
       const efp = earthFixed(sim.einfo.peak.date);
-      const ll = efLatLon(shadowGeom(efp.s, efp.m).P);
-      sim._peakLoc = { key: sim.win.t0, lat: ll.lat, lon: ll.lon };
+      const m = simKm ? mul(efp.m, simKm / len(efp.m)) : efp.m;
+      const ll = efLatLon(shadowGeom(efp.s, m).P);
+      sim._peakLoc = { key: pkKey, lat: ll.lat, lon: ll.lon };
     }
     const city = IL_CITIES[sim.viewLoc];
     const v = cityView(g, sim.t, city || sim._peakLoc);   // שדות: S,M,P,rs,rm,frac,kind,sunUp
