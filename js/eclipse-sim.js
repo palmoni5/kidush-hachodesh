@@ -883,6 +883,13 @@
       const pct = g ? Math.round((this.type === 'lunar' ? g.umbra : g.frac) * 100) : 0;
       const ep = $('e_pct'); if (ep) ep.textContent = pct + '%';
       const elc = $('e_loc'); if (elc && loc) elc.textContent = fmtLat(loc.lat) + ' · ' + fmtLon(loc.lon);
+      // מרחק הירח מן הארץ: כשההדגמה כבויה מוצג המרחק האמיתי ברגע המוצג,
+      // והמחוון (הנעול) עוקב אחריו — כך שהפעלת ההדגמה נפתחת מן המרחק הזה
+      if (this.mode === 'solar' && !this.distOn && g && g.distReal) {
+        const d = Math.round(g.distReal);
+        const dl = $('e_distL'); if (dl) dl.textContent = d.toLocaleString();
+        const ds = $('e_dist'); if (ds) ds.value = Math.max(PERIGEE, Math.min(APOGEE, d));
+      }
       // תאריך עברי — מתרענן רק כשהתצוגה מתחלפת (שקיעה / עלות השחר, לא חצות)
       const hk = window.HebrewDate && window.HebrewDate.key
         ? window.HebrewDate.key(this.einfo.peak.date)
@@ -968,7 +975,9 @@
       $('e_dsim').onchange = e => {
         this.distOn = e.target.checked;
         $('e_dist').disabled = !this.distOn;
-        if (!this.distOn) { this.distKm = MEAN_DIST; $('e_dist').value = MEAN_DIST; $('e_distL').textContent = MEAN_DIST.toLocaleString(); }
+        // ההדגמה נפתחת מן המרחק האמיתי שהמחוון עוקב אחריו; בכיבוי החיווי
+        // חוזר להתעדכן מן החישוב בציור הבא (_hud)
+        if (this.distOn) this.distKm = +$('e_dist').value;
       };
       $('e_dist').oninput = e => { this.distKm = +e.target.value; $('e_distL').textContent = this.distKm.toLocaleString(); };
       const fc = $('e_follow'); if (fc) fc.onchange = e => { this.follow = e.target.checked; };

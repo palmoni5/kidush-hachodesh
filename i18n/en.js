@@ -86,7 +86,7 @@ window.TRANSLATIONS.en = {
   'מולד': 'New moon',
   '🗓 הירח היום': '🗓 Moon today',
   'רגעים בחודש': 'Moments of the month',
-  '🌑 מולד': '🌑 New moon',
+  '🌑 קיבוץ (מולד)': '🌑 Conjunction (new moon)',
   '🌕 ניגוד (ירח במילואו)': '🌕 Opposition (full moon)',
   'ג׳ ימים מן המולד': '3 days after the molad',
   'ז׳ ימים מן המולד': '7 days after the molad',
@@ -94,6 +94,8 @@ window.TRANSLATIONS.en = {
   'החודש הבא': 'Next month',
   'מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.':
     'Molad (new moon) = Sun and Moon in conjunction, and the Moon is unseen. Opposition = Sun and Moon on opposite sides of Earth — a full moon (when lunar eclipses occur). Three days after the molad is the start of the time for Birkat HaLevanah in the Ashkenazi custom, and seven days in the Sephardi custom.',
+  'רגעי הלחצנים הם לפי המולד הממוצע — הוא מולד הלוח המוכרז בבית הכנסת, ההולך בצעדים שווים של כ״ט י״ב תשצ״ג. הקיבוץ האמיתי עשוי להקדים או לאחר עד כי״ד שעות, כפי מהירות הירח במסלולו; הוא מוצג בלשונית הלוח העברי, בחלונית חישוב המולדות.':
+    'The button moments follow the mean molad — the calendar molad announced in synagogue, advancing in equal steps of 29d 12h 793p. The true conjunction may fall up to about 14 hours earlier or later, following the Moon’s varying speed along its orbit; it is shown in the Hebrew-calendar tab, in the molad-calculation panel.',
   'הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש המוצג — חודש הלבנה שהתאריך שבאיור נמצא בתוכו, מן המולד ועד המולד הבא. כפתורי "החודש הקודם" ו"החודש הבא" מעבירים את התצוגה חודש לבנה שלם אחורה או קדימה. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.':
     'The buttons jump the date and time (shown above) to the exact moment of these milestones in the displayed month — the lunar month containing the date in the illustration, from one molad to the next. The "Previous month" and "Next month" buttons shift the view a whole lunar month back or forward. When that moment falls in daytime the moon is not visible to the eye — even when above the horizon — except near sunset or right after sunrise; advance the time to evening (via the date fields or by playing) to see it in the sky window.',
   'יום בחודש (גרירה)': 'Day of month (drag)',
@@ -408,8 +410,8 @@ window.TRANSLATIONS.en = {
   'שליטה ידנית במרחק (הדגמה)': 'Manual distance control (demo)',
   'מרחק:': 'Distance:',
   'ק״מ': 'km',
-  'ככל שהירח רחוק יותר מכדור הארץ הוא נראה קטן יותר, ואינו מספיק לכסות את כל השמש — והליקוי נעשה טבעתי. קרבו את הירח וראו את הליקוי נעשה מלא.':
-    'The farther the Moon is from Earth, the smaller it appears — too small to cover the whole Sun, so the eclipse becomes annular. Bring the Moon closer and watch the eclipse become total.',
+  'ככל שהירח רחוק יותר מכדור הארץ הוא נראה קטן יותר, ואינו מספיק לכסות את כל השמש — והליקוי נעשה טבעתי. קרבו את הירח וראו את הליקוי נעשה מלא. כשההדגמה כבויה מוצג מרחקו האמיתי של הירח ברגע המוצג.':
+    'The farther the Moon is from Earth, the smaller it appears — too small to cover the whole Sun, so the eclipse becomes annular. Bring the Moon closer and watch the eclipse become total. When the demo is off, the Moon’s actual distance at the displayed moment is shown.',
   'הגלובוס': 'Globe',
   'המבט עוקב אחר מרכז הצל': 'View follows the shadow center',
   'גררו את הגלובוס לסיבוב. ההכהיה על פני הכדור — לפי אחוז כיסוי השמש הנראה מכל מקום; הכתם הכהה — אזור הליקוי המלא (או הטבעתי), והקו הכתום — מסלול מרכז הצל, המתקדם בדרך כלל ממערב למזרח.':
@@ -526,7 +528,7 @@ window.TRANSLATIONS.en = {
     'Far from the present era the astronomical computation loses precision, mainly due to uncertainty in Earth’s rotation rate.',
 
   // ── ממיר השעה היממתית ────────────────────────────────────────────────
-  'ממיר שעה אזרחית ⇄ שעה יממתית': 'Civil ⇄ Calendar-Day Time Converter',
+  'ממיר שעה יממתית ⇄ שעה אזרחית': 'Calendar-Day ⇄ Civil Time Converter',
   'כיוון ההמרה': 'Conversion direction',
   'משעה אזרחית לשעה יממתית': 'Civil clock → hours and parts',
   'משעה יממתית לשעה אזרחית': 'Hours and parts → civil clock',

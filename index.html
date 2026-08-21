@@ -65,7 +65,7 @@
             </div>
             <label class="field" style="margin-top:8px">רגעים בחודש</label>
             <div class="ctrls">
-              <button class="btn-secondary" id="m_jNew">🌑 מולד</button>
+              <button class="btn-secondary" id="m_jNew">🌑 קיבוץ (מולד)</button>
               <button class="btn-secondary" id="m_jFull">🌕 ניגוד (ירח במילואו)</button>
             </div>
             <div class="ctrls" style="margin-top:6px">
@@ -77,6 +77,7 @@
               <button class="btn-secondary" id="m_nextM">החודש הבא</button>
             </div>
             <div class="htxt" style="margin-top:6px">מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.</div>
+            <div class="htxt" style="margin-top:6px">רגעי הלחצנים הם לפי המולד הממוצע — הוא מולד הלוח המוכרז בבית הכנסת, ההולך בצעדים שווים של כ״ט י״ב תשצ״ג. הקיבוץ האמיתי עשוי להקדים או לאחר עד כי״ד שעות, כפי מהירות הירח במסלולו; הוא מוצג בלשונית הלוח העברי, בחלונית חישוב המולדות.</div>
             <div class="htxt" style="margin-top:6px">הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש המוצג — חודש הלבנה שהתאריך שבאיור נמצא בתוכו, מן המולד ועד המולד הבא. כפתורי "החודש הקודם" ו"החודש הבא" מעבירים את התצוגה חודש לבנה שלם אחורה או קדימה. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.</div>
           </div>
           <div class="card">
@@ -139,17 +140,19 @@
             </div>
           </div>
 
-          <!-- ממיר השעה היממתית: תאריך עברי ושעה אזרחית ⇄ שעות וחלקים, לפי
-               ארבע השיטות במניין שעות היממה. גלוי תמיד, גם בשנת מעבדה —
+          <!-- ממיר השעה היממתית: שעות וחלקים ⇄ תאריך עברי ושעה אזרחית, לפי
+               ארבע השיטות במניין שעות היממה. עיקר תפקידו המרת שעה יממתית
+               לשעה אזרחית, ולכן זה הכיוון הראשון וברירת המחדל; ההיפוך —
+               להתלמד ולתרגל. גלוי תמיד, גם בשנת מעבדה —
                התאריך שלו עצמאי ואינו תלוי בשנה המוצגת. -->
           <div class="card luach-molad" id="l_convBox">
-            <h2>ממיר שעה אזרחית ⇄ שעה יממתית</h2>
+            <h2>ממיר שעה יממתית ⇄ שעה אזרחית</h2>
             <div class="lm-grid">
               <div>
                 <label class="field">כיוון ההמרה</label>
                 <select id="lc_dir">
-                  <option value="c2y">משעה אזרחית לשעה יממתית</option>
                   <option value="y2c">משעה יממתית לשעה אזרחית</option>
+                  <option value="c2y">משעה אזרחית לשעה יממתית</option>
                 </select>
                 <label class="field" style="margin-top:8px">תאריך עברי</label>
                 <div class="lc-row">
@@ -157,7 +160,7 @@
                   <select id="lc_month"></select>
                   <input type="number" id="lc_year" min="1" max="9999" value="5786" />
                 </div>
-                <div id="lc_civIn">
+                <div id="lc_civIn" style="display:none">
                   <div class="lc-row lc-time">
                     <label class="field">שעה<input type="number" id="lc_ch" min="0" max="23" value="12" /></label>
                     <label class="field">דקות<input type="number" id="lc_cm" min="0" max="59" value="0" /></label>
@@ -165,7 +168,7 @@
                   </div>
                   <div class="htxt lc-hint">השעה בשעון ישראל. שעה 18:00 ואילך מתפרשת כליל התאריך הנבחר.</div>
                 </div>
-                <div id="lc_yemIn" style="display:none">
+                <div id="lc_yemIn">
                   <div class="lc-row lc-time">
                     <label class="field">שעות<input type="number" id="lc_h" min="0" max="23" value="0" /></label>
                     <label class="field">חלקים<input type="number" id="lc_p" min="0" max="1079" value="0" /></label>
@@ -724,7 +727,7 @@
               <label for="e_dsim">שליטה ידנית במרחק (הדגמה)</label></div>
             <label class="field">מרחק: <b id="e_distL">384,400</b> ק״מ</label>
             <input type="range" id="e_dist" min="356500" max="406700" step="100" value="384400" disabled />
-            <div class="htxt" style="margin-top:6px">ככל שהירח רחוק יותר מכדור הארץ הוא נראה קטן יותר, ואינו מספיק לכסות את כל השמש — והליקוי נעשה טבעתי. קרבו את הירח וראו את הליקוי נעשה מלא.</div>
+            <div class="htxt" style="margin-top:6px">ככל שהירח רחוק יותר מכדור הארץ הוא נראה קטן יותר, ואינו מספיק לכסות את כל השמש — והליקוי נעשה טבעתי. קרבו את הירח וראו את הליקוי נעשה מלא. כשההדגמה כבויה מוצג מרחקו האמיתי של הירח ברגע המוצג.</div>
           </div>
           <div class="card" data-emode-card="globe" style="display:none">
             <h2>הגלובוס</h2>

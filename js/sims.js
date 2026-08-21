@@ -111,13 +111,29 @@ window.Sims = (function () {
     if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h);
     else { ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, w / 2, 0, 2 * Math.PI); ctx.fill(); }
   }
-  // גיל הירח היום (ימים מאז מולד) לפי מולד ידוע — 6.1.2000 18:14 UT
-  const REF_NEW = Date.UTC(2000, 0, 6, 18, 14, 0);   // מולד ממוצע ידוע
+  // גיל הירח (ימים מאז מולד) לפי שרשרת המולדות של הלוח — מבהר״ד בצעדי
+  // כ״ט י״ב תשצ״ג. כך לחצן "קיבוץ (מולד)" נופל בדיוק על המולד המוכרז שבלוח,
+  // וג׳/ז׳ ימים לברכת הלבנה נמנים ממנו. שעות המולד נקראות כזמן ירושלים
+  // האמצעי (UTC+2:21), כדרך חשבון המולדות — כבחלונית המולדות שבלוח העברי.
+  // הקיבוץ האמיתי עשוי לסטות מן הממוצע עד כי״ד שעות (ההערה שבכרטיס).
+  const LUN_DAYS = (() => {
+    const HC = window.HebCal;
+    return HC ? HC.LUNATION / HC.P_DAY : A.SYNODIC;
+  })();
+  const REF_NEW = (() => {
+    const HC = window.HebCal;
+    if (!HC) return Date.UTC(2000, 0, 6, 18, 14, 0);        // גיבוי: מולד ממוצע אסטרונומי
+    const m = HC.moladTishrei(5785);                          // מולד עוגן כלשהו בשרשרת
+    return HC.absToDate(Math.floor(m / HC.P_DAY)).getTime()
+      - 6 * 3600000                                           // היממה נמנית משש בערב
+      + (m % HC.P_DAY) * (3600000 / HC.P_HOUR)                // חלק — 10/3 שניות
+      - (2 * 60 + 21) * 60000;                                // זמן ירושלים האמצעי → UTC
+  })();
   function moonAgeAt(ms) {
-    const a = ((((ms - REF_NEW) / 86400000) % A.SYNODIC) + A.SYNODIC) % A.SYNODIC;
-    // שגיאת צף זעירה מתחת לאפס מתעטפת לסוף החודש (29.5299…) — מיושרת לאפס,
+    const a = ((((ms - REF_NEW) / 86400000) % LUN_DAYS) + LUN_DAYS) % LUN_DAYS;
+    // שגיאת צף זעירה מתחת לאפס מתעטפת לסוף החודש (29.5305…) — מיושרת לאפס,
     // שלא יוצג "יום 30" מיד אחרי קפיצה למולד
-    return a >= A.SYNODIC - 1e-7 ? 0 : a;
+    return a >= LUN_DAYS - 1e-7 ? 0 : a;
   }
   // זריחת/שקיעת הירח בירושלים ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
   const _jlmT = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
@@ -336,7 +352,7 @@ window.Sims = (function () {
       // (שאורכו משתנה לפי המופע) לפני מדידת moonTop — אחרת הפריים הראשון נמדד
       // לפי ערכי ברירת המחדל שב-HTML, ומדידה-מחדש מאוחרת מקפיצה את האיור.
       const pct = Math.round(A.moonIllum(this.day) * 100);
-      $('m_day').textContent = Math.floor(this.day % A.SYNODIC) + 1;
+      $('m_day').textContent = Math.floor(this.day % LUN_DAYS) + 1;
       $('m_pct').textContent = pct + '%';
       $('m_phase').textContent = T(A.moonPhaseLabel(this.day));
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
@@ -366,7 +382,7 @@ window.Sims = (function () {
       const top = _layout.moonTop;
       const earthX = W * 0.60, earthY = top + (H - top) * 0.56, sunX = W * 0.13, sunY = earthY;
       const orbitR = Math.min(W, H - top) * 0.19;
-      const ang = Math.PI - 2 * Math.PI * (this.day / A.SYNODIC);
+      const ang = Math.PI - 2 * Math.PI * (this.day / LUN_DAYS);
       const mx = earthX + Math.cos(ang) * orbitR, my = earthY + Math.sin(ang) * orbitR;
       // קרני שמש (עד אזור הארץ/הירח בלבד) + מסלול
       const rayEnd = earthX + orbitR + 26;
@@ -435,13 +451,13 @@ window.Sims = (function () {
         stop(); this._syncDate();
       }; };
       jump('m_jNew', 0);
-      jump('m_jFull', A.SYNODIC / 2);
+      jump('m_jFull', LUN_DAYS / 2);
       jump('m_j3', 3);
       jump('m_j7', 7);
       // מעבר מפורש בין חודשים — הזזה בחודש סינודי שלם: היום בחודש נשמר,
       // וכפתורי הרגעים מכוונים מעתה אל החודש החדש
       const shiftMonth = (id, dir) => { const b = $(id); if (b) b.onclick = () => {
-        this.t += dir * A.SYNODIC * 86400000;
+        this.t += dir * LUN_DAYS * 86400000;
         stop(); this._syncDate();
       }; };
       shiftMonth('m_prevM', -1);
@@ -465,7 +481,7 @@ window.Sims = (function () {
       set('m_hh', d.getHours()); set('m_mi', d.getMinutes());
     },
     sync() {
-      if (document.activeElement !== $('m_scrub')) $('m_scrub').value = (this.day % A.SYNODIC).toFixed(2);
+      if (document.activeElement !== $('m_scrub')) $('m_scrub').value = (this.day % LUN_DAYS).toFixed(2);
       this._syncDate();
     },
   };
@@ -503,7 +519,7 @@ window.Sims = (function () {
       ctx.drawImage(IMG.moonReal, cx - R, cy - R, 2 * R, 2 * R);
       ctx.filter = 'none';
     } else drawMoonDisc(ctx, cx, cy, R);
-    const theta = 2 * Math.PI * (day % A.SYNODIC) / A.SYNODIC, a = R * Math.cos(theta);
+    const theta = 2 * Math.PI * (day % LUN_DAYS) / LUN_DAYS, a = R * Math.cos(theta);
     const waning = A.moonWaning(day), limb = waning ? 1 : -1, term = waning ? -1 : 1, N = 72;
     ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
     for (let i = 0; i <= N; i++) { const u = Math.PI * i / N; ctx.lineTo(cx + limb * R * Math.sin(u), cy - R * Math.cos(u)); }
