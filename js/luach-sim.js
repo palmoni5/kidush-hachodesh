@@ -188,7 +188,7 @@
     if (_sunCache.has(abs)) return _sunCache.get(abs);
     let out = null;
     try {
-      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.22, 0);
+      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.24, 0);
       const t0 = AE.MakeTime(new Date(localMidnight(abs) - JLM_MS));
       const rise = AE.SearchRiseSet(AE.Body.Sun, obs, +1, t0, 1.2);
       const set = AE.SearchRiseSet(AE.Body.Sun, obs, -1, t0, 1.2);

@@ -156,7 +156,7 @@
   // בירושלים בשיא ובקצות השלב החלקי. ליקוי חמה תלוי-מקום באמת, ולכן נבנית
   // (בנגיסות, כמו הרשימה הראשית) רשימת הליקויים המקומיים לצופה בירושלים —
   // המנוע מחזיר לכל אחד גם את סוגו המקומי ואת שיעור הכיסוי שם.
-  const IL_OBS = new AE.Observer(31.78, 35.22, 750);        // ירושלים
+  const IL_OBS = new AE.Observer(31.78, 35.24, 750);        // ירושלים
   function moonUpIL(ms) {
     const t = AE.MakeTime(new Date(ms));
     const eq = AE.Equator(AE.Body.Moon, t, IL_OBS, true, true);
@@ -172,7 +172,7 @@
   // צפון–דרום; מזרח–מערב (ירושלים–ת״א, ~55 ק"מ) ההפרש כאחוז בודד, ולכן די באלה.
   const IL_CITIES = {
     safed:     { name: 'צפת',     lat: 32.965, lon: 35.496 },
-    jerusalem: { name: 'ירושלים', lat: 31.778, lon: 35.235 },
+    jerusalem: { name: 'ירושלים', lat: 31.78, lon: 35.24 },
     beersheba: { name: 'באר שבע', lat: 31.252, lon: 34.791 },
     eilat:     { name: 'אילת',    lat: 29.558, lon: 34.948 },
   };

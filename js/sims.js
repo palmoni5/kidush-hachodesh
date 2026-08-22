@@ -160,7 +160,7 @@ window.Sims = (function () {
   const _jlmT = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
   function moonRiseSet(date) {
     try {
-      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.22, 0);
+      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.24, 0);
       const t = AE.MakeTime(date);
       const r = AE.SearchRiseSet(AE.Body.Moon, obs, +1, t, 1.2);
       const s = AE.SearchRiseSet(AE.Body.Moon, obs, -1, t, 1.2);
@@ -170,7 +170,7 @@ window.Sims = (function () {
   // מיקום הירח והשמש בכיפת השמים מעל ירושלים לרגע נתון (Astronomy Engine)
   function moonSkyPos(date) {
     try {
-      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.22, 0), t = AE.MakeTime(date);
+      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.24, 0), t = AE.MakeTime(date);
       const eqM = AE.Equator(AE.Body.Moon, t, obs, true, true);
       const hM = AE.Horizon(t, obs, eqM.ra, eqM.dec, 'normal');
       const eqS = AE.Equator(AE.Body.Sun, t, obs, true, true);
@@ -573,7 +573,7 @@ window.Sims = (function () {
   const year = {
     // hour = השעון האזרחי במקום הנבחר (כולל שעון קיץ). ההמרה לזוית השעה נעשית
     // ב-solarHour(): הפחתת היסט אזור הזמן, הוספת קו האורך המקומי ומשוואת הזמן.
-    hour: 12, dayY: 0, lat: 31.78, lon: 35.22, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
+    hour: 12, dayY: 0, lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
     speed: 2, playing: false, auto: true, viewAz: 90, hintDone: false, _bound: false,
     step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % A.SOLAR_YEAR; } } },
     // היסט אזור הזמן בשעות; ללא אזור זמן ידוע — הערכה לפי קו האורך
@@ -1017,7 +1017,7 @@ window.Sims = (function () {
     { k: 'saturn', n: 'שבתאי' }, { k: 'uranus', n: 'אורנוס' }, { k: 'neptune', n: 'נפטון' },
   ];
   const planets = {
-    sky: null, lat: 31.78, lon: 35.22, _bound: false,
+    sky: null, lat: 31.78, lon: 35.24, _bound: false,
     step() {},
     inputToUTC() {
       const Y = +$('p_year').value, M = +$('p_month').value, D = +$('p_day').value, h = +$('p_hour').value, mi = +$('p_min').value;
@@ -1065,7 +1065,7 @@ window.Sims = (function () {
     },
     bind() {
       if (this._bound) return; this._bound = true;
-      $('p_lat').value = 31.78; $('p_lon').value = 35.22; this.setNow();
+      $('p_lat').value = 31.78; $('p_lon').value = 35.24; this.setNow();
       $('p_go').onclick = () => this.compute();
       $('p_now').onclick = () => { this.setNow(); this.compute(); };
       this.compute();

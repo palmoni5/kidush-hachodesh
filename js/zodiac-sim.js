@@ -172,13 +172,13 @@
   }
   // היום האזרחי שהתאריך העברי שלו הוא תאריכו של הרגע הנתון
   function hebCivilDay(date, lat, lon) {
-    const set = sunsetOf(date, lat === undefined ? 31.78 : lat, lon === undefined ? 35.22 : lon);
+    const set = sunsetOf(date, lat === undefined ? 31.78 : lat, lon === undefined ? 35.24 : lon);
     return set && date >= set ? new Date(date.getTime() + 86400000) : date;
   }
   // לילה לעניין "אור ל־": מהשקיעה ועד עלות השחר האדם בתחילת יום המחרת,
   // ובלוח (כבלוח השנה של אוצריא) נכתב "אור לז׳ אלול" — שלא יתבלבל בתאריך.
   function isNight(date, lat, lon) {
-    const la = lat === undefined ? 31.78 : lat, lo = lon === undefined ? 35.22 : lon;
+    const la = lat === undefined ? 31.78 : lat, lo = lon === undefined ? 35.24 : lon;
     const set = sunsetOf(date, la, lo);
     if (set && date >= set) return true;                 // מהשקיעה עד חצות
     const dawn = dawnOf(date, la, lo);
@@ -559,7 +559,7 @@
     horizon: true,
     view: 'wheel',            // 'wheel' — מבט-על על הגלגל; 'observer' — הרצועה ברקיע מעל הצופה
     viewAz: 270,              // כיוון המבט במבט הצופה (270 = פנים אל המזרח, כיוון הזריחה)
-    lat: 31.78, lon: 35.22,
+    lat: 31.78, lon: 35.24,
     _bound: false,
 
     step(dt) { this.date = new Date(this.date.getTime() + this.speed * dt * (this.unit === 'day' ? 86400000 : 3600000)); },

@@ -329,7 +329,7 @@
             <h2>מיקום הצופה</h2>
             <label class="field">עיר</label>
             <select id="y_city">
-              <option value="31.78,35.22" data-tz="Asia/Jerusalem" selected>ירושלים</option>
+              <option value="31.78,35.24" data-tz="Asia/Jerusalem" selected>ירושלים</option>
               <option value="40.71,-74.01" data-tz="America/New_York">ניו יורק</option>
               <option value="34.05,-118.24" data-tz="America/Los_Angeles">לוס אנג'לס</option>
               <option value="25.76,-80.19" data-tz="America/New_York">מיאמי</option>
@@ -348,8 +348,8 @@
             <label class="field">קו רוחב במעלות (צפון חיובי)</label>
             <input type="number" id="y_lat" step="0.1" min="-89" max="89" value="31.78" />
             <label class="field">קו אורך במעלות (מזרח חיובי)</label>
-            <input type="number" id="y_lon" step="0.1" min="-180" max="180" value="35.22" />
-            <div class="htxt" style="margin-top:8px">השעון שבאיור הוא השעון האזרחי במקום הנבחר — כולל שעון קיץ, ההפרש שבין אזור הזמן לקו האורך של המקום, והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך. לצדו מוצגת השעה השמשית — שעון שבו רגע החצות האמיתי של אותו יום, מעבר השמש במרידיאן, נחשב 12:00 בדיוק, והשעות נמנות ממנו. שלושת ההפרשים שמנינו הם כל ההבדל שבינה ובין השעון האזרחי.</div>
+            <input type="number" id="y_lon" step="0.1" min="-180" max="180" value="35.24" />
+            <div class="htxt" style="margin-top:8px">השעון שבאיור הוא השעון האזרחי במקום הנבחר, כולל שעון קיץ. לצדו מוצגת השעה השמשית — שעון שבו רגע החצות האמיתי של אותו יום (מעבר השמש במרידיאן) נחשב 12:00 בדיוק, והשעות נמנות ממנו. כל ההבדל בין שני השעונים — שלושה הפרשים: שעון הקיץ; ההפרש שבין אזור הזמן לקו האורך של המקום — בירושלים, למשל, 5.24 מעלות מזרחית לקו האורך 30° שהשעון מכוון לפיו, שהן כ-21 דקות; והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך.</div>
           </div>
           <div class="card" id="y_otzCard" style="display:none">
             <h2>זמני היום — לוח אוצריא</h2>
@@ -454,7 +454,7 @@
               <label for="z_horizon">הצג את קו האופק ואת המזל העולה</label></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:6px">
               <label class="field">קו רוחב °<input type="number" id="z_lat" step="0.01" value="31.78" /></label>
-              <label class="field">קו אורך °<input type="number" id="z_lon" step="0.01" value="35.22" /></label>
+              <label class="field">קו אורך °<input type="number" id="z_lon" step="0.01" value="35.24" /></label>
             </div>
             <div class="htxt" style="margin-top:8px">
               המזל העולה הוא הנקודה שבגלגל המלקה העולה באותו רגע באופק המזרחי. הגלגל כולו מסתובב סביב הארץ פעם ביממה, ולכן כל שנים-עשר המזלות עולים ושוקעים בכל יום — בערך מזל לכל שעתיים.<br><br>
@@ -507,7 +507,7 @@
             <h2>מיקום הצופה</h2>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
               <label class="field">קו רוחב °<input type="number" id="h_lat" step="0.01" value="31.78" /></label>
-              <label class="field">קו אורך °<input type="number" id="h_lon" step="0.01" value="35.22" /></label>
+              <label class="field">קו אורך °<input type="number" id="h_lon" step="0.01" value="35.24" /></label>
             </div>
             <div class="htxt" style="margin-top:6px">השעות הזמניות מחושבות מהזריחה עד השקיעה (יום) ומהשקיעה עד הזריחה (לילה) במקום הנבחר, כל אחת מחולקת לשתים-עשרה.</div>
           </div>
