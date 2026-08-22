@@ -136,7 +136,7 @@ window.TRANSLATIONS.en = {
   'זוית השמש מצפון/דרום לקו המשוה': 'Sun’s angle N/S of the equator',
   'זוית השמש מצפון/דרום למקום הצופה': 'Sun’s angle N/S of the observer',
   'עונה / תקופה': 'Season / Tekufah',
-  'שעה שמשית (חצות אמיתי = 12:00)': 'Solar time (true noon = 12:00)',
+  'שעה שמשית (החצות האמיתי נחשב כ-12:00)': 'Solar time (true noon counted as 12:00)',
   'זריחה / שקיעה': 'Sunrise / Sunset',
   'אורך היום': 'Day length',
   'עומק בחצות הלילה': 'Depth at midnight',
@@ -157,8 +157,8 @@ window.TRANSLATIONS.en = {
   'קו אורך במעלות (מזרח חיובי)': 'Longitude in degrees (east positive)',
   'קו רוחב °': 'Latitude °',
   'קו אורך °': 'Longitude °',
-  'השעון שבאיור הוא השעון האזרחי במקום הנבחר — כולל שעון קיץ, ההפרש שבין אזור הזמן לקו האורך של המקום, והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך.':
-    'The clock shown is the civil clock of the selected place — including daylight saving, the offset between the time zone and the local longitude, and the equation of time. For "Custom", the time zone is estimated from the longitude.',
+  'השעון שבאיור הוא השעון האזרחי במקום הנבחר — כולל שעון קיץ, ההפרש שבין אזור הזמן לקו האורך של המקום, והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך. לצדו מוצגת השעה השמשית — שעון שבו רגע החצות האמיתי של אותו יום, מעבר השמש במרידיאן, נחשב 12:00 בדיוק, והשעות נמנות ממנו. שלושת ההפרשים שמנינו הם כל ההבדל שבינה ובין השעון האזרחי.':
+    'The clock shown is the civil clock of the selected place — including daylight saving, the offset between the time zone and the local longitude, and the equation of time. For "Custom", the time zone is estimated from the longitude. Beside it the solar time is shown — a clock on which that day’s true noon, the Sun’s meridian transit, counts as exactly 12:00, the hours being reckoned from it. Those three offsets are the whole difference between it and the civil clock.',
   'אביב · ניסן': 'Spring · Nissan', 'קיץ · תמוז': 'Summer · Tammuz',
   'סתיו · תשרי': 'Autumn · Tishrei', 'חורף · טבת': 'Winter · Teves',
   'סתיו · ניסן': 'Autumn · Nissan', 'חורף · תמוז': 'Winter · Tammuz',
