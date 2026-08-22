@@ -94,8 +94,8 @@ window.TRANSLATIONS.en = {
   'החודש הבא': 'Next month',
   'מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.':
     'Molad (new moon) = Sun and Moon in conjunction, and the Moon is unseen. Opposition = Sun and Moon on opposite sides of Earth — a full moon (when lunar eclipses occur). Three days after the molad is the start of the time for Birkat HaLevanah in the Ashkenazi custom, and seven days in the Sephardi custom.',
-  'רגעי הלחצנים הם לפי המולד הממוצע — הוא מולד הלוח המוכרז בבית הכנסת, ההולך בצעדים שווים של כ״ט י״ב תשצ״ג. הקיבוץ האמיתי עשוי להקדים או לאחר עד כי״ד שעות, כפי מהירות הירח במסלולו; הוא מוצג בלשונית הלוח העברי, בחלונית חישוב המולדות.':
-    'The button moments follow the mean molad — the calendar molad announced in synagogue, advancing in equal steps of 29d 12h 793p. The true conjunction may fall up to about 14 hours earlier or later, following the Moon’s varying speed along its orbit; it is shown in the Hebrew-calendar tab, in the molad-calculation panel.',
+  'כל הזמנים הם לפי המולדות האמיתיים (ראו בלשונית הלוח העברי אודות המולד האמיתי).':
+    'All times follow the true moladot — the actual astronomical conjunctions (see the Hebrew-calendar tab regarding the true molad).',
   'הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש המוצג — חודש הלבנה שהתאריך שבאיור נמצא בתוכו, מן המולד ועד המולד הבא. כפתורי "החודש הקודם" ו"החודש הבא" מעבירים את התצוגה חודש לבנה שלם אחורה או קדימה. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.':
     'The buttons jump the date and time (shown above) to the exact moment of these milestones in the displayed month — the lunar month containing the date in the illustration, from one molad to the next. The "Previous month" and "Next month" buttons shift the view a whole lunar month back or forward. When that moment falls in daytime the moon is not visible to the eye — even when above the horizon — except near sunset or right after sunrise; advance the time to evening (via the date fields or by playing) to see it in the sky window.',
   'יום בחודש (גרירה)': 'Day of month (drag)',
@@ -330,7 +330,8 @@ window.TRANSLATIONS.en = {
     ' — 180° from Jerusalem (144.76°W). Dashed light-blue outline — the area R. Tukachinsky left in doubt: western Alaska, from his line to the Bering Strait, being joined by land to the line’s east.',
   'קו התאריך הסכמי אוה"ע': 'International date line',
   '— 180 מעלות מקו זמן יקום מתואם.': ' — 180° from the UTC line.',
-  'ירושלים (35.24° מזרח).': 'Jerusalem (35.24°E).',
+  'ירושלים (35.24° מזרח). הקו המקווקו — קו האורך שעליו שוכנת ירושלים, וממנו נמדדים שני קווי התאריך שבמחלוקת.':
+    'Jerusalem (35.24°E). The dashed line is the meridian on which Jerusalem lies — the reference from which both disputed date lines are measured.',
   'הערה: מהלך הקו לאורך חופי היבשות מצויר בקירוב, להמחשת העיקרון בלבד.':
     'Note: the line’s course along the coasts is approximate, for illustration only.',
   'מקורות:': 'Sources:',

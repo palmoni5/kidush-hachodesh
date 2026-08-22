@@ -273,6 +273,10 @@
         this.path(ctx, CI_PATH, cx, cy, R, COL.ci, 3);                            // הקו בפועל — עד סוף היבשת
       }
 
+      // קו האורך של ירושלים — מקווקו, בצבע סימונה: ממנו נמדדים שני קווי
+      // התאריך שבמחלוקת (90° מזרחה לחזו"א, 180° לגרי"מ)
+      this.path(ctx, this.meridian(JLEM_LON), cx, cy, R, COL.jlem, 1.6, [5, 5]);
+
       // ירושלים
       const j = this.proj(JLEM_LAT, JLEM_LON, cx, cy, R);
       if (j.vis) {

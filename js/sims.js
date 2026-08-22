@@ -111,29 +111,50 @@ window.Sims = (function () {
     if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h);
     else { ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, w / 2, 0, 2 * Math.PI); ctx.fill(); }
   }
-  // גיל הירח (ימים מאז מולד) לפי שרשרת המולדות של הלוח — מבהר״ד בצעדי
-  // כ״ט י״ב תשצ״ג. כך לחצן "קיבוץ (מולד)" נופל בדיוק על המולד המוכרז שבלוח,
-  // וג׳/ז׳ ימים לברכת הלבנה נמנים ממנו. שעות המולד נקראות כזמן ירושלים
-  // האמצעי (UTC+2:21), כדרך חשבון המולדות — כבחלונית המולדות שבלוח העברי.
-  // הקיבוץ האמיתי עשוי לסטות מן הממוצע עד כי״ד שעות (ההערה שבכרטיס).
-  const LUN_DAYS = (() => {
-    const HC = window.HebCal;
-    return HC ? HC.LUNATION / HC.P_DAY : A.SYNODIC;
-  })();
-  const REF_NEW = (() => {
-    const HC = window.HebCal;
-    if (!HC) return Date.UTC(2000, 0, 6, 18, 14, 0);        // גיבוי: מולד ממוצע אסטרונומי
-    const m = HC.moladTishrei(5785);                          // מולד עוגן כלשהו בשרשרת
-    return HC.absToDate(Math.floor(m / HC.P_DAY)).getTime()
-      - 6 * 3600000                                           // היממה נמנית משש בערב
-      + (m % HC.P_DAY) * (3600000 / HC.P_HOUR)                // חלק — 10/3 שניות
-      - (2 * 60 + 21) * 60000;                                // זמן ירושלים האמצעי → UTC
-  })();
-  function moonAgeAt(ms) {
-    const a = ((((ms - REF_NEW) / 86400000) % LUN_DAYS) + LUN_DAYS) % LUN_DAYS;
-    // שגיאת צף זעירה מתחת לאפס מתעטפת לסוף החודש (29.5305…) — מיושרת לאפס,
-    // שלא יוצג "יום 30" מיד אחרי קפיצה למולד
-    return a >= LUN_DAYS - 1e-7 ? 0 : a;
+  // ── שרשרת הקיבוצים האמיתיים ─────────────────────────────────────────
+  // גיל הירח ורגעי החודש נמנים מן הקיבוץ (המולד) האסטרונומי האמיתי, ולא
+  // ממולד ממוצע: אורך החודש האמיתי נע בין כ-29.27 לכ-29.83 ימים, והקיבוץ
+  // סוטה מן המולד הממוצע עד כי״ד שעות, כפי מהירות הירח במסלולו.
+  // חיפוש המופע יקר, ולכן החודש המוצג נשמר במטמון ומחושב מחדש רק כשהרגע
+  // המוצג יוצא מגבולותיו.
+  const MEAN_LUN = A.SYNODIC;
+  const REF_NEW = Date.UTC(2026, 7, 12, 17, 37, 11);   // קיבוץ ידוע — לגיבוי בלבד
+  function moonPhaseAfter(deg, ms) {
+    try {
+      const AE = window.Astronomy;
+      const t = AE.SearchMoonPhase(deg, AE.MakeTime(new Date(ms)), 31);
+      return t ? t.date.getTime() : null;
+    } catch (_) { return null; }
+  }
+  let _lun = null;                                     // {t0, t1, len} של החודש שבמטמון
+  function lunation(ms) {
+    if (_lun && ms >= _lun.t0 && ms < _lun.t1) return _lun;
+    // בכל חלון של 30 יום יש קיבוץ אחד לפחות, ולכן הראשון שנמצא אינו לאחר ms;
+    // משם מדלגים קדימה עד שהחודש שבידינו הוא זה שהרגע המוצג בתוכו
+    let t0 = moonPhaseAfter(0, ms - 30 * 86400000), t1 = null;
+    if (t0 != null) {
+      for (let k = 0; k < 3; k++) {
+        t1 = moonPhaseAfter(0, t0 + 86400000);
+        if (t1 == null || t1 > ms) break;
+        t0 = t1;
+      }
+    }
+    if (t0 == null || t1 == null) {                    // גיבוי: שרשרת ממוצעת מקיבוץ ידוע
+      const a = ((((ms - REF_NEW) / 86400000) % MEAN_LUN) + MEAN_LUN) % MEAN_LUN;
+      t0 = ms - a * 86400000; t1 = t0 + MEAN_LUN * 86400000;
+    }
+    _lun = { t0, t1, len: (t1 - t0) / 86400000 };
+    return _lun;
+  }
+  const moonAgeAt = ms => (ms - lunation(ms).t0) / 86400000;
+  // זווית המופע האמיתית (0° קיבוץ, 180° ניגוד) מומרת ל״יום שקול״ בחודש ממוצע,
+  // כדי שחישובי הציור והתאורה שנבנו על החודש הממוצע יישארו כשהם — ויקבלו
+  // מעתה את המופע האמיתי
+  function phaseDayAt(ms) {
+    try {
+      const AE = window.Astronomy;
+      return AE.MoonPhase(AE.MakeTime(new Date(ms))) / 360 * MEAN_LUN;
+    } catch (_) { return moonAgeAt(ms); }
   }
   // זריחת/שקיעת הירח בירושלים ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
   const _jlmT = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
@@ -337,24 +358,25 @@ window.Sims = (function () {
   // כך יש לכל מצב תאריך ושעה של ממש, וכפתורי ג׳/ז׳ מן המולד קופצים אל הרגע
   // האמיתי בחודש, שרואים בו שהוא יום או לילה. day נגזר מ-t בכל ציור.
   const moon = {
-    t: Date.now(), day: 0, speed: 2, playing: false, hintDone: false, _bound: false,
+    t: Date.now(), day: 0, phase: 0, speed: 2, playing: false, hintDone: false, _bound: false,
     step(dt) { if (this.playing) this.t += this.speed * dt * 86400000; },
-    // תחילת החודש המוצג — רגע המולד (הממוצע) שהרגע הנוכחי בתוך חודשו.
-    // נגזר מ-t עצמו, ולכן החודש מתחלף רק כש-t חוצה מולד (הפעלה, תאריך ידני,
+    // תחילת החודש המוצג — רגע הקיבוץ האמיתי שהרגע הנוכחי בתוך חודשו.
+    // נגזר מ-t עצמו, ולכן החודש מתחלף רק כש-t חוצה קיבוץ (הפעלה, תאריך ידני,
     // "הירח היום") או בכפתורי החודש הקודם/הבא — לא בלחיצות על רגעי החודש.
-    _monthT0() { return this.t - moonAgeAt(this.t) * 86400000; },
+    _monthT0() { return lunation(this.t).t0; },
     draw() {
       this.day = moonAgeAt(this.t);
+      this.phase = phaseDayAt(this.t);
       const simDate = new Date(this.t);
       const { ctx, W, H } = fit($('moonCanvas'));
       ctx.clearRect(0, 0, W, H);
       // עדכון ה-HUD תחילה: hudInset מודד את גובה ה-HUD, ולכן יש לעדכן את תוכנו
       // (שאורכו משתנה לפי המופע) לפני מדידת moonTop — אחרת הפריים הראשון נמדד
       // לפי ערכי ברירת המחדל שב-HTML, ומדידה-מחדש מאוחרת מקפיצה את האיור.
-      const pct = Math.round(A.moonIllum(this.day) * 100);
-      $('m_day').textContent = Math.floor(this.day % LUN_DAYS) + 1;
+      const pct = Math.round(A.moonIllum(this.phase) * 100);
+      $('m_day').textContent = Math.floor(this.day) + 1;
       $('m_pct').textContent = pct + '%';
-      $('m_phase').textContent = T(A.moonPhaseLabel(this.day));
+      $('m_phase').textContent = T(A.moonPhaseLabel(this.phase));
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
       $('m_clock').textContent = simDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
@@ -382,7 +404,7 @@ window.Sims = (function () {
       const top = _layout.moonTop;
       const earthX = W * 0.60, earthY = top + (H - top) * 0.56, sunX = W * 0.13, sunY = earthY;
       const orbitR = Math.min(W, H - top) * 0.19;
-      const ang = Math.PI - 2 * Math.PI * (this.day / LUN_DAYS);
+      const ang = Math.PI - 2 * Math.PI * (this.phase / MEAN_LUN);
       const mx = earthX + Math.cos(ang) * orbitR, my = earthY + Math.sin(ang) * orbitR;
       // קרני שמש (עד אזור הארץ/הירח בלבד) + מסלול
       const rayEnd = earthX + orbitR + 26;
@@ -419,14 +441,14 @@ window.Sims = (function () {
       const vx = W - vR - 16, vy = H - vR - 20;
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(T('הירח מכדור הארץ'), vx, vy - vR - 12);
-      drawPhase(ctx, vx, vy, vR, this.day);
+      drawPhase(ctx, vx, vy, vR, this.phase);
       // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
       const pos = moonSkyPos(simDate);
       if (W >= 520) {
         const dR = Math.max(50, Math.min(W * 0.12, (H - top) * 0.16, 92));
         const rtl = getComputedStyle(document.body).direction !== 'ltr';
         const dx = rtl ? 24 + dR + 14 : W - 24 - dR - 14;
-        drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.day);
+        drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.phase);
       }
       // לבנה מעל האופק בשעות היום — מעל האופק, אך אור החמה מסתירה מן העין
       const daylight = pos && pos.sun.alt > 0 && pos.moon.alt > 0;
@@ -451,22 +473,37 @@ window.Sims = (function () {
         stop(); this._syncDate();
       }; };
       jump('m_jNew', 0);
-      jump('m_jFull', LUN_DAYS / 2);
       jump('m_j3', 3);
       jump('m_j7', 7);
-      // מעבר מפורש בין חודשים — הזזה בחודש סינודי שלם: היום בחודש נשמר,
-      // וכפתורי הרגעים מכוונים מעתה אל החודש החדש
+      // הניגוד אינו נופל בדיוק באמצע החודש — הירח אינו נע במהירות אחידה;
+      // לכן הוא נדרש כמופע אמיתי (180°) ולא כמחצית אורך החודש
+      $('m_jFull').onclick = () => {
+        const t0 = this._monthT0();
+        const f = moonPhaseAfter(180, t0);
+        this.t = f == null ? t0 + lunation(t0).len / 2 * 86400000 : f;
+        stop(); this._syncDate();
+      };
+      // מעבר מפורש בין חודשים — אל הקיבוץ האמיתי הסמוך; היום בחודש נשמר
+      // בקירוב, וכפתורי הרגעים מכוונים מעתה אל החודש החדש
       const shiftMonth = (id, dir) => { const b = $(id); if (b) b.onclick = () => {
-        this.t += dir * LUN_DAYS * 86400000;
+        const cur = lunation(this.t), age = this.t - cur.t0;
+        // אורכי החודשים אינם שווים; גיל שאינו נכנס בחודש היעד נקטע, שלא יזלוג
+        const nt0 = dir > 0 ? cur.t1 : lunation(cur.t0 - 1000).t0;
+        const nxt = lunation(nt0 + 1000);
+        this.t = nt0 + Math.min(age, nxt.t1 - nt0 - 1000);
         stop(); this._syncDate();
       }; };
       shiftMonth('m_prevM', -1);
       shiftMonth('m_nextM', +1);
       $('m_today').onclick = () => { this.t = Date.now(); stop(); this._syncDate(); };
       $('m_speed').oninput = e => { this.speed = +e.target.value; $('m_spdL').textContent = this.speed.toFixed(1); };
-      // גרירת "יום בחודש" — מציבה את הרגע בתוך החודש המוצג; טווח המחוון
-      // (0–29.53) קצר מהחודש הסינודי, ולכן גם קצהו אינו גולש למולד הבא
-      $('m_scrub').oninput = e => { this.t = this._monthT0() + (+e.target.value) * 86400000; stop(); this._syncDate(); };
+      // גרירת "יום בחודש" — מציבה את הרגע בתוך החודש המוצג. טווח המחוון נקבע
+      // באורכו האמיתי של החודש (sync), והקצה נקטע שלא יגלוש אל הקיבוץ הבא
+      $('m_scrub').oninput = e => {
+        const cur = lunation(this.t);
+        this.t = cur.t0 + Math.min(+e.target.value * 86400000, cur.t1 - cur.t0 - 1000);
+        stop(); this._syncDate();
+      };
       $('m_go').onclick = () => {
         const y = +$('m_yy').value, m = +$('m_mm').value, d = +$('m_dd').value;
         if (!y || !m || !d) return;
@@ -481,7 +518,10 @@ window.Sims = (function () {
       set('m_hh', d.getHours()); set('m_mi', d.getMinutes());
     },
     sync() {
-      if (document.activeElement !== $('m_scrub')) $('m_scrub').value = (this.day % LUN_DAYS).toFixed(2);
+      // טווח המחוון הוא אורכו האמיתי של החודש המוצג (29.27–29.83 ימים)
+      const sc = $('m_scrub');
+      sc.max = lunation(this.t).len.toFixed(2);
+      if (document.activeElement !== sc) sc.value = this.day.toFixed(2);
       this._syncDate();
     },
   };
@@ -519,7 +559,7 @@ window.Sims = (function () {
       ctx.drawImage(IMG.moonReal, cx - R, cy - R, 2 * R, 2 * R);
       ctx.filter = 'none';
     } else drawMoonDisc(ctx, cx, cy, R);
-    const theta = 2 * Math.PI * (day % LUN_DAYS) / LUN_DAYS, a = R * Math.cos(theta);
+    const theta = 2 * Math.PI * (day % MEAN_LUN) / MEAN_LUN, a = R * Math.cos(theta);
     const waning = A.moonWaning(day), limb = waning ? 1 : -1, term = waning ? -1 : 1, N = 72;
     ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
     for (let i = 0; i <= N; i++) { const u = Math.PI * i / N; ctx.lineTo(cx + limb * R * Math.sin(u), cy - R * Math.cos(u)); }
