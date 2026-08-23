@@ -156,21 +156,38 @@ window.Sims = (function () {
       return AE.MoonPhase(AE.MakeTime(new Date(ms))) / 360 * MEAN_LUN;
     } catch (_) { return moonAgeAt(ms); }
   }
-  // זריחת/שקיעת הירח בירושלים ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
-  const _jlmT = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
-  function moonRiseSet(date) {
+  // ── שעון המקום הנבחר ──────────────────────────────────────────────────
+  // הרגע שבאיור אחד הוא לכל העולם, וכל מקום רואה אותו בשעונו שלו: זמני
+  // זריחת הירח ושקיעתו וה"שעה במקום" מוצגים בשעון האזרחי של מקום הצפייה
+  // (כולל שעון קיץ). ב"מותאם אישית" — אין אזור זמן ידוע, והשעון מוערך מקו
+  // האורך (15 מעלות לשעה), כדרך שנעשה בלשונית מהלך השמש.
+  const _placeFmt = Object.create(null);
+  function fmtAtPlace(date, loc) {
+    if (loc && loc.tz) {
+      try {
+        const f = _placeFmt[loc.tz] || (_placeFmt[loc.tz] =
+          new Intl.DateTimeFormat('he-IL', { timeZone: loc.tz, hour: '2-digit', minute: '2-digit', hour12: false }));
+        return f.format(date);
+      } catch (e) {}
+    }
+    const off = Math.round(((loc && loc.lon) || 0) / 15);
+    const d = new Date(date.getTime() + off * 3600000);
+    return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+  }
+  // זריחת/שקיעת הירח במקום הנבחר, ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
+  function moonRiseSet(date, loc) {
     try {
-      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.24, 0);
+      const AE = window.Astronomy, obs = new AE.Observer(loc.lat, loc.lon, 0);
       const t = AE.MakeTime(date);
       const r = AE.SearchRiseSet(AE.Body.Moon, obs, +1, t, 1.2);
       const s = AE.SearchRiseSet(AE.Body.Moon, obs, -1, t, 1.2);
-      return { rise: r ? _jlmT.format(r.date) : '—', set: s ? _jlmT.format(s.date) : '—' };
+      return { rise: r ? fmtAtPlace(r.date, loc) : '—', set: s ? fmtAtPlace(s.date, loc) : '—' };
     } catch (e) { return { rise: '—', set: '—' }; }
   }
-  // מיקום הירח והשמש בכיפת השמים מעל ירושלים לרגע נתון (Astronomy Engine)
-  function moonSkyPos(date) {
+  // מיקום הירח והשמש בכיפת השמים מעל המקום הנבחר לרגע נתון (Astronomy Engine)
+  function moonSkyPos(date, loc) {
     try {
-      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.24, 0), t = AE.MakeTime(date);
+      const AE = window.Astronomy, obs = new AE.Observer(loc.lat, loc.lon, 0), t = AE.MakeTime(date);
       const eqM = AE.Equator(AE.Body.Moon, t, obs, true, true);
       const hM = AE.Horizon(t, obs, eqM.ra, eqM.dec, 'normal');
       const eqS = AE.Equator(AE.Body.Sun, t, obs, true, true);
@@ -184,7 +201,8 @@ window.Sims = (function () {
   // חלון תצפית השמים: עיגול כיפת השמים (כמו בלשונית כוכבי הלכת) ובו הירח
   // במיקומו הנוכחי ובצורתו הנראית, והשמש להקשר. מרכז העיגול = זניט,
   // השפה = האופק; מזרח משמאל (מבט אל-על, כבלשונית כוכבי הלכת).
-  function drawMoonSky(ctx, cx, cy, R, pos, day) {
+  // placeName — שם מקום הצפייה הנבחר, לכותרת החלון.
+  function drawMoonSky(ctx, cx, cy, R, pos, day, placeName) {
     ctx.strokeStyle = cv('--ill-grid'); ctx.lineWidth = 1;
     for (const alt of [30, 60]) {
       const rr = (90 - alt) / 90 * R;
@@ -199,7 +217,7 @@ window.Sims = (function () {
     ctx.fillText(T('צפון'), cx, cy - R - 8); ctx.fillText(T('דרום'), cx, cy + R + 8);
     ctx.fillText(T('מזרח'), cx - R - 14, cy); ctx.fillText(T('מערב'), cx + R + 14, cy);
     ctx.fillStyle = cv('--ill-muted'); ctx.font = '10px sans-serif';
-    ctx.fillText(T('הירח בשמים (ירושלים)'), cx, cy - R - 22);
+    ctx.fillText(T('הירח בשמים') + ' — ' + T(placeName || 'ירושלים'), cx, cy - R - 22);
     if (!pos) return;
     const place = o => {
       const rr = (90 - Math.max(o.alt, 0)) / 90 * R, a = o.az * Math.PI / 180;
@@ -359,6 +377,11 @@ window.Sims = (function () {
   // האמיתי בחודש, שרואים בו שהוא יום או לילה. day נגזר מ-t בכל ציור.
   const moon = {
     t: Date.now(), day: 0, phase: 0, speed: 2, playing: false, hintDone: false, _bound: false,
+    // מקום הצפייה — קובע את חלון "הירח בשמים", את מיקום הירח ואת זמני
+    // זריחתו ושקיעתו (המוצגים בשעון האזרחי של אותו מקום). המופע עצמו ואחוז
+    // ההארה כמעט שווים בכל העולם, אך שעת הראייה והמקום בשמים תלויי מקום —
+    // וזה עיקרו של קידוש החודש על פי הראייה.
+    loc: { lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', name: 'ירושלים' },
     step(dt) { if (this.playing) this.t += this.speed * dt * 86400000; },
     // תחילת החודש המוצג — רגע הקיבוץ האמיתי שהרגע הנוכחי בתוך חודשו.
     // נגזר מ-t עצמו, ולכן החודש מתחלף רק כש-t חוצה קיבוץ (הפעלה, תאריך ידני,
@@ -390,15 +413,18 @@ window.Sims = (function () {
       }
       // זריחת/שקיעת הירח — ליממה של התאריך המוצג.
       // החיפוש יקר, ולכן מחושב רק כשהיום המוצג משתנה בפועל (רבע יממה).
-      const rsKey = Math.floor(this.t / 21600000);
+      const rsKey = Math.floor(this.t / 21600000) + '|' + this.loc.lat + ',' + this.loc.lon + ',' + this.loc.tz;
       if (this._rsKey !== rsKey) {
         this._rsKey = rsKey;
         const d = new Date(this.t);
         d.setHours(0, 0, 0, 0);
-        this._rs = moonRiseSet(d);
+        this._rs = moonRiseSet(d, this.loc);
       }
       $('m_rise').textContent = this._rs.rise;
       $('m_set').textContent = this._rs.set;
+      // מקום הצפייה והשעה שבו לרגע המוצג — הרגע אחד, והשעון משתנה ממקום למקום
+      $('m_loc').textContent = T(this.loc.name);
+      $('m_locClock').textContent = fmtAtPlace(simDate, this.loc);
       // במסך צר מורידים את כל ההרכב מתחת ל-HUD (top=0 בדסקטופ → פריסה מקורית)
       if (_layout.moonTop === null) _layout.moonTop = hudInset($('moonCanvas'), W, 0);
       const top = _layout.moonTop;
@@ -443,12 +469,12 @@ window.Sims = (function () {
       ctx.fillText(T('הירח מכדור הארץ'), vx, vy - vR - 12);
       drawPhase(ctx, vx, vy, vR, this.phase);
       // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
-      const pos = moonSkyPos(simDate);
+      const pos = moonSkyPos(simDate, this.loc);
       if (W >= 520) {
         const dR = Math.max(50, Math.min(W * 0.12, (H - top) * 0.16, 92));
         const rtl = getComputedStyle(document.body).direction !== 'ltr';
         const dx = rtl ? 24 + dR + 14 : W - 24 - dR - 14;
-        drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.phase);
+        drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.phase, this.loc.name);
       }
       // לבנה מעל האופק בשעות היום — מעל האופק, אך אור החמה מסתירה מן העין
       const daylight = pos && pos.sun.alt > 0 && pos.moon.alt > 0;
@@ -473,6 +499,11 @@ window.Sims = (function () {
         stop(); this._syncDate();
       }; };
       jump('m_jNew', 0);
+      // ר"ה כ' ע"ב: כ"ד שעות מכוסה הלבנה סביב הקיבוץ — "לדידן" (בבל) י"ח מהן
+      // לאחר המולד, ו"לדידהו" (ארץ ישראל) שש בלבד; ומכאן שני הרגעים הללו,
+      // שהם הראשונים שאפשר בהם לראות את הלבנה החדשה לשתי הלשונות.
+      jump('m_j6h', 0.25);
+      jump('m_j18h', 0.75);
       jump('m_j3', 3);
       jump('m_j7', 7);
       // הניגוד אינו נופל בדיוק באמצע החודש — הירח אינו נע במהירות אחידה;
@@ -504,6 +535,18 @@ window.Sims = (function () {
         this.t = cur.t0 + Math.min(+e.target.value * 86400000, cur.t1 - cur.t0 - 1000);
         stop(); this._syncDate();
       };
+      // מקום הצפייה: בחירה מן הרשימה קובעת רוחב+אורך+אזור זמן; עריכה ידנית
+      // של הקואורדינטות מעבירה ל"מותאם אישית" (ואז אזור הזמן מוערך מקו האורך).
+      $('m_city').onchange = e => {
+        const opt = e.target.selectedOptions[0], v = e.target.value;
+        if (!v) { this.loc = { lat: this.loc.lat, lon: this.loc.lon, tz: null, name: 'מותאם אישית' }; return; }
+        const [la, lo] = v.split(',').map(Number);
+        $('m_lat').value = la; $('m_lon').value = lo;
+        this.loc = { lat: la, lon: lo, tz: opt.dataset.tz || null, name: opt.textContent.trim() };
+      };
+      const mCustom = () => { $('m_city').value = ''; this.loc.tz = null; this.loc.name = 'מותאם אישית'; };
+      $('m_lat').oninput = e => { this.loc.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); mCustom(); };
+      $('m_lon').oninput = e => { this.loc.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); mCustom(); };
       $('m_go').onclick = () => {
         const y = +$('m_yy').value, m = +$('m_mm').value, d = +$('m_dd').value;
         if (!y || !m || !d) return;

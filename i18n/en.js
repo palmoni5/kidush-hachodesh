@@ -81,19 +81,26 @@ window.TRANSLATIONS.en = {
   // ── מופעי הירח ───────────────────────────────────────────────────────
   'יום בחודש': 'Day of month',
   'אחוז הירח הנראה': 'Illuminated fraction',
-  'זריחת הירח (ירושלים)': 'Moonrise (Jerusalem)',
-  'שקיעת הירח (ירושלים)': 'Moonset (Jerusalem)',
+  'זריחת הירח': 'Moonrise',
+  'שקיעת הירח': 'Moonset',
+  'מקום הצפייה': 'Viewing location',
+  'השעה במקום': 'Local time there',
+  'מקום': 'Place',
   'מולד': 'New moon',
   '🗓 הירח היום': '🗓 Moon today',
   'רגעים בחודש': 'Moments of the month',
   '🌑 קיבוץ (מולד)': '🌑 Conjunction (new moon)',
   '🌕 ניגוד (ירח במילואו)': '🌕 Opposition (full moon)',
+  'ו׳ שעות מן המולד': '6 hours after the molad',
+  'י״ח שעות מן המולד': '18 hours after the molad',
   'ג׳ ימים מן המולד': '3 days after the molad',
   'ז׳ ימים מן המולד': '7 days after the molad',
   'החודש הקודם': 'Previous month',
   'החודש הבא': 'Next month',
   'מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.':
     'Molad (new moon) = Sun and Moon in conjunction, and the Moon is unseen. Opposition = Sun and Moon on opposite sides of Earth — a full moon (when lunar eclipses occur). Three days after the molad is the start of the time for Birkat HaLevanah in the Ashkenazi custom, and seven days in the Sephardi custom.',
+  'ו׳ שעות וי״ח שעות מן המולד — ראש השנה כ׳ ע״ב: "עשרים וארבעה שעי מכסי סיהרא" — כ״ד שעות שאין הלבנה נראית בהן סביב הקיבוץ; "לדידן — שית מעתיקא ותמני סרי מחדתא, לדידהו — שית מחדתא ותמני סרי מעתיקא". לבני ארץ ישראל ("לדידהו") שש השעות שלפני המולד הן מן הישנה ושמונה עשרה שלאחריו מן החדשה — ונמצא שהלבנה החדשה נראית כבר שש שעות מן המולד; ולבני בבל ("לדידן") שמונה עשרה שעות שלפני המולד ושש שעות שלאחריו — ואינה נראית עד שמונה עשרה שעות מן המולד. לחצו על הכפתורים והשוו את מראה הלבנה ואת מקומה בשמים בשני הרגעים — ובפרט בבחירת נהרדעא (עירו של שמואל) מול ירושלים ברשימת המקומות שלהלן.':
+    'Six hours and eighteen hours after the molad — Rosh Hashanah 20b: “for twenty-four hours the moon is covered” — the twenty-four hours around the conjunction in which the moon is not seen; “for us — six of the old and eighteen of the new; for them — six of the new and eighteen of the old.” For the people of Eretz Yisrael (“for them”) the six hours before the molad belong to the old moon and the eighteen after it to the new — so the new moon is already visible six hours after the molad; while for the people of Bavel (“for us”) it is eighteen hours before the molad and six after it — and it is not seen until eighteen hours after the molad. Press the buttons and compare the moon’s appearance and its place in the sky at the two moments — especially with Nehardea (Shmuel’s city) selected against Jerusalem in the location list below.',
   'כל הזמנים הם לפי המולדות האמיתיים (ראו בלשונית הלוח העברי אודות המולד האמיתי).':
     'All times follow the true moladot — the actual astronomical conjunctions (see the Hebrew-calendar tab regarding the true molad).',
   'הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש המוצג — חודש הלבנה שהתאריך שבאיור נמצא בתוכו, מן המולד ועד המולד הבא. כפתורי "החודש הקודם" ו"החודש הבא" מעבירים את התצוגה חודש לבנה שלם אחורה או קדימה. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.':
@@ -106,15 +113,21 @@ window.TRANSLATIONS.en = {
     '(= 29 days, 12 hours and 793 chalakim = the time between one molad and the next).',
   'הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.':
     'The lit side always faces the Sun; from Earth only part of it is seen — hence the phases.',
-  'זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק ירושלים — להמחשה בלבד.':
-    'Moonrise/moonset are shown for the date displayed in the diagram, for the Jerusalem horizon — illustration only.',
+  'זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק המקום הנבחר ובשעונו — להמחשה בלבד.':
+    'Moonrise/moonset are shown for the date displayed in the diagram, for the horizon of the selected location and in its own clock — illustration only.',
   'הירח מכדור הארץ': 'The Moon as seen from Earth',
-  'הירח בשמים (ירושלים)': 'Moon in the sky (Jerusalem)',
+  'הירח בשמים': 'Moon in the sky',
   'ביום אינה נראית לעין': 'not visible to the eye by day',
   'אור יום — אינה נראית לעין': 'daylight — not visible to the eye',
-  'מיקום בשמים (ירושלים)': 'Sky position (Jerusalem)',
-  'חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל ירושלים לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.':
-    'The "Moon in the sky" window shows the Moon’s position in the sky dome over Jerusalem for the moment in the diagram, in its visible shape — the way one looks for it in sanctifying the month by sighting and for Birkas HaLevanah. The Sun is marked too, to show their proximity.',
+  'מיקום בשמים': 'Sky position',
+  'חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל המקום הנבחר לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.':
+    'The "Moon in the sky" window shows the Moon’s position in the sky dome over the selected location for the moment in the diagram, in its visible shape — the way one looks for it in sanctifying the month by sighting and for Birkas HaLevanah. The Sun is marked too, to show their proximity.',
+  'מקום הצפייה קובע את חלון "הירח בשמים", את מיקום הירח (כיוון וגובה) ואת זמני זריחתו ושקיעתו — והם מוצגים בשעון האזרחי של אותו מקום (כולל שעון קיץ), שהוא "השעה במקום" שב-HUD. מופע הירח ואחוז הארתו כמעט שווים בכל העולם, אך שעת ראייתו ומקומו בשמים משתנים ממקום למקום — וזה עיקר עניינו של קידוש החודש על פי הראייה.':
+    'The viewing location determines the "Moon in the sky" window, the Moon’s position (direction and altitude) and its rise and set times — all shown in that location’s civil clock (including daylight saving), which is the "Local time there" reading in the HUD. The Moon’s phase and illuminated fraction are nearly the same worldwide, but the hour it is seen and its place in the sky differ from place to place — and that is the very heart of sanctifying the month by sighting.',
+  'התאריך והשעה שבשדות הבקרה נשארים בשעון המקומי של המכשיר; רגע אחד הוא לכל המקומות, וכל מקום רואה אותו בשעונו שלו.':
+    'The date and time in the control fields remain in the device’s own clock; the moment is one and the same everywhere, and each place sees it by its own clock.',
+  'נהרדעא — עירו של שמואל ומרכז ישיבות בבל, על נהר פרת סמוך למפגש נהר מלכא (בקירוב 33.4° צפון, 43.8° מזרח, באזור אנבר שבעיראק). היא מובאת כאן כדי להעמיד את "לדידן" של בני בבל מול "לדידהו" של בני ארץ ישראל שבראש השנה כ׳ ע״ב.':
+    'Nehardea — the city of Shmuel and a center of the Babylonian yeshivos, on the Euphrates near its meeting with the Nahr Malka (roughly 33.4°N, 43.8°E, in the Anbar region of Iraq). It is offered here to set the “for us” of the Babylonians against the “for them” of the people of Eretz Yisrael in Rosh Hashanah 20b.',
   'לבנה שמעל האופק בשעות היום אינה נראית לעין מפני אור החמה, אלא בסמוך לשקיעה או אחר הזריחה — וראו רש"י שבת קנ"ו ע"א ד"ה אכיל לא דיליה: "כלבנה המסגת גבול החמה למשול אף ביום".':
     'A moon above the horizon in daytime is not visible to the eye because of the sunlight, except near sunset or right after sunrise — see Rashi, Shabbos 156a s.v. achil lo dilei: “like the moon that oversteps the sun’s bound, to rule even by day.”',
   'מולד (ירח חדש)': 'New moon (molad)',
@@ -198,7 +211,8 @@ window.TRANSLATIONS.en = {
   'הזמנים באיור (זריחה, שקיעה, חצות, השעה השמשית ומיקום השמש) מחושבים אסטרונומית במדויק (Astronomy Engine) לגובה פני הים. ייתכנו הבדלים קלים מהלוחות בשל גובה המקום ושיטות החישוב — אין לסמוך עליהם להלכה.':
     'The times in the diagram (sunrise, sunset, chatzos, solar time and the Sun’s position) are computed astronomically (Astronomy Engine) at sea level. Small differences from published calendars may occur due to elevation and calculation methods — do not rely on them for halachah.',
   // ערים
-  'ירושלים': 'Jerusalem', 'ניו יורק': 'New York', "לוס אנג'לס": 'Los Angeles',
+  'ירושלים': 'Jerusalem', 'נהרדעא (בבל)': 'Nehardea (Babylonia)',
+  'לייקווד': 'Lakewood', 'ניו יורק': 'New York', "לוס אנג'לס": 'Los Angeles',
   'מיאמי': 'Miami', 'טורונטו': 'Toronto', 'מקסיקו סיטי': 'Mexico City',
   'סאו פאולו': 'São Paulo', 'בואנוס איירס': 'Buenos Aires', 'לונדון': 'London',
   'פריז': 'Paris', 'אנטוורפן': 'Antwerp', 'מוסקבה': 'Moscow',

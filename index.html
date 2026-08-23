@@ -35,9 +35,11 @@
             <div class="row"><span>שעה</span><b id="m_clock">—</b></div>
             <div class="row"><span>יום בחודש</span><b id="m_day">1</b></div>
             <div class="row"><span>אחוז הירח הנראה</span><b id="m_pct">0%</b></div>
-            <div class="row"><span>זריחת הירח (ירושלים)</span><b id="m_rise">—</b></div>
-            <div class="row"><span>שקיעת הירח (ירושלים)</span><b id="m_set">—</b></div>
-            <div class="row"><span>מיקום בשמים (ירושלים)</span><b id="m_pos">—</b></div>
+            <div class="row"><span>מקום הצפייה</span><b id="m_loc">ירושלים</b></div>
+            <div class="row"><span>השעה במקום</span><b id="m_locClock">—</b></div>
+            <div class="row"><span>זריחת הירח</span><b id="m_rise">—</b></div>
+            <div class="row"><span>שקיעת הירח</span><b id="m_set">—</b></div>
+            <div class="row"><span>מיקום בשמים</span><b id="m_pos">—</b></div>
             <div class="big" id="m_phase">מולד</div>
           </div>
         </div>
@@ -69,6 +71,10 @@
               <button class="btn-secondary" id="m_jFull">🌕 ניגוד (ירח במילואו)</button>
             </div>
             <div class="ctrls" style="margin-top:6px">
+              <button class="btn-secondary" id="m_j6h">ו׳ שעות מן המולד</button>
+              <button class="btn-secondary" id="m_j18h">י״ח שעות מן המולד</button>
+            </div>
+            <div class="ctrls" style="margin-top:6px">
               <button class="btn-secondary" id="m_j3">ג׳ ימים מן המולד</button>
               <button class="btn-secondary" id="m_j7">ז׳ ימים מן המולד</button>
             </div>
@@ -77,8 +83,39 @@
               <button class="btn-secondary" id="m_nextM">החודש הבא</button>
             </div>
             <div class="htxt" style="margin-top:6px">מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.</div>
+            <div class="htxt" style="margin-top:6px">ו׳ שעות וי״ח שעות מן המולד — ראש השנה כ׳ ע״ב: "עשרים וארבעה שעי מכסי סיהרא" — כ״ד שעות שאין הלבנה נראית בהן סביב הקיבוץ; "לדידן — שית מעתיקא ותמני סרי מחדתא, לדידהו — שית מחדתא ותמני סרי מעתיקא". לבני ארץ ישראל ("לדידהו") שש השעות שלפני המולד הן מן הישנה ושמונה עשרה שלאחריו מן החדשה — ונמצא שהלבנה החדשה נראית כבר שש שעות מן המולד; ולבני בבל ("לדידן") שמונה עשרה שעות שלפני המולד ושש שעות שלאחריו — ואינה נראית עד שמונה עשרה שעות מן המולד. לחצו על הכפתורים והשוו את מראה הלבנה ואת מקומה בשמים בשני הרגעים — ובפרט בבחירת נהרדעא (עירו של שמואל) מול ירושלים ברשימת המקומות שלהלן.</div>
             <div class="htxt" style="margin-top:6px">כל הזמנים הם לפי המולדות האמיתיים (ראו בלשונית הלוח העברי אודות המולד האמיתי).</div>
             <div class="htxt" style="margin-top:6px">הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש המוצג — חודש הלבנה שהתאריך שבאיור נמצא בתוכו, מן המולד ועד המולד הבא. כפתורי "החודש הקודם" ו"החודש הבא" מעבירים את התצוגה חודש לבנה שלם אחורה או קדימה. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.</div>
+          </div>
+          <div class="card">
+            <h2>מקום הצפייה</h2>
+            <label class="field">מקום</label>
+            <select id="m_city">
+              <option value="31.78,35.24" data-tz="Asia/Jerusalem" selected>ירושלים</option>
+              <option value="33.37,43.75" data-tz="Asia/Baghdad">נהרדעא (בבל)</option>
+              <option value="40.10,-74.22" data-tz="America/New_York">לייקווד</option>
+              <option value="40.71,-74.01" data-tz="America/New_York">ניו יורק</option>
+              <option value="34.05,-118.24" data-tz="America/Los_Angeles">לוס אנג'לס</option>
+              <option value="25.76,-80.19" data-tz="America/New_York">מיאמי</option>
+              <option value="43.65,-79.38" data-tz="America/Toronto">טורונטו</option>
+              <option value="19.43,-99.13" data-tz="America/Mexico_City">מקסיקו סיטי</option>
+              <option value="-23.55,-46.63" data-tz="America/Sao_Paulo">סאו פאולו</option>
+              <option value="-34.60,-58.38" data-tz="America/Argentina/Buenos_Aires">בואנוס איירס</option>
+              <option value="51.51,-0.13" data-tz="Europe/London">לונדון</option>
+              <option value="48.86,2.35" data-tz="Europe/Paris">פריז</option>
+              <option value="51.22,4.40" data-tz="Europe/Brussels">אנטוורפן</option>
+              <option value="55.76,37.62" data-tz="Europe/Moscow">מוסקבה</option>
+              <option value="-26.20,28.05" data-tz="Africa/Johannesburg">יוהנסבורג</option>
+              <option value="-33.87,151.21" data-tz="Australia/Sydney">סידני</option>
+              <option value="">מותאם אישית</option>
+            </select>
+            <label class="field">קו רוחב במעלות (צפון חיובי)</label>
+            <input type="number" id="m_lat" step="0.1" min="-89" max="89" value="31.78" />
+            <label class="field">קו אורך במעלות (מזרח חיובי)</label>
+            <input type="number" id="m_lon" step="0.1" min="-180" max="180" value="35.24" />
+            <div class="htxt" style="margin-top:8px">מקום הצפייה קובע את חלון "הירח בשמים", את מיקום הירח (כיוון וגובה) ואת זמני זריחתו ושקיעתו — והם מוצגים בשעון האזרחי של אותו מקום (כולל שעון קיץ), שהוא "השעה במקום" שב-HUD. מופע הירח ואחוז הארתו כמעט שווים בכל העולם, אך שעת ראייתו ומקומו בשמים משתנים ממקום למקום — וזה עיקר עניינו של קידוש החודש על פי הראייה.</div>
+            <div class="htxt" style="margin-top:6px">התאריך והשעה שבשדות הבקרה נשארים בשעון המקומי של המכשיר; רגע אחד הוא לכל המקומות, וכל מקום רואה אותו בשעונו שלו.</div>
+            <div class="htxt" style="margin-top:6px">נהרדעא — עירו של שמואל ומרכז ישיבות בבל, על נהר פרת סמוך למפגש נהר מלכא (בקירוב 33.4° צפון, 43.8° מזרח, באזור אנבר שבעיראק). היא מובאת כאן כדי להעמיד את "לדידן" של בני בבל מול "לדידהו" של בני ארץ ישראל שבראש השנה כ׳ ע״ב.</div>
           </div>
           <div class="card">
             <h2>מקרא</h2>
@@ -89,8 +126,8 @@
               חודש הלבנה (סינודי) = 29.53 יום<br>
               (= כ"ט יום י"ב שעות ותשצ"ג חלקים = הזמן שבין מולד למולד).<br><br>
               הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.<br><br>
-              זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק ירושלים — להמחשה בלבד.<br><br>
-              חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל ירושלים לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.<br><br>
+              זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק המקום הנבחר ובשעונו — להמחשה בלבד.<br><br>
+              חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל המקום הנבחר לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.<br><br>
               לבנה שמעל האופק בשעות היום אינה נראית לעין מפני אור החמה, אלא בסמוך לשקיעה או אחר הזריחה — וראו רש"י שבת קנ"ו ע"א ד"ה אכיל לא דיליה: "כלבנה המסגת גבול החמה למשול אף ביום".
             </div>
           </div>
@@ -330,6 +367,8 @@
             <label class="field">עיר</label>
             <select id="y_city">
               <option value="31.78,35.24" data-tz="Asia/Jerusalem" selected>ירושלים</option>
+              <option value="33.37,43.75" data-tz="Asia/Baghdad">נהרדעא (בבל)</option>
+              <option value="40.10,-74.22" data-tz="America/New_York">לייקווד</option>
               <option value="40.71,-74.01" data-tz="America/New_York">ניו יורק</option>
               <option value="34.05,-118.24" data-tz="America/Los_Angeles">לוס אנג'לס</option>
               <option value="25.76,-80.19" data-tz="America/New_York">מיאמי</option>
