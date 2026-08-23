@@ -783,13 +783,13 @@ window.Sims = (function () {
       g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 32, 0, 2 * Math.PI); ctx.fill();
       sprite(ctx, IMG.sun, cx, cy, 26, 26);
-      // ארבע התקופות על המסלול
-      ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      for (const [d, n] of [[0, 'ניסן'], [91.31, 'תמוז'], [182.62, 'תשרי'], [273.94, 'טבת']]) {
-        const p = pos(d);
-        ctx.fillStyle = cv('--ill-muted');
-        ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI); ctx.fill();
-        ctx.fillText(T(n), p.x + (p.x - cx) / a * 22, p.y + (p.y - cy) / b * 13);
+      // ארבע התקופות על המסלול — הנקודות כאן, והשמות בסוף הציור (אחרי הכדור),
+      // שהכדור לא יכסה את שם התקופה שהוא עומד בה
+      const TEKUFOT = [[0, 'ניסן'], [91.31, 'תמוז'], [182.62, 'תשרי'], [273.94, 'טבת']];
+      ctx.fillStyle = cv('--ill-muted');
+      for (const [d] of TEKUFOT) {
+        const q = pos(d);
+        ctx.beginPath(); ctx.arc(q.x, q.y, 2, 0, 2 * Math.PI); ctx.fill();
       }
       // הארץ במקומה של היום המוצג + קו אל השמש + הצללת צד הלילה
       const p = pos(((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR), er = 11;
@@ -804,12 +804,18 @@ window.Sims = (function () {
       ctx.moveTo(p.x - ux * er * 1.7, p.y - uy * er * 1.7);
       ctx.lineTo(p.x + ux * er * 1.7, p.y + uy * er * 1.7);
       ctx.stroke();
-      // קו המשווה של הכדור — ניצב לציר
-      ctx.strokeStyle = cv('--ill-muted'); ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(p.x + uy * er * 0.95, p.y - ux * er * 0.95);
-      ctx.lineTo(p.x - uy * er * 0.95, p.y + ux * er * 0.95);
-      ctx.stroke();
+      // קו המשווה של הכדור — ניצב לציר, מקווקו כדי להיבדל ממנו. בצבע הכיתוב
+      // ולא ב---ill-muted: קו דק בגון עמום על גבי תמונת הכדור נבלע בה (ברקע
+      // בהיר לא נראה כלל). מוארך מעט מעבר לשפת הכדור, שקצותיו ייראו על הרקע.
+      // דו-גוני: קו בהיר מלא, ומעליו קווקוו כהה — כך הוא נראה גם על הצד
+      // המואר של הכדור וגם על צד הלילה, ובשתי פלטות האיור
+      { const eq = () => { ctx.beginPath();
+          ctx.moveTo(p.x + uy * er * 1.45, p.y - ux * er * 1.45);
+          ctx.lineTo(p.x - uy * er * 1.45, p.y + ux * er * 1.45);
+          ctx.stroke(); };
+        ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.lineWidth = 2.6; eq();
+        ctx.strokeStyle = 'rgba(18,24,44,0.95)'; ctx.lineWidth = 1.3;
+        ctx.setLineDash([2.5, 2.5]); eq(); ctx.setLineDash([]); }
       // סימון הכיוונים על הכדור: צ/ד בקצות הציר, ו"משווה" בקצה קו המשווה
       // הפונה מן השמש (שלא יתנגש בקו הקרן). מזרח ומערב אינם מסומנים — אינם
       // נקודות קבועות באיור, שהרי הכדור מסתובב סביב הציר פעם ביממה.
@@ -825,6 +831,16 @@ window.Sims = (function () {
       ctx.font = '8px sans-serif'; ctx.fillStyle = cv('--ill-muted');
       ctx.fillText(T('צפון').charAt(0) + '=' + T('צפון') + ' · ' + T('דרום').charAt(0) + '=' + T('דרום') +
         ' · ' + T('הקו הניצב לציר — קו המשווה'), W - 6, H - 4);
+      // שמות התקופות — בקצות המסלול האופקיים (תמוז וטבת) הצמודים לשולי
+      // הקנבס השם נכתב מעל הנקודה, שלא ייחתך בשוליים ולא ייבלע בכדור
+      ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = cv('--ill-muted');
+      for (const [d, n] of TEKUFOT) {
+        const q = pos(d), side = Math.abs(q.x - cx) > a * 0.7;
+        const lx = side ? Math.min(Math.max(q.x, 22), W - 22) : q.x;
+        const ly = side ? q.y - er - 22 : q.y + (q.y - cy) / b * (er + 22);   // מחוץ לכדור ולאותיות שבקצות הציר
+        ctx.fillText(T(n), lx, ly);
+      }
       // השורה החיה שמתחת לאיור: קו הרוחב שהשמש ניצבת מעליו כעת
       const el = $('ss_now');
       if (el) el.textContent = T('השמש עומדת כעת מעל קו רוחב') + ' ' + fmtNS(dec) +
