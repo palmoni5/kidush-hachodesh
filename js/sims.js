@@ -810,9 +810,21 @@ window.Sims = (function () {
       ctx.moveTo(p.x + uy * er * 0.95, p.y - ux * er * 0.95);
       ctx.lineTo(p.x - uy * er * 0.95, p.y + ux * er * 0.95);
       ctx.stroke();
-      ctx.fillStyle = cv('--ill-text'); ctx.font = '9px sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-      ctx.fillText(T('צפון'), p.x + ux * er * 1.7, p.y + uy * er * 1.7 - 2);
+      // סימון הכיוונים על הכדור: צ/ד בקצות הציר, ו"משווה" בקצה קו המשווה
+      // הפונה מן השמש (שלא יתנגש בקו הקרן). מזרח ומערב אינם מסומנים — אינם
+      // נקודות קבועות באיור, שהרי הכדור מסתובב סביב הציר פעם ביממה.
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = cv('--ill-text');
+      // אות ראשונה של שם הרוח (צ/ד; באנגלית N/S) — 'צ' לבדה משמשת כמפתח
+      // תרגום אחר (צדק, בשצ"ם חנכ"ל), ולכן נגזרת כאן מן המילה המלאה
+      ctx.fillText(T('צפון').charAt(0), p.x + ux * er * 2.3, p.y + uy * er * 2.3);
+      ctx.fillText(T('דרום').charAt(0), p.x - ux * er * 2.3, p.y - uy * er * 2.3);
+      // מקרא בשולי האיור — הכדור קטן מלהכיל שם מלא לקו המשווה, ובקצות
+      // הקו היה הכיתוב מתנגש בשם התקופה שלצדו
+      ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+      ctx.font = '8px sans-serif'; ctx.fillStyle = cv('--ill-muted');
+      ctx.fillText(T('צפון').charAt(0) + '=' + T('צפון') + ' · ' + T('דרום').charAt(0) + '=' + T('דרום') +
+        ' · ' + T('הקו הניצב לציר — קו המשווה'), W - 6, H - 4);
       // השורה החיה שמתחת לאיור: קו הרוחב שהשמש ניצבת מעליו כעת
       const el = $('ss_now');
       if (el) el.textContent = T('השמש עומדת כעת מעל קו רוחב') + ' ' + fmtNS(dec) +

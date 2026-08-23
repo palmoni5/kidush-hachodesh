@@ -8,7 +8,7 @@ window.TRANSLATIONS.en = {
   'מופעי הירח': 'Moon Phases',
   'מהלך השמש (שנת חמה)': 'Sun’s Path (Solar Year)',
   'כוכבי הלכת': 'Planets',
-  'גלגל המלקה': 'Zodiac Wheel',
+  'גלגל המזלות': 'Zodiac Wheel',
   'שרי השעות': 'Hour Rulers',
   'קו התאריך': 'Date Line',
   'מערכת תלת-מימד': '3D System',
@@ -195,6 +195,9 @@ window.TRANSLATIONS.en = {
     'Earth’s rotation axis is tilted about 23.44° from the perpendicular to its orbital plane, and its direction is fixed in space — it always points at the same spot in the sky. So at Tekufas Tammuz the northern hemisphere leans toward the Sun and it appears high (over the northern tropic); at Tekufas Teves it leans away and the Sun is low (over the southern tropic); and at Nissan and Tishrei the axis is side-on to the Sun — which then stands over the equator. Press the tekufah buttons or drag "Day from Tekufas Nissan" to move the Earth along its orbit.',
   'ובמבט מן הארץ, כדרך חז״ל והרמב״ם: השמש מהלכת בגלגל הנוטה (גלגל המזלות), שחציו נוטה צפונה וחציו דרומה מקו המשווה — ולכן מסלולה היומי שבאיור הגדול נודד צפונה ודרומה במשך השנה. את הגלגל הנטוי עצמו רואים ב"מבט הצופה" שבלשונית גלגל המזלות.':
     'And as seen from the Earth, in the manner of Chazal and the Rambam: the Sun travels along the inclined wheel (the zodiac), half of which leans north and half south of the equator — which is why its daily path in the main diagram drifts north and south through the year. The tilted wheel itself is shown in the "Observer view" of the Zodiac Wheel tab.',
+  'הקו הניצב לציר — קו המשווה': 'the line perpendicular to the axis — the equator',
+  'האותיות שעל הכדור: צ ו־ד הם קצות ציר הסיבוב — הקוטב הצפוני והקוטב הדרומי, והקו הניצב להם הוא קו המשווה, שהוא קו רוחב אפס (ראו המקרא שבשולי האיור). מזרח ומערב אינם מסומנים, שאינם נקודות קבועות באיור: הכדור מסתובב סביב אותו ציר פעם ביממה, וכל נקודה שבמשווה פונה במשך היום לכל הרוחות. את המזרח והמערב רואים באיור הגדול, שהוא מבט מן הארץ.':
+    'The letters on the globe: N and S are the ends of the rotation axis — the north and south poles; the line perpendicular to them is the equator, latitude zero. East and west are not marked, because they are not fixed points in this drawing: the globe spins about that same axis once a day, so every point on the equator faces every direction in the course of the day. East and west are seen in the main diagram, which is the view from the Earth.',
   'השמש עומדת כעת מעל קו רוחב': 'The Sun now stands over latitude',
   'קו המשווה': 'the equator',
   'שנת החמה — הלכה': 'The solar year — Halachah',
@@ -237,9 +240,18 @@ window.TRANSLATIONS.en = {
   'ר״ח ניסן': 'R.Ch. Nissan', 'ר״ח שבט': 'R.Ch. Shevat', 'ר״ח אדר': 'R.Ch. Adar',
   '🌅 בוקר (06:00)': '🌅 Morning (06:00)',
   '🌙 לילה (21:00)': '🌙 Night (21:00)',
+  'למה הרצועה נראית נוטה תמיד לדרום?': 'Why does the band always appear to lean south?',
+  'משום שהצופה עומד בקו רוחב צפוני. הציר שסביבו מסתובב כל הרקיע מצביע אל הקוטב השמימי שבצפון, וגובהו מעל האופק שוה בדיוק לקו הרוחב (בירושלים 31.8°); ממילא משווה השמים נמתח מנקודת המזרח, דרך הדרום בגובה 58° (90° פחות 31.8°), אל נקודת המערב — כל קמרונו בחצי הדרומי של הרקיע. ורצועת המזלות חובקת את משווה השמים, חציה עד 23.44° צפונה וחציה עד 23.44° דרומה, ולכן גם שיאה בדרום — בין 34° ל־82°. שנו את קו הרוחב שבכרטיס "האופק ומזל עולה" למינוס 31.8 (דרום) והתמונה תתהפך והרצועה תיטה לצפון; בקו רוחב 0 היא תעבור ממש מעל הראש.':
+    ' Because the observer stands at a northern latitude. The axis about which the whole sky turns points to the celestial pole in the north, and its altitude above the horizon equals the latitude exactly (31.8° in Jerusalem); hence the celestial equator runs from the east point, through the south at an altitude of 58° (90° minus 31.8°), to the west point — its entire arc in the southern half of the sky. The zodiac band straddles the celestial equator, half of it up to 23.44° north and half up to 23.44° south, so its highest point is likewise in the south — between 34° and 82°. Set the latitude in the "Horizon and ascendant" card to -31.8 (south) and the picture flips, the band leaning north; at latitude 0 it passes directly overhead.',
+  'ולמה התנועה נראית מעוקלת?': 'And why does the motion look curved?',
+  'שני טעמים. האחד: הסיבוב היומי אינו סביב הנקודה שמעל הראש אלא סביב הציר השמימי הנטוי שבצפון, ולכן כל גרם מהלך במעגל הנטוי לאופק בכ־58° — עולה במזרח באלכסון, מגיע לשיאו בדרום, ושוקע במערב באלכסון. והשני: האיור הוא היטל של כיפת הרקיע כולה על שטח שטוח, כמבט עדשה רחבה, וכל מעגל שבו נראה מתעקל. הגלגל עצמו מסתובב בשוה סביב צירו — העיקום הוא במבט ולא בגלגל.':
+    ' Two reasons. First: the daily rotation is not about the point overhead but about the tilted celestial axis in the north, so every body travels a circle inclined some 58° to the horizon — rising in the east at a slant, peaking in the south, and setting in the west at a slant. Second: the drawing projects the entire dome of the sky onto a flat surface, as through a wide-angle lens, and every circle on it appears curved. The wheel itself turns evenly about its axis — the curvature is in the view, not in the wheel.',
+  'ארבע התקופות (בשנת התאריך המוצג)': 'The four tekufos (in the year shown)',
+  'נטיית הרצועה עצמה אינה משתנה כלל — הקבוע הוא הגלגל הנטוי. מה שנודד במשך השנה הוא מקום השמש שבו: בתקופת תמוז היא בקצה הצפוני שברצועה ולכן עולה גבוה, בתקופת טבת בקצה הדרומי ולכן נמוכה, ובניסן ובתשרי היא על משווה השמים עצמו. לחצו והשוו — השעה שביממה נשמרת, ובחרו "מבט הצופה" כדי לראות את גובה השמש שברקיע.':
+    'The tilt of the band itself never changes — the inclined wheel is the constant. What wanders through the year is the Sun’s place upon it: at Tekufas Tammuz it is at the northern end of the band and so rises high, at Tekufas Teves at the southern end and so stays low, and at Nissan and Tishrei it is on the celestial equator itself. Press and compare — the time of day is kept; choose "Observer view" to see the Sun’s altitude in the sky.',
   'האופק ומזל עולה': 'Horizon and ascendant',
   'הצג את קו האופק ואת המזל העולה': 'Show the horizon line and the ascendant',
-  'המזל העולה הוא הנקודה שבגלגל המלקה העולה באותו רגע באופק המזרחי. הגלגל כולו מסתובב סביב הארץ פעם ביממה, ולכן כל שנים-עשר המזלות עולים ושוקעים בכל יום — בערך מזל לכל שעתיים.':
+  'המזל העולה הוא הנקודה שבגלגל המזלות (הוא "גלגל המלקה") העולה באותו רגע באופק המזרחי. הגלגל כולו מסתובב סביב הארץ פעם ביממה, ולכן כל שנים-עשר המזלות עולים ושוקעים בכל יום — בערך מזל לכל שעתיים.':
     'The ascendant is the point of the zodiac rising at that moment on the eastern horizon. The whole wheel circles the Earth once a day, so all twelve signs rise and set every day — roughly one sign every two hours.',
   'כשהאופק מוצג, הגלגל מסובב לפי הרגע והמקום: המזרח (המזל העולה) בצד שמאל, המערב (השוקע) מנגד, אמצע הרקיע למעלה, וחצי הגלגל המוצל שלמטה הוא מה שמתחת לאופק. בחרו "שעות" בבקרת הזמן והפעילו — ותראו את המזלות עולים זה אחר זה.':
     'When the horizon is shown, the wheel is rotated for the moment and place: east (the rising sign) on the left, west opposite, midheaven on top, and the shaded lower half is below the horizon. Choose "Hours" in the time controls and press Play to watch the signs rise one after another.',

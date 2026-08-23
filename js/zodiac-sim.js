@@ -60,6 +60,17 @@
     return c;
   }
 
+  // ══ ארבע התקופות ══════════════════════════════════════════════════════
+  // התקופה = הרגע שבו אורך המלקה של השמש הוא 0° (ניסן), 90° (תמוז),
+  // 180° (תשרי) או 270° (טבת) — שוויון היום והלילה ושתי נקודות ההיפוך.
+  // מחושב אסטרונומית (Astronomy Engine) בשנה המבוקשת.
+  function tekufaDate(targetLon, year) {
+    try {
+      const t = AE.SearchSunLongitude(targetLon, new Date(Date.UTC(year, 0, 1)), 400);
+      return t ? t.date : null;
+    } catch (_) { return null; }
+  }
+
   // ══ חישוב אורכי מלקה ══════════════════════════════════════════════════
 
   // אורך מלקה אמיתי של-תאריך (tropical) של גוף, באופן אחיד לכל הגופים:
@@ -645,6 +656,16 @@
       // בוקר / לילה — קביעת השעה בלבד, התאריך נשמר
       document.querySelectorAll('#view-zodiac [data-tod]').forEach(b => b.onclick = () => {
         this._setHour(+b.dataset.tod);
+        this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
+      });
+      // ארבע התקופות — היום שבו אורך השמש מגיע ל-0/90/180/270 מעלות מלקה,
+      // בשנת התאריך המוצג. השעה ביממה נשמרת, שהמשווה יראה את מקום השמש
+      // שברצועה באותה שעה עצמה בארבע התקופות.
+      document.querySelectorAll('#view-zodiac [data-tek]').forEach(b => b.onclick = () => {
+        const d = tekufaDate(+b.dataset.tek, this.date.getFullYear());
+        if (!d) return;
+        const cur = this.date;
+        this.date = new Date(d.getFullYear(), d.getMonth(), d.getDate(), cur.getHours(), cur.getMinutes(), 0);
         this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
       });
       $('z_horizon').onchange = e => this.horizon = e.target.checked;
