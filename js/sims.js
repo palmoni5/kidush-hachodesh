@@ -760,83 +760,151 @@ window.Sims = (function () {
       this.drawSeasons(dec);
     },
     // ── מדוע מסלול השמש נודד? — איור עזר בפאנל ─────────────────────────
-    // מבט-על אלכסוני על מסלול הארץ סביב השמש: ציר הסיבוב נטוי 23.44°
-    // וכיוונו קבוע בחלל, ולכן בתקופת תמוז החצי הצפוני רכון אל השמש ובטבת
-    // ממנה והלאה. הארץ מוצבת לפי היום שבאיור הגדול ונעה עמו.
+    // מבט אלכסוני על מסלול הארץ סביב השמש, מצפון למישור המסלול (מישור המלקה):
+    // המסלול נראה כאליפסה. ציר הסיבוב נטוי 23.44° וכיוונו קבוע בחלל, ולכן
+    // בתקופת תמוז החצי הצפוני רכון אל השמש ובטבת ממנה והלאה.
+    //
+    // ההיטל מחושב בשלושה ממדים ממש: EX ימינה במסך, EUP מעלה, ו-EV לעומק (אל
+    // הצופה). זה תיקון עיקרי: קודם צוירו קו המשווה וגבול היום־לילה כקווים
+    // *ניצבים על המסך* לציר שעל המסך — ומכיוון שההיטל אלכסוני יצא שהקרן מן
+    // השמש פגעה בקו המשווה בימים 43 ו-226 מתקופת ניסן במקום בתקופות ניסן
+    // ותשרי עצמן, וגבול היום־לילה לא התאים לכיוון השמש. כאן קו המשווה, גבול
+    // היום־לילה והנקודה שהשמש מעליה כולם היטלים של מעגלים בחלל — ולכן הם
+    // מתאימים לכיוון השמש בכל נקודה שבמסלול.
     drawSeasons(dec) {
       const c = $('seasonsCanvas'); if (!c) return;
       const { ctx, W, H } = fitInset(c);
       ctx.clearRect(0, 0, W, H);
       const cx = W / 2, cy = H / 2 + 4;
-      const a = Math.min(W * 0.38, 130), b = a * 0.40;
+      const a = Math.min(W * 0.38, 130), b = a * 0.44;
+      // בסיס ההיטל. גובה נקודת המבט מעל מישור המסלול נגזר מיחס האליפסה עצמו
+      // (b/a = sin α), ולכן המסלול והכדור מצוירים באותו היטל בדיוק.
+      const sinA = b / a, cosA = Math.sqrt(1 - sinA * sinA);
+      const EX = [1, 0, 0], EUP = [0, sinA, cosA], EV = [0, -cosA, sinA];
+      const dot3 = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+      const cross3 = (u, v) => [u[1]*v[2] - u[2]*v[1], u[2]*v[0] - u[0]*v[2], u[0]*v[1] - u[1]*v[0]];
+      const norm3 = u => { const m = Math.hypot(u[0], u[1], u[2]) || 1; return [u[0]/m, u[1]/m, u[2]/m]; };
       // מסלול הארץ (סכמטי)
       ctx.strokeStyle = cv('--ill-line'); ctx.lineWidth = 1; ctx.setLineDash([4, 5]);
       ctx.beginPath(); ctx.ellipse(cx, cy, a, b, 0, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
-      // מיקום על המסלול לפי היום בשנה — תקופת תמוז מימין, ששם הציר
-      // (הקבוע) רכון אל השמש; ניסן למעלה, תשרי למטה, טבת משמאל
-      const pos = d => {
-        const w = 2 * Math.PI * (d - 91.31) / A.SOLAR_YEAR;
-        return { x: cx + a * Math.cos(w), y: cy + b * Math.sin(w) };
-      };
+      // מיקום על המסלול: תקופת תמוז מימין (שם הציר הקבוע רכון אל השמש), טבת
+      // משמאל, ותקופות השוויון בקצות האליפסה. הארץ נעה נגד כיוון השעון — כמות
+      // שהיא נראית ממש מצפון למישור המסלול.
+      const lam = d => 2 * Math.PI * (d - 91.31) / A.SOLAR_YEAR;
+      const orbit = d => { const l = lam(d); return [Math.cos(l), Math.sin(l), 0]; };
+      const scr = P => ({ x: cx + a * dot3(P, EX), y: cy - a * dot3(P, EUP) });
       // השמש במרכז
-      const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, 32);
+      const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, 26);
       g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 32, 0, 2 * Math.PI); ctx.fill();
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 26, 0, 2 * Math.PI); ctx.fill();
       sprite(ctx, IMG.sun, cx, cy, 26, 26);
       // ארבע התקופות על המסלול — הנקודות כאן, והשמות בסוף הציור (אחרי הכדור),
       // שהכדור לא יכסה את שם התקופה שהוא עומד בה
       const TEKUFOT = [[0, 'ניסן'], [91.31, 'תמוז'], [182.62, 'תשרי'], [273.94, 'טבת']];
       ctx.fillStyle = cv('--ill-muted');
       for (const [d] of TEKUFOT) {
-        const q = pos(d);
+        const q = scr(orbit(d));
         ctx.beginPath(); ctx.arc(q.x, q.y, 2, 0, 2 * Math.PI); ctx.fill();
       }
-      // הארץ במקומה של היום המוצג + קו אל השמש + הצללת צד הלילה
-      const p = pos(((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR), er = 11;
-      ctx.strokeStyle = cv('--ill-ray'); ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.x, p.y); ctx.stroke();
+      // ── הארץ ביומה ──
+      const dayY = ((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
+      const E = orbit(dayY), p = scr(E), er = 11;
+      const sv = norm3([-E[0], -E[1], -E[2]]);          // כיוון השמש מן הארץ
+      const eps = 23.44 * Math.PI / 180;
+      const N3 = [-Math.sin(eps), 0, Math.cos(eps)];    // ציר הסיבוב — קבוע בחלל
+      // נקודה על פני הכדור (וקטור יחידה) → מסך
+      const sph = P => ({ x: p.x + er * dot3(P, EX), y: p.y - er * dot3(P, EUP) });
+      const ang = P => { const q = sph(P); return Math.atan2(q.y - p.y, q.x - p.x); };
+      // קרן השמש — עד שפת הכדור בלבד. קודם נמשכה עד מרכז הכדור, וממילא חצתה
+      // תמיד את קו המשווה ולא ניתן היה לראות בה מעל איזה קו רוחב השמש עומדת.
+      { const dx = p.x - cx, dy = p.y - cy, m = Math.hypot(dx, dy) || 1;
+        ctx.strokeStyle = cv('--ill-ray'); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.x - dx / m * er, p.y - dy / m * er); ctx.stroke(); }
       sprite(ctx, IMG.earth, p.x, p.y, 2 * er, 2 * er);
-      shade(ctx, p.x, p.y, er, cx, cy);
-      // ציר הסיבוב — נטוי 23.44° מהאנך, מצביע תמיד לאותו כיוון (שמאלה-מעלה)
-      const tt = 23.44 * Math.PI / 180, ux = -Math.sin(tt), uy = -Math.cos(tt);
+      // ── צד הלילה ──
+      // האזור שאין השמש זורחת בו ושהצופה רואה אותו: מחצית גבול היום־לילה
+      // (מעגל הניצב לכיוון השמש) הפונה אל הצופה, ואחריה מחצית שפת הכדור
+      // שמנגד לשמש. שתי המחציות נפגשות בדיוק בקצות הגבול, ולכן הצורה נסגרת.
+      { const u1 = norm3(cross3(sv, EV));               // בגבול, ובמישור המסך
+        const u2 = cross3(sv, u1);                      // בגבול, לכיוון העומק
+        const sgn = dot3(u2, EV) >= 0 ? 1 : -1;         // המחצית הפונה אל הצופה
+        ctx.save(); ctx.beginPath(); ctx.arc(p.x, p.y, er, 0, 2 * Math.PI); ctx.clip();
+        ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
+        const NS = 36;
+        for (let i = 0; i <= NS; i++) {
+          const t = sgn * Math.PI * i / NS;
+          const P = [u1[0]*Math.cos(t) + u2[0]*Math.sin(t), u1[1]*Math.cos(t) + u2[1]*Math.sin(t),
+                     u1[2]*Math.cos(t) + u2[2]*Math.sin(t)];
+          const q = sph(P); if (i) ctx.lineTo(q.x, q.y); else ctx.moveTo(q.x, q.y);
+        }
+        // שפת הכדור מקצה הגבול בחזרה, דרך הכיוון שמנגד לשמש
+        const a1 = ang(u1), a2 = ang([-u1[0], -u1[1], -u1[2]]);
+        const asun = ang([-sv[0], -sv[1], -sv[2]]);   // כיוון "מנגד לשמש" במסך
+        const nrm = x => ((x % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+        const ccw = !(nrm(asun - a2) < nrm(a1 - a2));
+        ctx.arc(p.x, p.y, er, a2, a1, ccw);
+        ctx.closePath(); ctx.fill(); ctx.restore(); }
+      // ── קו המשווה — היטל המעגל הניצב לציר ──
+      // דו-גוני (בהיר מלא ומעליו קווקוו כהה) כדי שייראה על צד היום ועל צד
+      // הלילה ובשתי פלטות האיור; החצי הרחוק עמום.
+      { const w1 = norm3(cross3(N3, EV)), w2 = cross3(N3, w1);
+        const pts = [];
+        for (let i = 0; i <= 72; i++) {
+          const t = 2 * Math.PI * i / 72;
+          const P = [w1[0]*Math.cos(t) + w2[0]*Math.sin(t), w1[1]*Math.cos(t) + w2[1]*Math.sin(t),
+                     w1[2]*Math.cos(t) + w2[2]*Math.sin(t)];
+          pts.push({ q: sph(P), near: dot3(P, EV) >= 0 });
+        }
+        const run = near => { ctx.beginPath();
+          for (let i = 0; i < pts.length - 1; i++) {
+            if (pts[i].near !== near || pts[i+1].near !== near) continue;
+            ctx.moveTo(pts[i].q.x, pts[i].q.y); ctx.lineTo(pts[i+1].q.x, pts[i+1].q.y);
+          } ctx.stroke(); };
+        ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.lineWidth = 2.6; run(true);
+        ctx.strokeStyle = 'rgba(18,24,44,0.95)'; ctx.lineWidth = 1.3;
+        ctx.setLineDash([2.5, 2.5]); run(true); ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(160,170,190,0.45)'; ctx.lineWidth = 1;
+        ctx.setLineDash([2, 3]); run(false); ctx.setLineDash([]); }
+      // ── ציר הסיבוב ──
+      const pn = sph(N3), ps = sph([-N3[0], -N3[1], -N3[2]]);
       ctx.strokeStyle = cv('--ill-text'); ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.moveTo(p.x - ux * er * 1.7, p.y - uy * er * 1.7);
-      ctx.lineTo(p.x + ux * er * 1.7, p.y + uy * er * 1.7);
+      ctx.moveTo(p.x + (pn.x - p.x) * 1.7, p.y + (pn.y - p.y) * 1.7);
+      ctx.lineTo(p.x + (ps.x - p.x) * 1.7, p.y + (ps.y - p.y) * 1.7);
       ctx.stroke();
-      // קו המשווה של הכדור — ניצב לציר, מקווקו כדי להיבדל ממנו. בצבע הכיתוב
-      // ולא ב---ill-muted: קו דק בגון עמום על גבי תמונת הכדור נבלע בה (ברקע
-      // בהיר לא נראה כלל). מוארך מעט מעבר לשפת הכדור, שקצותיו ייראו על הרקע.
-      // דו-גוני: קו בהיר מלא, ומעליו קווקוו כהה — כך הוא נראה גם על הצד
-      // המואר של הכדור וגם על צד הלילה, ובשתי פלטות האיור
-      { const eq = () => { ctx.beginPath();
-          ctx.moveTo(p.x + uy * er * 1.45, p.y - ux * er * 1.45);
-          ctx.lineTo(p.x - uy * er * 1.45, p.y + ux * er * 1.45);
-          ctx.stroke(); };
-        ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.lineWidth = 2.6; eq();
-        ctx.strokeStyle = 'rgba(18,24,44,0.95)'; ctx.lineWidth = 1.3;
-        ctx.setLineDash([2.5, 2.5]); eq(); ctx.setLineDash([]); }
-      // סימון הכיוונים על הכדור: צ/ד בקצות הציר, ו"משווה" בקצה קו המשווה
-      // הפונה מן השמש (שלא יתנגש בקו הקרן). מזרח ומערב אינם מסומנים — אינם
-      // נקודות קבועות באיור, שהרי הכדור מסתובב סביב הציר פעם ביממה.
+      // ── הנקודה שהשמש עומדת מעליה ──
+      // היא הקישור בין האיור ובין השורה שמתחתיו: בתקופות ניסן ותשרי היא על קו
+      // המשווה ממש, ובתמוז ובטבת על קווי ההיפוך. כשהיא בצדו הרחוק של הכדור
+      // (הארץ בין הצופה ובין השמש) היא מסומנת כטבעת ריקה.
+      { const q = sph(sv), vis = dot3(sv, EV) >= 0;
+        ctx.beginPath(); ctx.arc(q.x, q.y, 2.6, 0, 2 * Math.PI);
+        if (vis) { ctx.fillStyle = '#ffd257'; ctx.fill(); ctx.strokeStyle = 'rgba(60,40,0,0.8)'; }
+        else { ctx.strokeStyle = 'rgba(255,210,87,0.85)'; }
+        ctx.lineWidth = 1.1; ctx.stroke(); }
+      // סימון הכיוונים על הכדור: צ/ד בקצות הציר. מזרח ומערב אינם מסומנים —
+      // אינם נקודות קבועות באיור, שהרי הכדור מסתובב סביב הציר פעם ביממה.
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = cv('--ill-text');
       // אות ראשונה של שם הרוח (צ/ד; באנגלית N/S) — 'צ' לבדה משמשת כמפתח
       // תרגום אחר (צדק, בשצ"ם חנכ"ל), ולכן נגזרת כאן מן המילה המלאה
-      ctx.fillText(T('צפון').charAt(0), p.x + ux * er * 2.3, p.y + uy * er * 2.3);
-      ctx.fillText(T('דרום').charAt(0), p.x - ux * er * 2.3, p.y - uy * er * 2.3);
-      // מקרא בשולי האיור — הכדור קטן מלהכיל שם מלא לקו המשווה, ובקצות
-      // הקו היה הכיתוב מתנגש בשם התקופה שלצדו
+      ctx.fillText(T('צפון').charAt(0), p.x + (pn.x - p.x) * 2.3, p.y + (pn.y - p.y) * 2.3);
+      ctx.fillText(T('דרום').charAt(0), p.x + (ps.x - p.x) * 2.3, p.y + (ps.y - p.y) * 2.3);
+      // מקרא בשולי האיור — הכדור קטן מלהכיל שמות מלאים
       ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-      ctx.font = '8px sans-serif'; ctx.fillStyle = cv('--ill-muted');
-      ctx.fillText(T('צפון').charAt(0) + '=' + T('צפון') + ' · ' + T('דרום').charAt(0) + '=' + T('דרום') +
-        ' · ' + T('הקו הניצב לציר — קו המשווה'), W - 6, H - 4);
+      ctx.fillStyle = cv('--ill-muted');
+      { const txt = T('צפון').charAt(0) + '=' + T('צפון') + ' · ' + T('דרום').charAt(0) + '=' + T('דרום') +
+          ' · ' + T('המעגל הניצב לציר — קו המשווה');
+        // הקנבס צר, ואורך המקרא משתנה עם השפה — הגופן מוקטן עד שהוא נכנס
+        let fs = 8;
+        ctx.font = fs + 'px sans-serif';
+        while (fs > 6 && ctx.measureText(txt).width > W - 12) { fs -= 0.5; ctx.font = fs + 'px sans-serif'; }
+        ctx.fillText(txt, W - 6, H - 4); }
       // שמות התקופות — בקצות המסלול האופקיים (תמוז וטבת) הצמודים לשולי
       // הקנבס השם נכתב מעל הנקודה, שלא ייחתך בשוליים ולא ייבלע בכדור
       ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillStyle = cv('--ill-muted');
       for (const [d, n] of TEKUFOT) {
-        const q = pos(d), side = Math.abs(q.x - cx) > a * 0.7;
+        const q = scr(orbit(d)), side = Math.abs(q.x - cx) > a * 0.7;
         const lx = side ? Math.min(Math.max(q.x, 22), W - 22) : q.x;
         const ly = side ? q.y - er - 22 : q.y + (q.y - cy) / b * (er + 22);   // מחוץ לכדור ולאותיות שבקצות הציר
         ctx.fillText(T(n), lx, ly);

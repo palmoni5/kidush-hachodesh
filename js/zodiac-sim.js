@@ -181,6 +181,34 @@
     _dawnCache.set(key, dawn);
     return dawn;
   }
+  // ══ רגעי היום האמיתיים — זריחה, שקיעה וחצות ═══════════════════════════
+  // כפתורי הרגעים מכוונים אל האירוע עצמו בתאריך ובמקום המוצגים, ולא לשעת
+  // שעון קבועה: שעה קבועה אינה יכולה לעקוב אחרי העונות. בירושלים השקיעה נעה
+  // בין 16:39 (טבת) ל-19:47 (תמוז), ולכן "לילה" בשעה 18:00 היה מציג רקיע של
+  // יום בכל הקיץ. חצות הוא חצות הלילה האמיתי (מעבר השמש במרידיאן התחתון).
+  // באזורים קוטביים, שאין בהם זריחה או שקיעה ביום המבוקש, נסוגים לשעה קבועה.
+  const TOD_FALLBACK = { rise: 6, set: 18, mid: 0 };
+  const _todCache = new Map();
+  function dayEvent(kind, date, lat, lon) {
+    const key = kind + '|' + civilKey(date) + '|' + lat.toFixed(2) + '|' + lon.toFixed(2);
+    if (_todCache.has(key)) return _todCache.get(key);
+    let out = null;
+    try {
+      const obs = new AE.Observer(lat, lon, 0);
+      const t0 = new Date(date); t0.setHours(0, 0, 0, 0);
+      const t = AE.MakeTime(t0);
+      if (kind === 'mid') {
+        const e = AE.SearchHourAngle(AE.Body.Sun, obs, 12, t);
+        out = e && e.time.date;
+      } else {
+        const e = AE.SearchRiseSet(AE.Body.Sun, obs, kind === 'rise' ? +1 : -1, t, 1.2);
+        out = e && e.date;
+      }
+    } catch (_) {}
+    _todCache.set(key, out);
+    return out;
+  }
+
   // היום האזרחי שהתאריך העברי שלו הוא תאריכו של הרגע הנתון
   function hebCivilDay(date, lat, lon) {
     const set = sunsetOf(date, lat === undefined ? 31.78 : lat, lon === undefined ? 35.24 : lon);
@@ -320,10 +348,21 @@
       ctx.moveTo(cx + outerR * Math.cos(aA), cy + outerR * Math.sin(aA));
       ctx.lineTo(cx + outerR * Math.cos(aD), cy + outerR * Math.sin(aD));
       ctx.stroke();
-      // קו אמצע הרקיע (חצי השמים) — מהמרכז כלפי מעלה
-      const aM = A(hz.mc);
-      ctx.strokeStyle = 'rgba(126,224,129,0.45)'; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+      // קו אמצע הרקיע (חצי השמים) — מצויר כקוטר מלא, כמו קו האופק, שכן אף הוא
+      // חתך של מישור בגלגל. הוא אינו ניצב לקו האופק והוא נע במשך היממה, ואין
+      // בזה שגיאה: הכיוון בשמים אמנם קבוע, אבל הקשת שעל הגלגל בין הנקודה
+      // העולה לנקודה שבחצי השמים משתנה — מפני שהגלגל נטוי לקו המשווה (23.44°).
+      // בירושלים היא 71°–108°, בלונדון 54°–126°, ובקו המשווה כמעט 90° קבועות.
+      // לכן אי אפשר לקבע את שני הקווים גם יחד, והעוגן הוא המזל העולה.
+      // הירוק הבהיר נבלע ברקע האיור הבהיר (ובפרט בחציו המוצל של הגלגל), ולכן
+      // מוכהה שם — כדרך תווית "0° טלה" שלמעלה.
+      const aM = A(hz.mc), aI = A(hz.mc + 180);
+      const mcCol = isLight() ? 'rgba(32,96,40,' : 'rgba(126,224,129,';
+      ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+      ctx.strokeStyle = mcCol + '0.55)';
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + outerR * Math.cos(aM), cy + outerR * Math.sin(aM)); ctx.stroke();
+      ctx.strokeStyle = mcCol + (isLight() ? '0.32)' : '0.20)');   // החצי שמתחת לארץ — עמום, כשאר מה שמתחת לאופק
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + outerR * Math.cos(aI), cy + outerR * Math.sin(aI)); ctx.stroke();
       ctx.setLineDash([]);
 
       // התווית מוצמדת אל גבולות הקנבס: בקנבס צר אין מקום מחוץ לגלגל, ובלי ההצמדה
@@ -587,6 +626,10 @@
       if (zs) { const sl = getLongitudes(this.date).sun; zs.textContent = T(signOf(sl)) + ' ' + Math.floor(rev360(sl) % 30) + '°'; }
       $('z_asc').textContent = hz ? T(signOf(hz.asc)) + ' ' + Math.floor(hz.asc % 30) + '°' : '—';
       $('z_mc').textContent  = hz ? T(signOf(hz.mc))  + ' ' + Math.floor(hz.mc  % 30) + '°' : '—';
+      // הקשת שבין אמצע הרקיע למזל העולה — משתנה במשך היממה (ראו ההערה בציור
+      // קו אמצע הרקיע); הצגתה מבארת מדוע הקו נע ואינו ניצב לקו האופק.
+      const za = $('z_arc');
+      if (za) za.textContent = hz ? rev360(hz.asc - hz.mc).toFixed(0) + '°' : '—';
       const hud = $('z_date');
       if (hud) hud.textContent = this.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day:'numeric', month:'long', year:'numeric' });
       const hudHe = $('z_date_he');
@@ -653,9 +696,11 @@
         this.date = new Date(d.getFullYear(), d.getMonth(), d.getDate(), cur.getHours(), cur.getMinutes(), 0);
         this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
       });
-      // בוקר / לילה — קביעת השעה בלבד, התאריך נשמר
-      document.querySelectorAll('#view-zodiac [data-tod]').forEach(b => b.onclick = () => {
-        this._setHour(+b.dataset.tod);
+      // זריחה / שקיעה / חצות — קפיצה אל האירוע האמיתי בתאריך ובמקום המוצגים
+      document.querySelectorAll('#view-zodiac [data-sev]').forEach(b => b.onclick = () => {
+        const kind = b.dataset.sev, d = dayEvent(kind, this.date, this.lat, this.lon);
+        if (d) this.date = new Date(d.getTime());
+        else this._setHour(TOD_FALLBACK[kind]);
         this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
       });
       // ארבע התקופות — היום שבו אורך השמש מגיע ל-0/90/180/270 מעלות מלקה,
