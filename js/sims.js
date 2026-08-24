@@ -269,6 +269,25 @@ window.Sims = (function () {
                               : (((now.getTime() / 3600000 + off) % 24) + 24) % 24;
     return { dayY, hour };
   }
+  // רגע התקופה האמיתי (שוויון/היפוך, Astronomy Engine) שבמחזור השנה המוצג.
+  // i: 0=ניסן (שוויון מרץ), 1=תמוז, 2=תשרי, 3=טבת. רבעי שנת שמואל הסכמטיים
+  // (91.31 יום) רחוקים מהתקופות האמיתיות עד ~4 ימים, כי העונות אינן שוות
+  // באורכן (המסלול אליפטי — הארץ איטית ברחקה, וקיץ הצפון ארוך מחורפו);
+  // סמוך לשוויון זו סטייה של ~1.5° בנטיית השמש (וסמוך להיפוך — אפסית, שהנטייה
+  // כמעט אינה משתנה שם). מוחזר null כשהמנוע אינו זמין.
+  function tekufaMoment(i) {
+    try {
+      const cyc = A.SOLAR_YEAR * 86400000;
+      const start = SPRING_REF + Math.floor((Date.now() - SPRING_REF) / cyc) * cyc;
+      const y0 = new Date(start).getUTCFullYear();
+      for (const y of [y0, y0 + 1]) {
+        const s = window.Astronomy.Seasons(y);
+        const t = [s.mar_equinox, s.jun_solstice, s.sep_equinox, s.dec_solstice][i].date;
+        if (t.getTime() >= start && t.getTime() < start + cyc) return t;
+      }
+    } catch (e) {}
+    return null;
+  }
   // היסט אזור הזמן (שעות) לתאריך נתון — כולל שעון קיץ, מנתוני ה-IANA של הדפדפן.
   // מוחזר null כשאין אזור זמן ידוע (מיקום "מותאם אישית") — ואז מעריכים לפי קו האורך.
   const _tzCache = Object.create(null);
@@ -1013,7 +1032,21 @@ window.Sims = (function () {
       $('y_rotR').onclick = () => { this.viewAz = (this.viewAz + 10) % 360; };
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };
       $('y_rot0').onclick = () => { this.viewAz = 90; };
-      document.querySelectorAll('#view-year .seg button').forEach(b => b.onclick = () => this.dayY = +b.dataset.d);
+      // לחצני התקופות — קפיצה אל רגע התקופה האמיתי (שוויון/היפוך), בתאריך
+      // ובשעון האזרחיים של המקום הנבחר, כך שהשמש עומדת בדיוק על קו השוויון או
+      // ההיפוך. התאריך נקבע לפי היום האזרחי המקומי של הרגע (לא יום ה-UTC), כדי
+      // ש-instant() — המרכיב תאריך + שעון אזרחי — ישחזר את הרגע גם כשהם נבדלים.
+      // data-d (רבעי שנת שמואל) נשאר כנפילה סכמטית כשהמנוע אינו זמין.
+      document.querySelectorAll('#view-year .seg button').forEach((b, i) => b.onclick = () => {
+        const m = tekufaMoment(i);
+        if (m) {
+          const o = tzOffsetHours(this.tz, m), off = o === null ? Math.round(this.lon / 15) : o;
+          const loc = new Date(m.getTime() + off * 3600000);
+          this.dayY = dayYFromDate(loc.getUTCFullYear(), loc.getUTCMonth() + 1, loc.getUTCDate());
+          this.hour = loc.getUTCHours() + loc.getUTCMinutes() / 60 + loc.getUTCSeconds() / 3600;
+        } else this.dayY = +b.dataset.d;
+        loadOtzariaTimes();   // כרטיס הלוח עוקב אחרי תאריך האיור
+      });
       // זמני היום מלוח אוצריא — נטענים בכניסה ללשונית, ברענון, בהחלפת עיר
       // בכרטיס, ובקביעת תאריך באיור (במצב החדש הזמנים עוקבים אחרי תאריך האיור)
       $('yo_refresh').onclick = () => loadOtzariaTimes();
