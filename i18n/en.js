@@ -215,6 +215,8 @@ window.TRANSLATIONS.en = {
   '91 ימים 7.5 שעות': '91 days 7.5 hours',
   'ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז וטבת (הקיצון).':
     'The four tekufos are the extreme points of the Sun’s path: Nissan/Tishrei (equinoxes), Tammuz and Teves (solstices).',
+  'לחצני התקופות שבאיור קופצים אל רגעי התקופה האמיתיים, המחושבים אסטרונומית — והם שונים מתקופת שמואל ומתקופת רב אדא, שהן שנות ממוצע. עיין רמב״ם הלכות קידוש החודש פרקים ט–י.':
+    'The tekufah buttons in the diagram jump to the true, astronomically computed moments of the tekufos — which differ from the tekufos of Shmuel and of Rav Ada, both of which are mean years. See Rambam, Hilchos Kiddush HaChodesh, ch. 9–10.',
   'מצפון לקו המשוה: תמוז=קיץ, טבת=חורף. מדרום לקו המשוה: תמוז=חורף, טבת=קיץ.':
     'North of the equator: Tammuz=summer, Teves=winter. South of the equator: Tammuz=winter, Teves=summer.',
   'הזמנים באיור (זריחה, שקיעה, חצות, השעה השמשית ומיקום השמש) מחושבים אסטרונומית במדויק (Astronomy Engine) לגובה פני הים. ייתכנו הבדלים קלים מהלוחות בשל גובה המקום ושיטות החישוב — אין לסמוך עליהם להלכה.':
