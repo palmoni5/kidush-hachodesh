@@ -984,6 +984,13 @@ window.Sims = (function () {
       $('y_azL').textContent = this.faceLabel();
       if (document.activeElement !== $('y_hour')) $('y_hour').value = this.hour;
       if (document.activeElement !== $('y_dayY')) $('y_dayY').value = this.dayY;
+      // שדות "או לפי תאריך" עוקבים אחרי היום המוצג באיור (ולא נשארים על תאריך
+      // ישן) — כך קפיצה של יום אחד מהמקום הנוכחי יוצאת ממנו ולא מהיום שהוזן
+      // קודם. שדה בפוקוס או שהוזן ולא אושר אינו נדרס (__fieldLocked).
+      const d = dayYToDate(this.dayY), L = window.__fieldLocked || (el => document.activeElement === el);
+      if (!L($('y_dd'))) $('y_dd').value = d.getUTCDate();
+      if (!L($('y_mm'))) $('y_mm').value = d.getUTCMonth() + 1;
+      if (!L($('y_yy'))) $('y_yy').value = d.getUTCFullYear();
     },
     bind() {
       if (this._bound) return; this._bound = true;
