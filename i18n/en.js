@@ -320,9 +320,10 @@ window.TRANSLATIONS.en = {
   'מרכז המבט': 'View center',
   "קו זמן יקום מתואם (גריניץ')": 'UTC line (Greenwich)',
   'חזון איש': 'Chazon Ish',
-  '125.2° מזרח': '125.2° East',
-  'הגרי"מ טוקצינסקי': 'R. Y.M. Tukachinsky',
-  '144.8° מערב': '144.8° West',
+  '35.24° מזרח': '35.24° East',
+  '125.24° מזרח': '125.24° East',
+  'הגרי"מ טיקוצינסקי': 'R. Y.M. Tukachinsky',
+  '144.76° מערב': '144.76° West',
   'הסכמי אוה"ע': 'International convention',
   'בקרת זמן (שעון ישראל)': 'Time controls (Israel time)',
   'הצג יום ולילה על הגלובוס': 'Show day/night on the globe',
@@ -338,7 +339,7 @@ window.TRANSLATIONS.en = {
   'קו רוחב במרכז המבט:': 'Latitude at view center:',
   'הצגת הקווים': 'Show lines',
   'קו התאריך — שיטת החזו"א': 'Date line — Chazon Ish',
-  'קו התאריך — שיטת הגרי"מ טוקצינסקי': 'Date line — R. Y.M. Tukachinsky',
+  'קו התאריך — שיטת הגרי"מ טיקוצינסקי': 'Date line — R. Y.M. Tukachinsky',
   'קו התאריך — הסכמי אומות העולם': 'Date line — international convention',
   'רשת קווי אורך ורוחב': 'Latitude/longitude grid',
   'קווי האורך והרוחב': 'Lines of longitude and latitude',
@@ -362,7 +363,7 @@ window.TRANSLATIONS.en = {
   'קו התאריך שיטת החזו"א': 'Chazon Ish date line',
   '— 90 מעלות מזרחית לירושלים (125.24° מזרח). כל מה שמחובר יבשתית למערב מקו התאריך נדון כמו המערב, ולכן הקו נוטה אל סוף היבשת (הקו הישר העובר בתוך היבשת מסומן במקווקו).':
     ' — 90° east of Jerusalem (125.24°E). Whatever is joined by land to the west of the line follows the west, so the line bends around to the edge of the landmass (the straight line within the landmass is dashed).',
-  'קו התאריך הגרי"מ טוקצינסקי': 'Tukachinsky date line',
+  'קו התאריך הגרי"מ טיקוצינסקי': 'Tukachinsky date line',
   '— 180 מעלות מירושלים (144.76° מערב). קו מקווקו תכלת — שטח בספק של הגרי"מ: מערב אלסקה, מקו התאריך שלו עד מיצר ברינג, שהסתפק אם הוא נדון כמזרח הקו (שהוא מחובר אליו יבשתית) או כמערבו.':
     ' — 180° from Jerusalem (144.76°W). Dashed light-blue outline — the area R. Tukachinsky left in doubt: western Alaska, from his line to the Bering Strait, being joined by land to the line’s east.',
   'קו התאריך הסכמי אוה"ע': 'International date line',
@@ -372,7 +373,7 @@ window.TRANSLATIONS.en = {
   'הערה: מהלך הקו לאורך חופי היבשות מצויר בקירוב, להמחשת העיקרון בלבד.':
     'Note: the line’s course along the coasts is approximate, for illustration only.',
   'מקורות:': 'Sources:',
-  'חזון איש, או"ח סי\' ס"ד; הגרי"מ טוקצינסקי, ספר "היומם בכדור הארץ".':
+  'חזון איש, או"ח סי\' ס"ד; הגרי"מ טיקוצינסקי, ספר "היומם בכדור הארץ".':
     'Chazon Ish, O.C. §64; R. Y.M. Tukachinsky, "HaYomam BeKadur HaAretz".',
   'טוקיו — יפן': 'Tokyo — Japan',
   'וולינגטון — ניו זילנד': 'Wellington — New Zealand',
@@ -383,7 +384,7 @@ window.TRANSLATIONS.en = {
   'שיטת הגרי״מ': 'Tukachinsky',
   'גריניץ׳ 0°': 'Greenwich 0°',
   'חזו״א': 'Chazon Ish',
-  'גרי״מ טוקצינסקי': 'Tukachinsky',
+  'גרי״מ טיקוצינסקי': 'Tukachinsky',
   'הסכמי אוה״ע 180°': 'Intl. 180°',
 
   // ── מערכת תלת-מימד ───────────────────────────────────────────────────
@@ -579,7 +580,7 @@ window.TRANSLATIONS.en = {
   'הרגע בשעון ישראל': 'The moment, Israel clock',
   'תוס׳ — שעות זמניות': 'Tosafot — seasonal hours',
   'תוס׳ — שעות שוות': 'Tosafot — equal hours',
-  'הגרי״מ טוקצינסקי — חצות אמיתי': 'R. Y. M. Tukachinsky — true noon',
+  'הגרי״מ טיקוצינסקי — חצות אמיתי': 'R. Y. M. Tukachinsky — true noon',
   'הגר״י מרצבך — חצות ממוצע': 'R. Y. Merzbach — mean noon',
   'שיטה א׳ בתוס׳ עירובין נ״ו ע״א: היממה משקיעה לשקיעה, י״ב שעות ללילה וי״ב ליום':
     'First view in Tosafot, Eruvin 56a: the day runs sunset to sunset, 12 hours for the night and 12 for the day',

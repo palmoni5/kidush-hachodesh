@@ -244,28 +244,35 @@
     setTimeout(chunk, 0);
   }
 
+  // האם הליקוי עובר את תיבות הסינון (רק מלא / רק הנראים בא״י) — משמש גם את
+  // הרשימה וגם את לחצני הליקוי הבא/הקודם, כדי שינועו על אותם ליקויים בדיוק
+  function listPass(type, it) {
+    if ($('e_onlyTotal') && $('e_onlyTotal').checked && it.kind !== 'total') return false;
+    if ($('e_onlyIL') && $('e_onlyIL').checked)
+      return type === 'solar' ? !!ilSolarInfo(it.ms) : !!it.il;
+    return true;
+  }
+
   function refreshList() {
     const sel = $('e_list'); if (!sel) return;
     const type = sim.mode === 'lunar' ? 'lunar' : 'solar';
     const L = LISTS[type];
-    const only = $('e_onlyTotal') && $('e_onlyTotal').checked;
     const onlyIL = $('e_onlyIL') && $('e_onlyIL').checked;
     if (onlyIL && type === 'solar') buildILSolar();
     const loc = window.I18N ? window.I18N.dateLocale : 'he-IL';
     const cur = sim.einfo ? sim.einfo.peak.date.getTime() : 0;
     let html = '';
     if (L) for (const it of L.arr) {
-      if (only && it.kind !== 'total') continue;
+      if (!listPass(type, it)) continue;
       // בליקוי חמה הסוג ברשימה הוא העולמי; בא״י אופן הליקוי עשוי להיות אחר
       // (מלא בעולם — חלקי בא״י), ולכן מוצג לצדו גם המקומי עם שיעור הכיסוי.
       let ilTag = '';
       if (type === 'solar') {
         const il = ilSolarInfo(it.ms);
-        if (onlyIL && !il) continue;
         if (il) ilTag = ' · ' + T('בא״י') + ' ' +
           (il.kind === 'total' ? T('מלא') : il.kind === 'annular' ? T('טבעתי')
             : Math.round(il.pct * 100) + '%');
-      } else if (onlyIL && !it.il) continue;
+      }
       const lbl = it.date.toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric' }) + ' — ' + T(EK[it.kind] || it.kind) + ilTag;
       html += `<option value="${it.ms}">${lbl}</option>`;
     }
@@ -922,8 +929,32 @@
         this.playing = false; $('e_play').textContent = T('▶ הפעל');
         this.hintDone = true;
       };
-      $('e_prev').onclick = () => { try { this.setEclipse(prevEcl(this.type, this.einfo.peak.date)); } catch (e) {} };
-      $('e_next').onclick = () => { try { this.setEclipse(seqNext(this.type, this.einfo)); } catch (e) {} };
+      // הליקוי הבא/הקודם נעים על הרשימה המסוננת — כשמסומנת תיבת סינון
+      // מדלגים על ליקויים שאינם ברשימה (ולא נוחתים על ליקוי שהתיבה שלו ריקה)
+      const step = dir => {
+        try {
+          const filtered = ($('e_onlyTotal') && $('e_onlyTotal').checked) ||
+                           ($('e_onlyIL') && $('e_onlyIL').checked);
+          if (!filtered) {
+            this.setEclipse(dir > 0 ? seqNext(this.type, this.einfo)
+                                    : prevEcl(this.type, this.einfo.peak.date));
+            return;
+          }
+          const L = LISTS[this.type]; if (!L) return;
+          const cur = this.einfo.peak.date.getTime();
+          let found = null;
+          if (dir > 0) {
+            for (const it of L.arr)
+              if (it.ms > cur + 60000 && listPass(this.type, it)) { found = it; break; }
+          } else {
+            for (let i = L.arr.length - 1; i >= 0; i--)
+              if (L.arr[i].ms < cur - 60000 && listPass(this.type, L.arr[i])) { found = L.arr[i]; break; }
+          }
+          if (found) this.setEclipse(nextEcl(this.type, new Date(found.ms - 5 * 86400000)));
+        } catch (e) {}
+      };
+      $('e_prev').onclick = () => step(-1);
+      $('e_next').onclick = () => step(1);
       $('e_list').onchange = e => {
         const ms = +e.target.value; if (!ms) return;
         try { this.setEclipse(nextEcl(this.type, new Date(ms - 5 * 86400000))); } catch (er) {}
