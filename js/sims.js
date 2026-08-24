@@ -258,35 +258,48 @@ window.Sims = (function () {
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(T(txt), W / 2, 8);
   }
-  // נקודת ייחוס לשנת החמה — שוויון אביב (תקופת ניסן) 20.3.2000 07:35 UT
+  // נקודת ייחוס לנפילה הסכמטית — שוויון אביב (תקופת ניסן) 20.3.2000 07:35 UT
   const SPRING_REF = Date.UTC(2000, 2, 20, 7, 35, 0);
-  // יום בשנת החמה (מתקופת ניסן) ושעה נוכחית באזור הזמן שנבחר
+  // מחזור השנה המוצג — אסטרונומי כולו (Astronomy Engine): מתקופת ניסן האמיתית
+  // (שוויון האביב) האחרונה ועד הבאה. "יום 0" הוא רגע התקופה עצמו, אורך השנה
+  // הוא המרווח האמיתי בין שני השוויונים (כ-365.2424 יום), ו-tek הם ימי ארבע
+  // התקופות האמיתיות במחזור — שאינן רבעים שווים, שהעונות אינן שוות באורכן
+  // (המסלול אליפטי — הארץ איטית ברחקה, וקיץ הצפון ארוך מחורפו): תשרי נופלת
+  // כ-4 ימים אחרי רבע שנת שמואל הסכמטי. כשהמנוע אינו זמין — נפילה למחזור
+  // הסכמטי (שנת שמואל של 365.25 יום המעוגנת בשוויון האביב של 2000, tek=null).
+  let _span = null;
+  function yearSpan() {
+    if (_span && Date.now() < _span.end) return _span;
+    try {
+      const AE = window.Astronomy;
+      let y = new Date().getUTCFullYear();
+      if (AE.Seasons(y).mar_equinox.date.getTime() > Date.now()) y--;
+      const s = AE.Seasons(y);
+      const start = s.mar_equinox.date.getTime();
+      const end = AE.Seasons(y + 1).mar_equinox.date.getTime();
+      const d = t => (t.date.getTime() - start) / 86400000;
+      return (_span = { start, end, days: (end - start) / 86400000,
+                        tek: [0, d(s.jun_solstice), d(s.sep_equinox), d(s.dec_solstice)] });
+    } catch (e) {
+      const cyc = A.SOLAR_YEAR * 86400000;
+      const start = SPRING_REF + Math.floor((Date.now() - SPRING_REF) / cyc) * cyc;
+      return { start, end: start + cyc, days: A.SOLAR_YEAR, tek: null };   // לא נשמר — שהמנוע ינוסה שוב
+    }
+  }
+  // יום בשנת החמה (מתקופת ניסן האמיתית) ושעה נוכחית באזור הזמן שנבחר
   function solarToday(tz) {
     const now = new Date();
-    const dayY = ((((now.getTime() - SPRING_REF) / 86400000) % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
+    const dayY = (now.getTime() - yearSpan().start) / 86400000;
     const off = tzOffsetHours(tz, now);
     const hour = off === null ? now.getHours() + now.getMinutes() / 60
                               : (((now.getTime() / 3600000 + off) % 24) + 24) % 24;
     return { dayY, hour };
   }
-  // רגע התקופה האמיתי (שוויון/היפוך, Astronomy Engine) שבמחזור השנה המוצג.
-  // i: 0=ניסן (שוויון מרץ), 1=תמוז, 2=תשרי, 3=טבת. רבעי שנת שמואל הסכמטיים
-  // (91.31 יום) רחוקים מהתקופות האמיתיות עד ~4 ימים, כי העונות אינן שוות
-  // באורכן (המסלול אליפטי — הארץ איטית ברחקה, וקיץ הצפון ארוך מחורפו);
-  // סמוך לשוויון זו סטייה של ~1.5° בנטיית השמש (וסמוך להיפוך — אפסית, שהנטייה
-  // כמעט אינה משתנה שם). מוחזר null כשהמנוע אינו זמין.
+  // רגע התקופה האמיתי שבמחזור השנה המוצג. i: 0=ניסן (שוויון מרץ), 1=תמוז,
+  // 2=תשרי, 3=טבת. null כשהמנוע אינו זמין — ואז הלחצנים נופלים לרבעים הסכמטיים.
   function tekufaMoment(i) {
-    try {
-      const cyc = A.SOLAR_YEAR * 86400000;
-      const start = SPRING_REF + Math.floor((Date.now() - SPRING_REF) / cyc) * cyc;
-      const y0 = new Date(start).getUTCFullYear();
-      for (const y of [y0, y0 + 1]) {
-        const s = window.Astronomy.Seasons(y);
-        const t = [s.mar_equinox, s.jun_solstice, s.sep_equinox, s.dec_solstice][i].date;
-        if (t.getTime() >= start && t.getTime() < start + cyc) return t;
-      }
-    } catch (e) {}
-    return null;
+    const s = yearSpan();
+    return s.tek ? new Date(s.start + s.tek[i] * 86400000) : null;
   }
   // היסט אזור הזמן (שעות) לתאריך נתון — כולל שעון קיץ, מנתוני ה-IANA של הדפדפן.
   // מוחזר null כשאין אזור זמן ידוע (מיקום "מותאם אישית") — ואז מעריכים לפי קו האורך.
@@ -372,16 +385,15 @@ window.Sims = (function () {
     const B = 2 * Math.PI * (N - 81) / 364;
     return (9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B)) / 60;
   }
-  // יום בשנת החמה מתאריך לועזי (נדגם בצהרי היום)
+  // יום בשנת החמה מתאריך לועזי (נדגם בצהרי היום) — ממופה מחזורית אל השנה המוצגת
   function dayYFromDate(Y, M, D) {
-    return ((((Date.UTC(Y, M - 1, D, 12) - SPRING_REF) / 86400000) % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
+    const s = yearSpan();
+    return ((((Date.UTC(Y, M - 1, D, 12) - s.start) / 86400000) % s.days) + s.days) % s.days;
   }
-  // תאריך לועזי מיום בשנת החמה — ממופה למחזור השנה שמכיל את היום הנוכחי
+  // תאריך לועזי מיום בשנת החמה המוצגת
   const GREG_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
   function dayYToDate(dayY) {
-    const cyc = A.SOLAR_YEAR * 86400000;
-    const n = Math.floor((Date.now() - SPRING_REF) / cyc);
-    return new Date(SPRING_REF + n * cyc + dayY * 86400000);
+    return new Date(yearSpan().start + dayY * 86400000);
   }
   function dayYToDateLabel(dayY) {
     const d = dayYToDate(dayY);
@@ -637,7 +649,7 @@ window.Sims = (function () {
     // ב-solarHour(): הפחתת היסט אזור הזמן, הוספת קו האורך המקומי ומשוואת הזמן.
     hour: 12, dayY: 0, lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
     speed: 2, playing: false, auto: true, viewAz: 90, hintDone: false, _bound: false,
-    step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % A.SOLAR_YEAR; } } },
+    step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % yearSpan().days; } } },
     // היסט אזור הזמן בשעות; ללא אזור זמן ידוע — הערכה לפי קו האורך
     tzOff() {
       const o = tzOffsetHours(this.tz, dayYToDate(this.dayY));
@@ -808,8 +820,17 @@ window.Sims = (function () {
       ctx.beginPath(); ctx.ellipse(cx, cy, a, b, 0, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
       // מיקום על המסלול: תקופת תמוז מימין (שם הציר הקבוע רכון אל השמש), טבת
       // משמאל, ותקופות השוויון בקצות האליפסה. הארץ נעה נגד כיוון השעון — כמות
-      // שהיא נראית ממש מצפון למישור המסלול.
-      const lam = d => 2 * Math.PI * (d - 91.31) / A.SOLAR_YEAR;
+      // שהיא נראית ממש מצפון למישור המסלול. הזוית נגזרת מאורך המלקה האמיתי
+      // של השמש (Astronomy Engine): ארבע התקופות רחוקות זו מזו 90° באורך
+      // המלקה בשווה אף שאינן שוות בזמן, וכך רוחב הנקודה הצהובה שעל הכדור
+      // (sin ε · sin λ) שווה בדיוק לנטייה האמיתית שבשורת הנתונים. בלי המנוע —
+      // נפילה לתנועה סכמטית אחידה ברבעים שווים.
+      const lam = d => {
+        try {
+          const AE = window.Astronomy;
+          return (AE.SunPosition(AE.MakeTime(dayYToDate(d))).elon - 90) * Math.PI / 180;
+        } catch (e) { return 2 * Math.PI * (d - 91.31) / A.SOLAR_YEAR; }
+      };
       const orbit = d => { const l = lam(d); return [Math.cos(l), Math.sin(l), 0]; };
       const scr = P => ({ x: cx + a * dot3(P, EX), y: cy - a * dot3(P, EUP) });
       // השמש במרכז
@@ -817,16 +838,18 @@ window.Sims = (function () {
       g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 26, 0, 2 * Math.PI); ctx.fill();
       sprite(ctx, IMG.sun, cx, cy, 26, 26);
-      // ארבע התקופות על המסלול — הנקודות כאן, והשמות בסוף הציור (אחרי הכדור),
-      // שהכדור לא יכסה את שם התקופה שהוא עומד בה
-      const TEKUFOT = [[0, 'ניסן'], [91.31, 'תמוז'], [182.62, 'תשרי'], [273.94, 'טבת']];
+      // ארבע התקופות על המסלול — ברגעיהן האמיתיים (רבעים סכמטיים בלי המנוע).
+      // הנקודות כאן, והשמות בסוף הציור (אחרי הכדור), שהכדור לא יכסה את שם
+      // התקופה שהוא עומד בה
+      const spn = yearSpan(), tkd = spn.tek || [0, 91.31, 182.62, 273.94];
+      const TEKUFOT = [[tkd[0], 'ניסן'], [tkd[1], 'תמוז'], [tkd[2], 'תשרי'], [tkd[3], 'טבת']];
       ctx.fillStyle = cv('--ill-muted');
       for (const [d] of TEKUFOT) {
         const q = scr(orbit(d));
         ctx.beginPath(); ctx.arc(q.x, q.y, 2, 0, 2 * Math.PI); ctx.fill();
       }
       // ── הארץ ביומה ──
-      const dayY = ((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
+      const dayY = ((this.dayY % spn.days) + spn.days) % spn.days;
       const E = orbit(dayY), p = scr(E), er = 11;
       const sv = norm3([-E[0], -E[1], -E[2]]);          // כיוון השמש מן הארץ
       const eps = 23.44 * Math.PI / 180;
@@ -937,10 +960,11 @@ window.Sims = (function () {
       // מדרום לקו המשוה העונות מהופכות: תקופת תמוז שם חורף ותקופת טבת קיץ.
       // סמוך לקו המשוה (3°±) אין קיץ וחורף — מוצג שם התקופה בלבד.
       const south = this.lat < 0, nearEq = Math.abs(this.lat) <= 3;
-      const t = ((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
-      if (t < 91.31) return nearEq ? { n: 'תקופת ניסן', c: '--ill-spring' } : south ? { n: 'סתיו · ניסן', c: '--ill-autumn' } : { n: 'אביב · ניסן', c: '--ill-spring' };
-      if (t < 182.62) return nearEq ? { n: 'תקופת תמוז', c: '--ill-summer' } : south ? { n: 'חורף · תמוז', c: '--ill-winter' } : { n: 'קיץ · תמוז', c: '--ill-summer' };
-      if (t < 273.94) return nearEq ? { n: 'תקופת תשרי', c: '--ill-autumn' } : south ? { n: 'אביב · תשרי', c: '--ill-spring' } : { n: 'סתיו · תשרי', c: '--ill-autumn' };
+      const s = yearSpan(), tk = s.tek || [0, 91.31, 182.62, 273.94];
+      const t = ((this.dayY % s.days) + s.days) % s.days;
+      if (t < tk[1]) return nearEq ? { n: 'תקופת ניסן', c: '--ill-spring' } : south ? { n: 'סתיו · ניסן', c: '--ill-autumn' } : { n: 'אביב · ניסן', c: '--ill-spring' };
+      if (t < tk[2]) return nearEq ? { n: 'תקופת תמוז', c: '--ill-summer' } : south ? { n: 'חורף · תמוז', c: '--ill-winter' } : { n: 'קיץ · תמוז', c: '--ill-summer' };
+      if (t < tk[3]) return nearEq ? { n: 'תקופת תשרי', c: '--ill-autumn' } : south ? { n: 'אביב · תשרי', c: '--ill-spring' } : { n: 'סתיו · תשרי', c: '--ill-autumn' };
       return nearEq ? { n: 'תקופת טבת', c: '--ill-winter' } : south ? { n: 'קיץ · טבת', c: '--ill-summer' } : { n: 'חורף · טבת', c: '--ill-winter' };
     },
     hud(Unow, sn) {
@@ -1041,16 +1065,20 @@ window.Sims = (function () {
       $('y_rot0').onclick = () => { this.viewAz = 90; };
       // לחצני התקופות — קפיצה אל רגע התקופה האמיתי (שוויון/היפוך), בתאריך
       // ובשעון האזרחיים של המקום הנבחר, כך שהשמש עומדת בדיוק על קו השוויון או
-      // ההיפוך. התאריך נקבע לפי היום האזרחי המקומי של הרגע (לא יום ה-UTC), כדי
-      // ש-instant() — המרכיב תאריך + שעון אזרחי — ישחזר את הרגע גם כשהם נבדלים.
-      // data-d (רבעי שנת שמואל) נשאר כנפילה סכמטית כשהמנוע אינו זמין.
+      // ההיפוך. dayY נגזר מהרגע עצמו — לא במיפוי המחזורי של dayYFromDate,
+      // שבקצה המחזור (תקופת ניסן, יום 0) היה עוטף את היום אל סוף הפס ומרכיב
+      // את שעת התקופה על תאריך של שנה אחרת. instant() בונה את הרגע מהיום
+      // ומהשעון האזרחיים — כשהיום האזרחי המקומי שונה מיום ה-UTC מוסטים יום
+      // ושעה יחדיו, והרגע נשמר. data-d (רבעי שנת שמואל) — נפילה בלי המנוע.
       document.querySelectorAll('#view-year .seg button').forEach((b, i) => b.onclick = () => {
         const m = tekufaMoment(i);
         if (m) {
           const o = tzOffsetHours(this.tz, m), off = o === null ? Math.round(this.lon / 15) : o;
-          const loc = new Date(m.getTime() + off * 3600000);
-          this.dayY = dayYFromDate(loc.getUTCFullYear(), loc.getUTCMonth() + 1, loc.getUTCDate());
-          this.hour = loc.getUTCHours() + loc.getUTCMinutes() / 60 + loc.getUTCSeconds() / 3600;
+          let dayY = (m.getTime() - yearSpan().start) / 86400000;
+          let hour = ((m.getTime() / 3600000) % 24 + 24) % 24 + off;
+          if (hour >= 24) { hour -= 24; dayY += 1; }
+          else if (hour < 0) { hour += 24; dayY -= 1; }
+          this.dayY = dayY; this.hour = hour;
         } else this.dayY = +b.dataset.d;
         loadOtzariaTimes();   // כרטיס הלוח עוקב אחרי תאריך האיור
       });
