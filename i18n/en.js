@@ -262,6 +262,8 @@ window.TRANSLATIONS.en = {
   'ארבע התקופות (בשנת התאריך המוצג)': 'The four tekufos (in the year shown)',
   'נטיית הרצועה עצמה אינה משתנה כלל — הקבוע הוא הגלגל הנטוי. מה שנודד במשך השנה הוא מקום השמש שבו: בתקופת תמוז היא בקצה הצפוני שברצועה ולכן עולה גבוה, בתקופת טבת בקצה הדרומי ולכן נמוכה, ובניסן ובתשרי היא על משווה השמים עצמו. לחצו והשוו — השעה שביממה נשמרת, ובחרו "מבט הצופה" כדי לראות את גובה השמש שברקיע.':
     'The tilt of the band itself never changes — the tilted wheel is the one thing that stays put. What moves through the year is the Sun’s place upon it. At Tekufas Tammuz the Sun is at the northern end of the band, so it rises high. At Tekufas Teves it is at the southern end, so it stays low. At Nissan and Tishrei it is on the celestial equator itself. Press and compare — the time of day stays the same. Choose "Observer view" to see how high the Sun is in the sky.',
+  'וכך הן מוגדרות בגלגל: תקופת ניסן היא תמיד כשהשמש מתחילה להכנס למזל טלה, תקופת תמוז — למזל סרטן, תקופת תשרי — למזל מאזנים, ותקופת טבת — למזל גדי (רמב״ם, הלכות קידוש החודש פ״ט ה״ג).':
+    'And this is how they are defined on the wheel: Tekufas Nissan is always the moment the Sun begins to enter the sign of Taleh (Aries); Tekufas Tammuz — the sign of Sartan (Cancer); Tekufas Tishrei — the sign of Moznayim (Libra); and Tekufas Teves — the sign of Gedi (Capricorn). (Rambam, Hilchos Kiddush HaChodesh 9:3.)',
   'האופק ומזל עולה': 'Horizon and ascendant',
   'הצג את קו האופק ואת המזל העולה': 'Show the horizon line and the ascendant',
   'המזל העולה הוא הנקודה שבגלגל המזלות (הוא "גלגל המלקה") העולה באותו רגע באופק המזרחי. הגלגל כולו מסתובב סביב הארץ פעם ביממה, ולכן כל שנים-עשר המזלות עולים ושוקעים בכל יום — בערך מזל לכל שעתיים.':
