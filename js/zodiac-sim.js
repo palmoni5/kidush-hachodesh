@@ -11,6 +11,17 @@
 
   const SIGNS = ['טלה','שור','תאומים','סרטן','אריה','בתולה','מאזניים','עקרב','קשת','גדי','דלי','דגים'];
 
+  // תרגום דו-לשוני "Aries (טלה)" נפרק על הגלגל לשתי שורות, שלא יגלוש מהמשבצת
+  function drawSignLabel(ctx, label, x, y, fs) {
+    const m = /^(.*\S) \((.+)\)$/.exec(label);
+    if (!m) { ctx.fillText(label, x, y); return; }
+    const f = ctx.font;
+    ctx.fillText(m[1], x, y - fs * 0.42);
+    ctx.font = f.replace(/\d+(\.\d+)?px/, Math.max(8, fs - 2) + 'px');
+    ctx.fillText(m[2], x, y + fs * 0.62);
+    ctx.font = f;
+  }
+
   // גרמי שמים לפי סדר חשיבות ויזואלית
   const BODIES = [
     { key: 'sun',     he: 'שמש',    color: '#f5c842', r: 9 },
@@ -310,7 +321,7 @@
     for (let i = 0; i < 12; i++) {
       const midA = A(i * 30 + 15);
       ctx.fillStyle = cv('--ill-text') || '#e0e0e0';
-      ctx.fillText(T(SIGNS[i]), cx + labelR * Math.cos(midA), cy + labelR * Math.sin(midA));
+      drawSignLabel(ctx, T(SIGNS[i]), cx + labelR * Math.cos(midA), cy + labelR * Math.sin(midA), fontSize);
     }
 
     // מסגרות רינג
@@ -544,7 +555,7 @@
       ctx.globalAlpha = v.U > 0 ? 1 : 0.35;
       ctx.font = (i === sunSign ? 'bold ' : '') + fs + 'px sans-serif';
       ctx.fillStyle = cv('--ill-text') || '#e0e0e0';
-      ctx.fillText(T(SIGNS[i]), p.x, p.y);
+      drawSignLabel(ctx, T(SIGNS[i]), p.x, p.y, fs);
       ctx.globalAlpha = 1;
     }
     // המזל העולה — נקודת החיתוך של המלקה עם האופק המזרחי

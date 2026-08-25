@@ -1,5 +1,8 @@
 // i18n/en.js — English dictionary.
 // המפתחות הם מחרוזות המקור בעברית (ראו js/i18n.js); מחרוזת שאינה כאן תוצג בעברית.
+// כללי תרגום (משוב משתמשים): מונח תורני שיש לו תרגום מבטא מוצג דו-לשונית —
+// "Aries (טלה)"; מונח שתרגומו המילולי ריק ממשמעות (שרי השעות) נשאר בעברית
+// בלבד — פשוט בלי רשומה כאן; והסברים באנגלית פשוטה וקריאה, לא טכנית.
 "use strict";
 window.TRANSLATIONS = window.TRANSLATIONS || {};
 window.TRANSLATIONS.en = {
@@ -8,8 +11,7 @@ window.TRANSLATIONS.en = {
   'מופעי הירח': 'Moon Phases',
   'מהלך השמש (שנת חמה)': 'Sun’s Path (Solar Year)',
   'כוכבי הלכת': 'Planets',
-  'גלגל המזלות': 'Zodiac Wheel',
-  'שרי השעות': 'Hour Rulers',
+  'גלגל המזלות': 'גלגל המזלות (Zodiac Wheel)',
   'קו התאריך': 'Date Line',
   'מערכת תלת-מימד': '3D System',
   // קידומת התאריך העברי בלילה (מהשקיעה עד עלות השחר): "אור לז׳ אלול"
@@ -98,13 +100,13 @@ window.TRANSLATIONS.en = {
   'החודש הקודם': 'Previous month',
   'החודש הבא': 'Next month',
   'מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.':
-    'Molad (new moon) = Sun and Moon in conjunction, and the Moon is unseen. Opposition = Sun and Moon on opposite sides of Earth — a full moon (when lunar eclipses occur). Three days after the molad is the start of the time for Birkat HaLevanah in the Ashkenazi custom, and seven days in the Sephardi custom.',
+    'The molad is the moment the Sun and Moon line up ("conjunction"). Around that moment the Moon cannot be seen at all. Opposition is the reverse: the Sun and Moon stand on opposite sides of the Earth, and the Moon is full (this is when lunar eclipses happen). Birkat HaLevanah may be said from three days after the molad by Ashkenazi custom, or from seven days by Sephardi custom.',
   'ו׳ שעות וי״ח שעות מן המולד — ראש השנה כ׳ ע״ב: "עשרים וארבעה שעי מכסי סיהרא" — כ״ד שעות שאין הלבנה נראית בהן סביב הקיבוץ; "לדידן — שית מעתיקא ותמני סרי מחדתא, לדידהו — שית מחדתא ותמני סרי מעתיקא". לבני ארץ ישראל ("לדידהו") שש השעות שלפני המולד הן מן הישנה ושמונה עשרה שלאחריו מן החדשה — ונמצא שהלבנה החדשה נראית כבר שש שעות מן המולד; ולבני בבל ("לדידן") שמונה עשרה שעות שלפני המולד ושש שעות שלאחריו — ואינה נראית עד שמונה עשרה שעות מן המולד. לחצו על הכפתורים והשוו את מראה הלבנה ואת מקומה בשמים בשני הרגעים — ובפרט בבחירת נהרדעא (עירו של שמואל) מול ירושלים ברשימת המקומות שלהלן.':
-    'Six hours and eighteen hours after the molad — Rosh Hashanah 20b: “for twenty-four hours the moon is covered” — the twenty-four hours around the conjunction in which the moon is not seen; “for us — six of the old and eighteen of the new; for them — six of the new and eighteen of the old.” For the people of Eretz Yisrael (“for them”) the six hours before the molad belong to the old moon and the eighteen after it to the new — so the new moon is already visible six hours after the molad; while for the people of Bavel (“for us”) it is eighteen hours before the molad and six after it — and it is not seen until eighteen hours after the molad. Press the buttons and compare the moon’s appearance and its place in the sky at the two moments — especially with Nehardea (Shmuel’s city) selected against Jerusalem in the location list below.',
+    'Six and eighteen hours after the molad — from Rosh Hashanah 20b: “for twenty-four hours the moon is covered.” The Moon is hidden for about a full day around the molad. How is that day split? For the people of Eretz Yisrael, six of those hours come before the molad and eighteen after it — so the new moon can first be seen six hours after the molad. For the people of Bavel it is the reverse: eighteen hours before and six after — so it is not seen until eighteen hours after the molad. Press the two buttons and compare how the Moon looks, and where it sits in the sky, at each moment — especially with Nehardea (Shmuel’s city) chosen against Jerusalem in the location list below.',
   'כל הזמנים הם לפי המולדות האמיתיים (ראו בלשונית הלוח העברי אודות המולד האמיתי).':
-    'All times follow the true moladot — the actual astronomical conjunctions (see the Hebrew-calendar tab regarding the true molad).',
+    'All times here follow the true moladot — the actual astronomical moments of conjunction (see the Hebrew-calendar tab about the true molad).',
   'הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש המוצג — חודש הלבנה שהתאריך שבאיור נמצא בתוכו, מן המולד ועד המולד הבא. כפתורי "החודש הקודם" ו"החודש הבא" מעבירים את התצוגה חודש לבנה שלם אחורה או קדימה. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.':
-    'The buttons jump the date and time (shown above) to the exact moment of these milestones in the displayed month — the lunar month containing the date in the illustration, from one molad to the next. The "Previous month" and "Next month" buttons shift the view a whole lunar month back or forward. When that moment falls in daytime the moon is not visible to the eye — even when above the horizon — except near sunset or right after sunrise; advance the time to evening (via the date fields or by playing) to see it in the sky window.',
+    'These buttons jump the date and time shown above to the exact moment of each milestone in the lunar month on screen — the month that runs from one molad to the next. "Previous month" and "Next month" move a whole lunar month back or forward. If a moment lands in the daytime, you will not be able to see the Moon with your eye, even when it is above the horizon. Move the time to the evening — with the date fields or the Play button — and you will see it in the sky window.',
   'יום בחודש (גרירה)': 'Day of month (drag)',
   'שמש — מקור האור': 'Sun — the source of light',
   'ירח — מקיף את הארץ': 'Moon — orbiting Earth',
@@ -112,24 +114,24 @@ window.TRANSLATIONS.en = {
   '(= כ"ט יום י"ב שעות ותשצ"ג חלקים = הזמן שבין מולד למולד).':
     '(= 29 days, 12 hours and 793 chalakim = the time between one molad and the next).',
   'הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.':
-    'The lit side always faces the Sun; from Earth only part of it is seen — hence the phases.',
+    'The lit side always faces the Sun; from Earth we see only part of it — and that is what makes the phases.',
   'זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק המקום הנבחר ובשעונו — להמחשה בלבד.':
-    'Moonrise/moonset are shown for the date displayed in the diagram, for the horizon of the selected location and in its own clock — illustration only.',
+    'Moonrise and moonset are shown for the date in the diagram, at the chosen location and on its local clock — for illustration only.',
   'הירח מכדור הארץ': 'The Moon as seen from Earth',
   'הירח בשמים': 'Moon in the sky',
   'ביום אינה נראית לעין': 'not visible to the eye by day',
   'אור יום — אינה נראית לעין': 'daylight — not visible to the eye',
   'מיקום בשמים': 'Sky position',
   'חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל המקום הנבחר לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.':
-    'The "Moon in the sky" window shows the Moon’s position in the sky dome over the selected location for the moment in the diagram, in its visible shape — the way one looks for it in sanctifying the month by sighting and for Birkas HaLevanah. The Sun is marked too, to show their proximity.',
+    'The "Moon in the sky" window shows where the Moon is in the sky over the place you chose, at the moment shown in the diagram. It also draws the Moon in the shape it really looks. This is how people look for it when the month is sanctified by sighting, and for Birkas HaLevanah. The Sun is marked too, so you can see how close the two of them are.',
   'מקום הצפייה קובע את חלון "הירח בשמים", את מיקום הירח (כיוון וגובה) ואת זמני זריחתו ושקיעתו — והם מוצגים בשעון האזרחי של אותו מקום (כולל שעון קיץ), שהוא "השעה במקום" שב-HUD. מופע הירח ואחוז הארתו כמעט שווים בכל העולם, אך שעת ראייתו ומקומו בשמים משתנים ממקום למקום — וזה עיקר עניינו של קידוש החודש על פי הראייה.':
-    'The viewing location determines the "Moon in the sky" window, the Moon’s position (direction and altitude) and its rise and set times — all shown in that location’s civil clock (including daylight saving), which is the "Local time there" reading in the HUD. The Moon’s phase and illuminated fraction are nearly the same worldwide, but the hour it is seen and its place in the sky differ from place to place — and that is the very heart of sanctifying the month by sighting.',
+    'The viewing place sets three things: the "Moon in the sky" window, where the Moon is (its direction, and its height above the horizon), and its rise and set times. All of them are shown on that place’s ordinary clock, daylight saving included — that is the "Local time there" reading in the HUD. The Moon’s phase, and how much of it is lit, are almost the same all over the world. But the hour you can see it, and its spot in the sky, change from place to place. That is the very heart of sanctifying the month by sighting.',
   'התאריך והשעה שבשדות הבקרה נשארים בשעון המקומי של המכשיר; רגע אחד הוא לכל המקומות, וכל מקום רואה אותו בשעונו שלו.':
     'The date and time in the control fields remain in the device’s own clock; the moment is one and the same everywhere, and each place sees it by its own clock.',
   'נהרדעא — עירו של שמואל ומרכז ישיבות בבל, על נהר פרת סמוך למפגש נהר מלכא (בקירוב 33.4° צפון, 43.8° מזרח, באזור אנבר שבעיראק). היא מובאת כאן כדי להעמיד את "לדידן" של בני בבל מול "לדידהו" של בני ארץ ישראל שבראש השנה כ׳ ע״ב.':
     'Nehardea — the city of Shmuel and a center of the Babylonian yeshivos, on the Euphrates near its meeting with the Nahr Malka (roughly 33.4°N, 43.8°E, in the Anbar region of Iraq). It is offered here to set the “for us” of the Babylonians against the “for them” of the people of Eretz Yisrael in Rosh Hashanah 20b.',
   'לבנה שמעל האופק בשעות היום אינה נראית לעין מפני אור החמה, אלא בסמוך לשקיעה או אחר הזריחה — וראו רש"י שבת קנ"ו ע"א ד"ה אכיל לא דיליה: "כלבנה המסגת גבול החמה למשול אף ביום".':
-    'A moon above the horizon in daytime is not visible to the eye because of the sunlight, except near sunset or right after sunrise — see Rashi, Shabbos 156a s.v. achil lo dilei: “like the moon that oversteps the sun’s bound, to rule even by day.”',
+    'A moon that is above the horizon during the day is washed out by the sunlight, so the eye cannot see it. You can catch it near sunset, or right after sunrise. See Rashi, Shabbos 156a s.v. achil lo dilei: “like the moon that oversteps the sun’s bound, to rule even by day.”',
   'מולד (ירח חדש)': 'New moon (molad)',
   'רבע ראשון': 'First quarter',
   'ירח מלא': 'Full moon',
@@ -171,7 +173,7 @@ window.TRANSLATIONS.en = {
   'קו רוחב °': 'Latitude °',
   'קו אורך °': 'Longitude °',
   'השעון שבאיור הוא השעון האזרחי במקום הנבחר, כולל שעון קיץ. לצדו מוצגת השעה השמשית — שעון שבו רגע החצות האמיתי של אותו יום (מעבר השמש במרידיאן) נחשב 12:00 בדיוק, והשעות נמנות ממנו. כל ההבדל בין שני השעונים — שלושה הפרשים: שעון הקיץ; ההפרש שבין אזור הזמן לקו האורך של המקום — בירושלים, למשל, 5.24 מעלות מזרחית לקו האורך 30° שהשעון מכוון לפיו, שהן כ-21 דקות; והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך.':
-    'The clock shown is the civil clock of the selected place, including daylight saving. Beside it the solar time is shown — a clock on which that day’s true noon (the Sun’s meridian transit) counts as exactly 12:00, the hours being reckoned from it. The whole difference between the two clocks is three offsets: daylight saving; the offset between the time zone and the local longitude — in Jerusalem, for instance, 5.24° east of the 30° meridian the clock is set by, about 21 minutes; and the equation of time. For "Custom", the time zone is estimated from the longitude.',
+    'The clock in the diagram is the ordinary civil clock of the place you chose, daylight saving included. Next to it is solar time. On that clock, the moment the Sun crosses due south that day — true noon, its meridian transit — counts as exactly 12:00, and the hours are counted from there. Three things make up the whole gap between the two clocks. First, daylight saving. Second, the gap between the time zone and the place’s own longitude — Jerusalem, for example, sits 5.24° east of the 30° meridian its clock is set by, which comes to about 21 minutes. Third, the equation of time — the small wobble in the Sun’s timekeeping over the course of the year. Under "Custom", the time zone is estimated from the longitude.',
   'אביב · ניסן': 'Spring · Nissan', 'קיץ · תמוז': 'Summer · Tammuz',
   'סתיו · תשרי': 'Autumn · Tishrei', 'חורף · טבת': 'Winter · Teves',
   'סתיו · ניסן': 'Autumn · Nissan', 'חורף · תמוז': 'Winter · Tammuz',
@@ -192,18 +194,18 @@ window.TRANSLATIONS.en = {
     'Halachic times computed by the Otzaria calendar (including elevation), for the date shown in the diagram and the city chosen here. Default: the city selected in the app, updating live when it changes.',
   'מדוע מסלול השמש נודד בין קיץ לחורף?': 'Why does the Sun’s path wander between summer and winter?',
   'ציר הסיבוב של כדור הארץ נטוי כ־23.44° ממאונך למישור מסלולו סביב השמש, וכיוונו קבוע בחלל — הוא מצביע תמיד אל אותה נקודה בשמים. לכן בתקופת תמוז חצי הכדור הצפוני רכון אל השמש והיא נראית גבוה (מעל קו ההיפוך הצפוני), בתקופת טבת הוא רכון ממנה והלאה והיא נמוכה (מעל קו ההיפוך הדרומי), ובניסן ותשרי הציר ניצב לכיוון השמש — והיא מעל קו המשווה. לחצו על כפתורי התקופות או גררו את "יום מתקופת ניסן" — והארץ תנוע במסלולה.':
-    'Earth’s rotation axis is tilted about 23.44° from the perpendicular to its orbital plane, and its direction is fixed in space — it always points at the same spot in the sky. So at Tekufas Tammuz the northern hemisphere leans toward the Sun and it appears high (over the northern tropic); at Tekufas Teves it leans away and the Sun is low (over the southern tropic); and at Nissan and Tishrei the axis is side-on to the Sun — which then stands over the equator. Press the tekufah buttons or drag "Day from Tekufas Nissan" to move the Earth along its orbit.',
+    'The Earth spins on an axis. That axis is tilted about 23.44° away from straight up out of its orbit, and it always points at the same spot in the sky. So at Tekufas Tammuz the northern half of the Earth leans toward the Sun, and the Sun looks high — over the northern tropic. At Tekufas Teves that half leans away, and the Sun is low — over the southern tropic. At Nissan and Tishrei the axis leans neither toward the Sun nor away from it, and the Sun stands over the equator. Press the tekufah buttons, or drag "Day from Tekufas Nissan", and the Earth will move along its orbit.',
   'ובמבט מן הארץ, כדרך חז״ל והרמב״ם: השמש מהלכת בגלגל הנוטה (גלגל המזלות), שחציו נוטה צפונה וחציו דרומה מקו המשווה — ולכן מסלולה היומי שבאיור הגדול נודד צפונה ודרומה במשך השנה. את הגלגל הנטוי עצמו רואים ב"מבט הצופה" שבלשונית גלגל המזלות.':
-    'And as seen from the Earth, in the manner of Chazal and the Rambam: the Sun travels along the inclined wheel (the zodiac), half of which leans north and half south of the equator — which is why its daily path in the main diagram drifts north and south through the year. The tilted wheel itself is shown in the "Observer view" of the Zodiac Wheel tab.',
+    'And here is the same thing as seen from the Earth, the way Chazal and the Rambam describe it. The Sun travels along a tilted wheel — the zodiac. Half of that wheel leans north of the equator and half leans south. That is why the Sun’s daily path in the main diagram drifts north and south through the year. The tilted wheel itself is shown in the "Observer view" of the Zodiac Wheel tab.',
   'המעגל הניצב לציר — קו המשווה': 'the circle perpendicular to the axis — the equator',
   'האותיות שעל הכדור: צ ו־ד הם קצות ציר הסיבוב — הקוטב הצפוני והקוטב הדרומי, והמעגל הניצב להם הוא קו המשווה, שהוא קו רוחב אפס (ראו המקרא שבשולי האיור). מזרח ומערב אינם מסומנים, שאינם נקודות קבועות באיור: הכדור מסתובב סביב אותו ציר פעם ביממה, וכל נקודה שבמשווה פונה במשך היום לכל הרוחות. את המזרח והמערב רואים באיור הגדול, שהוא מבט מן הארץ.':
-    'The letters on the globe: N and S are the ends of the rotation axis — the north and south poles; the circle perpendicular to them is the equator, latitude zero. East and west are not marked, because they are not fixed points in this drawing: the globe spins about that same axis once a day, so every point on the equator faces every direction in the course of the day. East and west are seen in the main diagram, which is the view from the Earth.',
+    'The letters on the globe: N and S mark the two ends of the axis the globe spins on — the north and south poles. The circle that runs around the middle, square to that axis, is the equator, latitude zero. East and west are not marked, because they are not fixed points in this drawing. The globe spins on that axis once a day, so every point on the equator faces every direction in the course of the day. For east and west, look at the main diagram, which is the view from the Earth.',
   'הנקודה הצהובה שעל הכדור היא המקום שהשמש ניצבת מעליו באותו רגע, והיא מראה מעל איזה קו רוחב היא עומדת: בתקופות ניסן ותשרי היא על קו המשווה ממש, ובתמוז ובטבת על קווי ההיפוך של-23.44 מעלות צפונה ודרומה. קרן השמש נמשכת עד שפת הכדור בלבד, כדי שיהיה ניכר לאן היא מגיעה. האיור, ככל הלשונית, מחושב אסטרונומית: סימוני התקופות עומדים ברגעיהן האמיתיים, ולכן אינם מחלקים את השנה לרבעים שווים בזמן כתקופת שמואל — שהעונות האמיתיות אינן שוות באורכן (האביב והקיץ ארוכים מן הסתו והחורף) — אף שבמסלול עצמו הם רחוקים זה מזה תשעים מעלות בשווה.':
-    'The yellow dot on the globe is the place the Sun stands directly over at that moment, and it shows which latitude it stands over: at the tekufos of Nissan and Tishrei it lies exactly on the equator, and at Tammuz and Teves on the tropics of 23.44° north and south. The Sun’s ray is drawn only as far as the edge of the globe, so that where it arrives can be seen. This illustration, like the whole tab, is computed astronomically: the tekufah marks stand at their true moments, and so do not divide the year into quarters equal in time as in Tekufas Shmuel — for the true seasons are unequal in length (spring and summer are longer than autumn and winter) — though along the orbit itself they are an equal ninety degrees apart.',
+    'The yellow dot on the globe marks the place the Sun is standing straight over at that moment. It shows you which latitude the Sun is over: at the tekufos of Nissan and Tishrei it sits exactly on the equator, and at Tammuz and Teves on the tropics, 23.44° north and south. The Sun’s ray is drawn only as far as the edge of the globe, so you can see where it lands. This picture, like the whole tab, is worked out astronomically. The tekufah marks stand at their true moments. So they do not cut the year into four stretches equal in time, the way Tekufas Shmuel does — the true seasons are not equal in length, and spring and summer run longer than autumn and winter. Along the orbit itself, though, they are an even ninety degrees apart.',
   'ומפני מה נראה הכדור בתקופת ניסן כולו כמעט בצד הלילה, ובתשרי כולו מואר? משום שהאיור הוא מבט מן הצד, ובתקופת ניסן הארץ עומדת ביננו ובין השמש — ונמצא שאנו רואים את צדה שאינו מואר, ובתשרי היא מעבר לשמש ואנו רואים את צד היום — כענין מופעי הלבנה ממש. בשתי התקופות האלו הנקודה שהשמש מעליה על קו המשווה בשווה, וכשהיא נופלת בצד הרחוק של הכדור היא מסומנת כטבעת ריקה.':
-    'And why does the globe appear almost entirely in night at the tekufah of Nissan, and fully lit at Tishrei? Because the drawing is a view from the side, and at the tekufah of Nissan the Earth stands between us and the Sun — so we see its unlit side; while at Tishrei it is beyond the Sun and we see its day side — exactly as with the phases of the Moon. At both of these tekufos the point the Sun stands over is on the equator all the same, and when it falls on the far side of the globe it is marked as an empty ring.',
+    'Why is the globe almost all in night at the tekufah of Nissan, and fully lit at Tishrei? Because we are looking at it from the side. At the tekufah of Nissan the Earth stands between us and the Sun, so we see its unlit side. At Tishrei it is on the far side of the Sun, so we see its day side. It works exactly like the phases of the Moon. At both of these tekufos the point the Sun stands over is on the equator all the same, and when that point falls on the far side of the globe it is drawn as an empty ring.',
   'במבט־על אתם מביטים על הגלגל מבחוץ, מצדו הצפוני של מישור המזלות (מישור המלקה) — הארץ במרכז, ושנים־עשר המזלות סביבה כסדרם. זו מעין מפה ולא תמונה של הרקיע: היא מראה באיזה מזל עומד כל גרם, ולא את גובהו מעל האופק. לכן אף קו האופק מצויר בו כקו החוצה את הגלגל — קו החיתוך של מישור האופק של הצופה בגלגל — וחצי הגלגל המוצל הוא מה שמתחת לארץ. את הגובה שברקיע ממש רואים ב"מבט הצופה".':
-    'In the top-down view you look at the wheel from outside, from the northern side of the plane of the zodiac (the ecliptic) — the Earth at the center and the twelve signs around it in order. This is a map rather than a picture of the sky: it shows which sign each body stands in, not its height above the horizon. Hence the horizon too is drawn as a line cutting across the wheel — the line where the observer’s horizon plane cuts it — and the shaded half of the wheel is what lies beneath the Earth. Actual height in the sky is shown in the “Observer view”.',
+    'In the top-down view you are looking at the wheel from outside, from the northern side of the flat plane the zodiac sits on — the ecliptic. The Earth is at the center, with the twelve signs around it in order. Think of it as a map, not a picture of the sky: it tells you which sign each body stands in, not how high it is above the horizon. That is why the horizon too is drawn as a line cutting across the wheel — the line where the flat horizon around the observer slices through it — and the shaded half of the wheel is what lies beneath the Earth. For real height in the sky, use the “Observer view”.',
   'השמש עומדת כעת מעל קו רוחב': 'The Sun now stands over latitude',
   'קו המשווה': 'the equator',
   'שנת החמה — הלכה': 'The solar year — Halachah',
@@ -216,11 +218,11 @@ window.TRANSLATIONS.en = {
   'ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז וטבת (הקיצון).':
     'The four tekufos are the extreme points of the Sun’s path: Nissan/Tishrei (equinoxes), Tammuz and Teves (solstices).',
   'לחצני התקופות שבאיור קופצים אל רגעי התקופה האמיתיים, המחושבים אסטרונומית — והם שונים מתקופת שמואל ומתקופת רב אדא, שהן שנות ממוצע. עיין רמב״ם הלכות קידוש החודש פרקים ט–י.':
-    'The tekufah buttons in the diagram jump to the true, astronomically computed moments of the tekufos — which differ from the tekufos of Shmuel and of Rav Ada, both of which are mean years. See Rambam, Hilchos Kiddush HaChodesh, ch. 9–10.',
+    'The tekufah buttons in the diagram jump to the true moments of the tekufos, worked out astronomically. These are not the same as the tekufos of Shmuel or of Rav Ada, which both use an average year. See Rambam, Hilchos Kiddush HaChodesh, ch. 9–10.',
   'מצפון לקו המשוה: תמוז=קיץ, טבת=חורף. מדרום לקו המשוה: תמוז=חורף, טבת=קיץ.':
     'North of the equator: Tammuz=summer, Teves=winter. South of the equator: Tammuz=winter, Teves=summer.',
   'הזמנים באיור (זריחה, שקיעה, חצות, השעה השמשית ומיקום השמש) מחושבים אסטרונומית במדויק (Astronomy Engine) לגובה פני הים. ייתכנו הבדלים קלים מהלוחות בשל גובה המקום ושיטות החישוב — אין לסמוך עליהם להלכה.':
-    'The times in the diagram (sunrise, sunset, chatzos, solar time and the Sun’s position) are computed astronomically (Astronomy Engine) at sea level. Small differences from published calendars may occur due to elevation and calculation methods — do not rely on them for halachah.',
+    'The times in the diagram — sunrise, sunset, chatzos, solar time and the Sun’s position — are worked out astronomically (by Astronomy Engine) for sea level. They can differ a little from printed calendars, because of a place’s elevation and because methods of calculation differ. Do not rely on them for halachah.',
   // ערים
   'ירושלים': 'Jerusalem', 'נהרדעא (בבל)': 'Nehardea (Babylonia)',
   'לייקווד': 'Lakewood', 'ניו יורק': 'New York', "לוס אנג'לס": 'Los Angeles',
@@ -237,9 +239,10 @@ window.TRANSLATIONS.en = {
   'מתחת לאופק': 'below horizon',
 
   // ── גלגל המלקה ───────────────────────────────────────────────────────
-  'טלה': 'Aries', 'שור': 'Taurus', 'תאומים': 'Gemini', 'סרטן': 'Cancer',
-  'אריה': 'Leo', 'בתולה': 'Virgo', 'מאזניים': 'Libra', 'עקרב': 'Scorpio',
-  'קשת': 'Sagittarius', 'גדי': 'Capricorn', 'דלי': 'Aquarius', 'דגים': 'Pisces',
+  // שמות המזלות מוצגים דו-לשונית; על הגלגל הם נפרקים לשתי שורות (ראו zodiac-sim.js)
+  'טלה': 'Aries (טלה)', 'שור': 'Taurus (שור)', 'תאומים': 'Gemini (תאומים)', 'סרטן': 'Cancer (סרטן)',
+  'אריה': 'Leo (אריה)', 'בתולה': 'Virgo (בתולה)', 'מאזניים': 'Libra (מאזניים)', 'עקרב': 'Scorpio (עקרב)',
+  'קשת': 'Sagittarius (קשת)', 'גדי': 'Capricorn (גדי)', 'דלי': 'Aquarius (דלי)', 'דגים': 'Pisces (דגים)',
   'מזל עולה (במזרח)': 'Ascendant (in the east)',
   'מזל באמצע הרקיע': 'Midheaven sign',
   'ימים (מהלך המזלות בשנה)': 'Days (yearly motion)',
@@ -249,16 +252,16 @@ window.TRANSLATIONS.en = {
   'רגעי היום (לתאריך ולמקום המוצגים)': 'Moments of the day (for the date and place shown)',
   '🌅 זריחה': '🌅 Sunrise', '🌇 שקיעה': '🌇 Sunset', '🌙 חצות': '🌙 Midnight',
   'הרגעים מחושבים לתאריך ולמקום שנבחרו, ולא לשעת שעון קבועה — בירושלים השקיעה נעה בין 16:39 בטבת ל-19:47 בתמוז. ברגע הזריחה השמש עומדת בנקודה העולה, ולכן המזל העולה הוא המזל שהשמש בו; ברגע השקיעה היא בנקודה השוקעת שמנגד; ובחצות הלילה היא בנקודה הנמוכה שמתחת לארץ, והמזל שכנגדה עומד באמצע הרקיע.':
-    'The moments are computed for the chosen date and place, not for a fixed clock hour — in Jerusalem sunset moves between 16:39 in Teves and 19:47 in Tammuz. At sunrise the Sun stands at the rising point, so the ascendant is the sign the Sun is in; at sunset it is at the setting point opposite; and at midnight it is at the lowest point beneath the Earth, with the opposite sign at the midheaven.',
+    'These moments are worked out for the date and place you chose, not for a fixed hour on the clock. In Jerusalem, sunset moves between 16:39 in Teves and 19:47 in Tammuz. At sunrise the Sun stands at the rising point, so the ascendant — the sign coming up in the east — is the sign the Sun is in. At sunset the Sun is at the setting point opposite it. At midnight it is at the lowest point beneath the Earth, and the sign opposite it stands at the midheaven, the top of the sky.',
   'למה הרצועה נראית נוטה תמיד לדרום?': 'Why does the band always appear to lean south?',
   'משום שהצופה עומד בקו רוחב צפוני. הציר שסביבו מסתובב כל הרקיע מצביע אל הקוטב השמימי שבצפון, וגובהו מעל האופק שוה בדיוק לקו הרוחב (בירושלים 31.8°); ממילא משווה השמים נמתח מנקודת המזרח, דרך הדרום בגובה 58° (90° פחות 31.8°), אל נקודת המערב — כל קמרונו בחצי הדרומי של הרקיע. ורצועת המזלות חובקת את משווה השמים, חציה עד 23.44° צפונה וחציה עד 23.44° דרומה, ולכן גם שיאה בדרום — בין 34° ל־82°. שנו את קו הרוחב שבכרטיס "האופק ומזל עולה" למינוס 31.8 (דרום) והתמונה תתהפך והרצועה תיטה לצפון; בקו רוחב 0 משווה השמים עובר ממש מעל הראש, ולכן הרצועה אינה נוטה עוד לצד אחד קבוע — אבל נטייתה אינה מתבטלת: היא נשארת נטויה 23.44° למשווה השמים, ובמשך היממה היא מתנדנדת סביב הזנית ונוטה חליפות צפונה ודרומה. גלגל המזלות עצמו עובר בדיוק מעל הראש רק ברגעים שנקודת השוויון — 0° טלה או 0° מאזניים — נמצאת בזנית.':
-    ' Because the observer stands at a northern latitude. The axis about which the whole sky turns points to the celestial pole in the north, and its altitude above the horizon equals the latitude exactly (31.8° in Jerusalem); hence the celestial equator runs from the east point, through the south at an altitude of 58° (90° minus 31.8°), to the west point — its entire arc in the southern half of the sky. The zodiac band straddles the celestial equator, half of it up to 23.44° north and half up to 23.44° south, so its highest point is likewise in the south — between 34° and 82°. Set the latitude in the "Horizon and ascendant" card to -31.8 (south) and the picture flips, the band leaning north; at latitude 0 the celestial equator passes directly overhead, so the band no longer leans to one fixed side — but its tilt does not vanish: it stays inclined 23.44° to the celestial equator, swaying through the day about the zenith, leaning north and south by turns. The zodiac itself passes exactly overhead only at the moments when an equinox point — 0° Aries or 0° Libra — stands at the zenith.',
+    ' Because the observer stands at a northern latitude. The whole sky turns around one axis, and that axis points at the celestial pole in the north. Its height above the horizon is exactly the latitude — 31.8° in Jerusalem. So the celestial equator — the line in the sky right above the Earth’s equator — runs from the east point, up through the south at a height of 58° (90° minus 31.8°), and down to the west point. Its whole arc lies in the southern half of the sky. The zodiac band straddles that line, half of it up to 23.44° north and half up to 23.44° south, so its highest point is in the south too — between 34° and 82°. Set the latitude in the "Horizon and ascendant" card to -31.8 (south) and the picture flips: now the band leans north. At latitude 0 the celestial equator passes straight overhead, so the band no longer leans to one fixed side. But its tilt does not vanish. It stays tilted 23.44° to the celestial equator, and through the day it sways around the zenith — the point straight overhead — leaning north and south by turns. The zodiac itself passes exactly overhead only at the moments when an equinox point — 0° Aries or 0° Libra — stands at the zenith.',
   'ולמה התנועה נראית מעוקלת?': 'And why does the motion look curved?',
   'שני טעמים. האחד: הסיבוב היומי אינו סביב הנקודה שמעל הראש אלא סביב הציר השמימי הנטוי שבצפון, ולכן כל גרם מהלך במעגל הנטוי לאופק בכ־58° — עולה במזרח באלכסון, מגיע לשיאו בדרום, ושוקע במערב באלכסון. והשני: האיור הוא היטל של כיפת הרקיע כולה על שטח שטוח, כמבט עדשה רחבה, וכל מעגל שבו נראה מתעקל. הגלגל עצמו מסתובב בשוה סביב צירו — העיקום הוא במבט ולא בגלגל.':
-    ' Two reasons. First: the daily rotation is not about the point overhead but about the tilted celestial axis in the north, so every body travels a circle inclined some 58° to the horizon — rising in the east at a slant, peaking in the south, and setting in the west at a slant. Second: the drawing projects the entire dome of the sky onto a flat surface, as through a wide-angle lens, and every circle on it appears curved. The wheel itself turns evenly about its axis — the curvature is in the view, not in the wheel.',
+    ' Two reasons. First: the daily turning is not around the point straight overhead. It is around the tilted celestial axis in the north. So every body travels a circle that is tilted some 58° to the horizon — it rises in the east at a slant, reaches its high point in the south, and sets in the west at a slant. Second: the drawing squeezes the whole dome of the sky onto a flat surface, as through a wide-angle lens, and on such a picture every circle comes out curved. The wheel itself turns evenly around its axis — the bend is in the view, not in the wheel.',
   'ארבע התקופות (בשנת התאריך המוצג)': 'The four tekufos (in the year shown)',
   'נטיית הרצועה עצמה אינה משתנה כלל — הקבוע הוא הגלגל הנטוי. מה שנודד במשך השנה הוא מקום השמש שבו: בתקופת תמוז היא בקצה הצפוני שברצועה ולכן עולה גבוה, בתקופת טבת בקצה הדרומי ולכן נמוכה, ובניסן ובתשרי היא על משווה השמים עצמו. לחצו והשוו — השעה שביממה נשמרת, ובחרו "מבט הצופה" כדי לראות את גובה השמש שברקיע.':
-    'The tilt of the band itself never changes — the inclined wheel is the constant. What wanders through the year is the Sun’s place upon it: at Tekufas Tammuz it is at the northern end of the band and so rises high, at Tekufas Teves at the southern end and so stays low, and at Nissan and Tishrei it is on the celestial equator itself. Press and compare — the time of day is kept; choose "Observer view" to see the Sun’s altitude in the sky.',
+    'The tilt of the band itself never changes — the tilted wheel is the one thing that stays put. What moves through the year is the Sun’s place upon it. At Tekufas Tammuz the Sun is at the northern end of the band, so it rises high. At Tekufas Teves it is at the southern end, so it stays low. At Nissan and Tishrei it is on the celestial equator itself. Press and compare — the time of day stays the same. Choose "Observer view" to see how high the Sun is in the sky.',
   'האופק ומזל עולה': 'Horizon and ascendant',
   'הצג את קו האופק ואת המזל העולה': 'Show the horizon line and the ascendant',
   'המזל העולה הוא הנקודה שבגלגל המזלות (הוא "גלגל המלקה") העולה באותו רגע באופק המזרחי. הגלגל כולו מסתובב סביב הארץ פעם ביממה, ולכן כל שנים-עשר המזלות עולים ושוקעים בכל יום — בערך מזל לכל שעתיים.':
@@ -266,7 +269,7 @@ window.TRANSLATIONS.en = {
   'כשהאופק מוצג, הגלגל מסובב לפי הרגע והמקום: המזרח (המזל העולה) בצד שמאל, המערב (השוקע) מנגד, וחצי הגלגל המוצל הוא מה שמתחת לאופק. בחרו "שעות" בבקרת הזמן והפעילו — ותראו את המזלות עולים זה אחר זה.':
     'When the horizon is shown, the wheel is rotated for the moment and place: east (the rising sign) on the left, west opposite, and the shaded half is below the horizon. Choose "Hours" in the time controls and press Play to watch the signs rise one after another.',
   'קו אמצע הרקיע (המקווקו) אינו ניצב לקו האופק, והוא נע במשך היממה — וכך צריך להיות. הכיוון בשמים אמנם קבוע, קו חצי השמים שבדרום, אבל הקו שבאיור מסמן את נקודת הגלגל שנמצאת שם באותו רגע — והקשת שעל הגלגל בין הנקודה העולה לנקודה שבחצי השמים משתנה, מפני שהגלגל נטוי כ-23.44° לקו המשווה. בירושלים היא נעה בין 71° ל-108° במקום 90°, בלונדון בין 54° ל-126°, וסמוך לקו המשווה כמעט אינה משתנה. הקשת עצמה מוצגת בלוח הנתונים, ומכאן שאין לקבע את שני הקווים גם יחד — והעוגן כאן הוא המזל העולה.':
-    'The midheaven line (dashed) is not perpendicular to the horizon line, and it shifts through the day — as it should. The direction in the sky is indeed fixed, the meridian in the south, but the line in the drawing marks the point of the wheel standing there at that moment — and the arc along the wheel between the rising point and the culminating point varies, because the wheel is tilted about 23.44° to the equator. In Jerusalem it ranges from 71° to 108° instead of 90°, in London from 54° to 126°, and near the equator it barely changes. The arc itself is shown in the data panel; hence both lines cannot be fixed at once, and the anchor here is the rising sign.',
+    'The midheaven line (the dashed one) is not square to the horizon line, and it shifts through the day. That is how it should be. The direction in the sky is indeed fixed — it is the meridian, due south. But the line in the drawing marks whichever point of the wheel is standing there at that moment. The stretch of wheel between the rising point and that top point keeps changing, because the wheel is tilted about 23.44° to the equator. In Jerusalem it ranges from 71° to 108° instead of a steady 90°, in London from 54° to 126°, and near the equator it barely changes at all. That stretch is shown in the data panel. So the two lines cannot both be held fixed, and the anchor here is the rising sign.',
   'הקשת מאמצע הרקיע למזל העולה': 'Arc from midheaven to ascendant',
   'סדר עליית המזלות — ראו ראש השנה י״א ע״ב–י״ב ע״א וברש״י שם.':
     'On the order in which the signs rise, see Rosh Hashanah 11b–12a with Rashi.',
@@ -274,14 +277,14 @@ window.TRANSLATIONS.en = {
   'מזרח · עולה': 'East · rising',
   'מערב · שוקע': 'West · setting',
   'אמצע הרקיע': 'Midheaven',
-  '0° טלה': '0° Aries',
+  '0° טלה': '0° Aries (טלה)',
   'מבט': 'View',
   'מבט־על על הגלגל': 'Top-down wheel',
   'מבט הצופה (הרקיע)': 'Observer view (sky)',
   '🌅 מבט למזרח': '🌅 Face east',
   'מבט מהצד (לדרום)': 'Side view (face south)',
   'במבט הצופה אתם עומדים על הארץ: רצועת המזלות נטויה על פני הרקיע — חציה נוטה צפונה וחציה דרומה מקו המשווה השמימי. גררו את האיור לסיבוב המבט, בחרו "שעות" והפעילו — ותראו את המזלות עולים מן המזרח והשמש נישאת עמם.':
-    'In the observer view you stand on the Earth: the zodiac band arcs tilted across the sky — half of it leaning north and half south of the celestial equator. Drag the drawing to turn your gaze, choose "Hours" and press Play to watch the signs rise in the east with the sun carried along.',
+    'In the observer view you are standing on the Earth. The zodiac band arcs across the sky at a tilt — half of it leaning north of the celestial equator and half leaning south. Drag the drawing to turn which way you are facing. Choose "Hours" and press Play, and you will see the signs rise in the east with the sun carried along with them.',
   'השמש במזל': 'Sun in sign',
   'צופה': 'Observer',
   'משווה השמים': 'Celestial equator',
@@ -292,9 +295,8 @@ window.TRANSLATIONS.en = {
   // ── שרי השעות ────────────────────────────────────────────────────────
   'יום בשבוע': 'Day of week',
   'שעה זמנית': 'Seasonal hour',
-  'שר השעה —': 'Hour ruler —',
-  'שר השעה': 'Hour ruler',
-  'שר היום': 'Day ruler',
+  // 'שרי השעות', 'שר השעה', 'שר היום' — בכוונה בלי רשומה: מונח תורני שתרגומו
+  // המילולי ריק ממשמעות נשאר בעברית, כנהוג בציבור התורני דובר האנגלית.
   'שעות הלילה': 'Night hours',
   'שעות היום': 'Day hours',
   ' — ביום': ' — daytime', ' — בלילה': ' — nighttime',
@@ -302,15 +304,15 @@ window.TRANSLATIONS.en = {
   'תקופת': 'Tekufas',
   'שעות מתחילת הלילה': 'hours from nightfall',
   'השעות הזמניות מחושבות מהזריחה עד השקיעה (יום) ומהשקיעה עד הזריחה (לילה) במקום הנבחר, כל אחת מחולקת לשתים-עשרה.':
-    'Seasonal hours run from sunrise to sunset (day) and sunset to sunrise (night) at the selected place, each divided into twelve.',
+    'A seasonal hour is one twelfth of the day, or one twelfth of the night. The day runs from sunrise to sunset, and the night from sunset to sunrise, at the place you chose. Each one is split into twelve equal parts.',
   'ארבע התקופות ושריהן': 'The four tekufos and their rulers',
   'שנה עברית': 'Hebrew year',
   'תקופת שמואל: שנה = 365 יום ו-6 שעות, וכל תקופה 91 יום ו-7½ שעות. מכאן שתקופת ניסן נופלת תמיד ברבעי היום (0, 6, 12, 18 שעות מתחילת הלילה), תמוז — באחת ומחצה שאחריהן, תשרי — בשלוש, וטבת — בארבע ומחצה. השעות כאן שעות שוות מתחילת הלילה (שש בערב), כדרך חשבון התקופות.':
-    'Tekufas Shmuel: a year = 365 days 6 hours, each tekufah 91 days 7½ hours. Hence Tekufas Nissan always falls at day-quarters (0, 6, 12, 18 hours from nightfall), Tammuz an hour and a half later, Tishrei three, Teves four and a half. Hours here are fixed hours from nightfall (6 pm), as tekufos are traditionally reckoned.',
+    'Tekufas Shmuel counts a year as 365 days and 6 hours. Each tekufah (season) is 91 days and 7½ hours. So Tekufas Nissan always falls at a quarter point of the day: 0, 6, 12 or 18 hours from nightfall. Tammuz falls an hour and a half later, Tishrei three hours later, and Teves four and a half. The hours here are fixed hours counted from nightfall (6 pm), the way tekufos have always been reckoned.',
   'שבעת כוכבי הלכת משמשים בשעות היממה על הסדר': 'The seven planets serve the hours of the day in the order',
   'שצ״ם חנכ״ל': 'ShaTZaM ChaNKaL',
   '— שבתאי, צדק, מאדים, חמה, נוגה, כוכב, לבנה — וחוזר חלילה. שעה ראשונה של יום ראשון היא לחמה, ומכיוון שיממה בת עשרים וארבע שעות והכוכבים שבעה (24 = 3×7+3), מתקדם שר השעה הראשונה בשלושה בכל יום — ומכאן שמות ימי השבוע בלשונות אוה״ע ושר לכל יום: א׳ חמה, ב׳ לבנה, ג׳ מאדים, ד׳ כוכב, ה׳ צדק, ו׳ נוגה, שבת שבתאי.':
-    '— Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon — repeating. The first hour of Sunday belongs to the Sun, and since a day has 24 hours and the planets are seven (24 = 3×7+3), the ruler of the first hour advances by three each day — hence the weekday names in other languages, and a ruler for each day: Sun. Sun, Mon. Moon, Tue. Mars, Wed. Mercury, Thu. Jupiter, Fri. Venus, Shabbos Saturn.',
+    '— Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon — and then the order starts again. The first hour of Sunday belongs to the Sun. A day has 24 hours, and there are seven planets. Since 24 = 3×7+3, the ruler of the first hour moves ahead by three each day. That is where the weekday names in other languages come from, and each day has its own ruler: Sun. Sun, Mon. Moon, Tue. Mars, Wed. Mercury, Thu. Jupiter, Fri. Venus, Shabbos Saturn.',
   'ראו עירובין נ״ו ע״א ורש״י שם ד״ה ואין תקופה, בשם רבי שבתי דונולו הרופא.':
     'See Eruvin 56a and Rashi there s.v. ve-ein tekufah, citing R. Shabsai Donolo the physician.',
   'ש=שבתאי · צ=צדק · מ=מאדים · ח=חמה · נ=נוגה · כ=כוכב · ל=לבנה':
@@ -330,7 +332,7 @@ window.TRANSLATIONS.en = {
   'בקרת זמן (שעון ישראל)': 'Time controls (Israel time)',
   'הצג יום ולילה על הגלובוס': 'Show day/night on the globe',
   'הפעילו וצפו: כשהחמה שוקעת במקומות שבמחלוקת, שלפי כל שיטה מתחלף היום ליום אחר.':
-    'Press Play and watch: as the sun sets over the disputed places, each opinion turns the day into a different day.',
+    'Press Play and watch. When the sun sets over the places under dispute, each opinion turns the day into a different day.',
   'מקומות שהנדון משליך עליהם': 'Places affected by the question',
   'סיבוב הגלובוס': 'Rotate the globe',
   'גררו את הגלובוס לסיבוב.': 'Drag the globe to rotate.',
@@ -348,30 +350,30 @@ window.TRANSLATIONS.en = {
   'קווי האורך': 'Lines of longitude',
   'קווי הרוחב': 'Lines of latitude',
   "יוצאים מקוטב אל קוטב וחוצים את קו המשוה, ומודדים מזרח ומערב מקו גריניץ' (0°) עד 180° לכל צד.":
-    ' run from pole to pole across the equator, measuring east and west from the Greenwich line (0°) up to 180° each way. ',
+    ' run from pole to pole, crossing the equator. They measure east and west from the Greenwich line (0°), up to 180° in each direction. ',
   'מקבילים לקו המשוה, ומודדים צפון ודרום מ-0° שבמשוה עד 90° שבקטבים.':
-    ' run parallel to the equator, measuring north and south from 0° at the equator up to 90° at the poles.',
+    ' run parallel to the equator. They measure north and south, from 0° at the equator up to 90° at the poles.',
   'הרשת שעל הגלובוס מסומנת': 'The grid on the globe is marked every',
   'בכל 15 מעלות': ' 15 degrees',
   ', לאורך ולרוחב. במקווקו מסומנים חוג הסרטן (23.44° צפון) וחוג הגדי (23.44° דרום), ומעגלי הקוטב — הצפוני והדרומי (66.56° צפון ודרום).':
-    ', in both longitude and latitude. Dashed: the Tropic of Cancer (23.44°N) and the Tropic of Capricorn (23.44°S), and the Arctic and Antarctic circles (66.56°N and S).',
+    ', in both longitude and latitude. The dashed lines are the Tropic of Cancer (23.44°N) and the Tropic of Capricorn (23.44°S), and the Arctic and Antarctic circles (66.56°N and S).',
   '15 מעלות = שעה': '15 degrees = one hour',
   '— הכדור מסתובב 360 מעלות ביממה, ונמצא שהשמש נעה מעל פניו 15 מעלות בכל שעה. מכאן שכל תנועה של 15 מעלות מזרחה הזמן מתקדם בשעה, וכל 15 מעלות מערבה הזמן מתאחר בשעה — וכל רצועה שבין שני קווי אורך שברשת היא שעה.':
-    ' — the Earth turns 360° in a day, so the Sun moves 15° over it every hour. Hence every 15° eastward the time is an hour later, and every 15° westward an hour earlier — and each band between two grid meridians is one hour.',
+    ' — the Earth turns a full 360° in one day, so the Sun moves 15° across it every hour. Go 15° east and the time is an hour later. Go 15° west and it is an hour earlier. So each band between two grid meridians (longitude lines) is one hour.',
   'עשרים וארבע רצועות של 15 מעלות הן עשרים וארבע שעות, היממה כולה. לפיכך המקיף את הכדור כולו מרויח או מפסיד יממה שלמה — וכאן נצרך קו התאריך, שבו מתחלף היום.':
-    'Twenty-four bands of 15° are twenty-four hours, a full day. Whoever circles the globe therefore gains or loses a whole day — and that is why a date line is needed, where the day changes.',
+    'Twenty-four bands of 15° make twenty-four hours — one full day. So anyone who travels all the way around the globe gains or loses a whole day. That is why a date line is needed: the place where the day changes.',
   'קו זמן יקום מתואם (UTC)': 'UTC line',
   "— קו גריניץ', 0°.": ' — the Greenwich line, 0°.',
   'קו התאריך שיטת החזו"א': 'Chazon Ish date line',
   '— 90 מעלות מזרחית לירושלים (125.24° מזרח). כל מה שמחובר יבשתית למערב מקו התאריך נדון כמו המערב, ולכן הקו נוטה אל סוף היבשת (הקו הישר העובר בתוך היבשת מסומן במקווקו).':
-    ' — 90° east of Jerusalem (125.24°E). Whatever is joined by land to the west of the line follows the west, so the line bends around to the edge of the landmass (the straight line within the landmass is dashed).',
+    ' — 90° east of Jerusalem (125.24°E). Any land joined to the west side of the line follows the west. So the line bends around to the edge of the landmass. The straight line inside the landmass is shown dashed.',
   'קו התאריך הגרי"מ טיקוצינסקי': 'Tukachinsky date line',
   '— 180 מעלות מירושלים (144.76° מערב). קו מקווקו תכלת — שטח בספק של הגרי"מ: מערב אלסקה, מקו התאריך שלו עד מיצר ברינג, שהסתפק אם הוא נדון כמזרח הקו (שהוא מחובר אליו יבשתית) או כמערבו.':
-    ' — 180° from Jerusalem (144.76°W). Dashed light-blue outline — the area R. Tukachinsky left in doubt: western Alaska, from his line to the Bering Strait, being joined by land to the line’s east.',
+    ' — 180° from Jerusalem (144.76°W). The dashed light-blue outline is the area R. Tukachinsky left in doubt: western Alaska, from his line to the Bering Strait, since it is joined by land to the line’s east.',
   'קו התאריך הסכמי אוה"ע': 'International date line',
   '— 180 מעלות מקו זמן יקום מתואם.': ' — 180° from the UTC line.',
   'ירושלים (35.24° מזרח). הקו המקווקו — קו האורך שעליו שוכנת ירושלים, וממנו נמדדים שני קווי התאריך שבמחלוקת.':
-    'Jerusalem (35.24°E). The dashed line is the meridian on which Jerusalem lies — the reference from which both disputed date lines are measured.',
+    'Jerusalem (35.24°E). The dashed line is the meridian (longitude line) that Jerusalem sits on. Both disputed date lines are measured from it.',
   'הערה: מהלך הקו לאורך חופי היבשות מצויר בקירוב, להמחשת העיקרון בלבד.':
     'Note: the line’s course along the coasts is approximate, for illustration only.',
   'מקורות:': 'Sources:',
@@ -404,7 +406,7 @@ window.TRANSLATIONS.en = {
   'כוכבי לכת': 'Planets',
   'הצג כוכבי לכת': 'Show planets',
   'המרחקים דחוסים (√) לתצוגה; הכיוון מדויק. במבט הגאוצנטרי הכוכבים ממוקמים לפי מרחקם מהארץ — כך נראית צמידוּתם לשמש ולירח.':
-    'Distances are compressed (√) for display; directions are exact. In the geocentric view the planets are placed by their distance from Earth — showing their conjunctions with the Sun and Moon.',
+    'Distances are squeezed down (by a square root) so everything fits on screen. The directions are exact. In the geocentric view — Earth at the center — each planet sits at its own distance from Earth. That is how you see it line up close to the Sun and the Moon (a conjunction).',
   'ליקויים': 'Eclipses',
   'ליקוי לבנה הבא': 'Next lunar eclipse',
   'ליקוי חמה הבא': 'Next solar eclipse',
@@ -418,9 +420,9 @@ window.TRANSLATIONS.en = {
   'ליקוי לבנה חלקי': 'Partial lunar eclipse',
   'צל-קדמי (פנומברה)': 'Penumbral',
   'חרוט הצל של הארץ מוצג בשני המבטים כאחד — הצל קיים תמיד, ונקודת המבט אינה משנה בו דבר. ירח מלא הנכנס אליו = ליקוי לבנה, ואז נראה צל הארץ מכהה את הצד המואר של הלבנה (עומק ההכהיה והאודם מחושבים מן הגאומטריה האמיתית). סביבו מצויר בעמעום גם חרוט הפנומברה — צל חלקי, ובו נעשה ליקוי צל-קדמי. חרוט הצל של הירח קדקודו מגיע בקושי אל הארץ, ובמולד — כשהוא פוגע בה — נעשה ליקוי חמה ליושבי אותו מקום.':
-    'Earth’s shadow cone is shown in both views alike — the shadow always exists, and the viewpoint changes nothing about it. A full moon entering it = a lunar eclipse, and then Earth’s shadow is seen darkening the lit side of the Moon (the depth of the darkening and its copper hue are computed from the true geometry). Around it the penumbral cone is drawn faintly — a partial shadow, in which a penumbral eclipse occurs. The Moon’s own shadow cone barely reaches Earth, and at new moon — where it strikes — a solar eclipse occurs for those beneath it.',
+    'Earth’s shadow cone is shown the same way in both views. The shadow is always there, and your viewpoint changes nothing about it. When a full moon enters it, that is a lunar eclipse. You then see Earth’s shadow darken the lit side of the Moon (how dark it gets, and its copper color, are worked out from the real geometry). A fainter cone is drawn around it — the penumbra, the partial shadow. An eclipse inside that one is called penumbral. The Moon has a shadow cone of its own, and its tip barely reaches Earth. At new moon, where that tip hits, the people under it see a solar eclipse.',
   'המיקומים והכיוונים מחושבים במדויק (Astronomy Engine, וקטורי J2000). המרחק ארץ–ירח מוגדל לצורך תצוגה. הצד המואר של הירח והארץ פונה תמיד אל השמש — כך המופע נוצר פיזיקלית נכון.':
-    'Positions and directions are computed exactly (Astronomy Engine, J2000 vectors). The Earth–Moon distance is enlarged for display. The lit side of Moon and Earth always faces the Sun — so the phase forms physically correctly.',
+    'Positions and directions are computed exactly (Astronomy Engine, J2000 vectors). The distance from Earth to the Moon is drawn larger than it really is, so both are easy to see. The lit side of the Moon and of Earth always faces the Sun — so the phase you see forms the way it really does.',
   'מלא': 'total', 'חלקי': 'partial', 'צל-קדמי': 'penumbral',
   'טבעתי': 'annular', 'היברידי': 'hybrid',
 
@@ -452,18 +454,18 @@ window.TRANSLATIONS.en = {
   'מרחק:': 'Distance:',
   'ק״מ': 'km',
   'ככל שהירח רחוק יותר מכדור הארץ הוא נראה קטן יותר, ואינו מספיק לכסות את כל השמש — והליקוי נעשה טבעתי. קרבו את הירח וראו את הליקוי נעשה מלא. כשההדגמה כבויה מוצג מרחקו האמיתי של הירח ברגע המוצג.':
-    'The farther the Moon is from Earth, the smaller it appears — too small to cover the whole Sun, so the eclipse becomes annular. Bring the Moon closer and watch the eclipse become total. When the demo is off, the Moon’s actual distance at the displayed moment is shown.',
+    'The farther the Moon is from Earth, the smaller it looks. Too small, and it cannot cover the whole Sun. Then the eclipse is annular — a ring of sun is left showing around the Moon. Move the Moon closer and watch the eclipse turn total. With the demo off, you see the Moon’s real distance at the moment shown.',
   'הגלובוס': 'Globe',
   'המבט עוקב אחר מרכז הצל': 'View follows the shadow center',
   'גררו את הגלובוס לסיבוב. ההכהיה על פני הכדור — לפי אחוז כיסוי השמש הנראה מכל מקום; הכתם הכהה — אזור הליקוי המלא (או הטבעתי), והקו הכתום — מסלול מרכז הצל, המתקדם בדרך כלל ממערב למזרח.':
-    'Drag the globe to rotate. The darkening reflects the sun-coverage percentage seen from each place; the dark spot is the zone of totality (or annularity), and the orange line is the shadow-center path, usually advancing west to east.',
+    'Drag the globe to turn it. The shading shows how much of the Sun is covered as seen from each place. The dark spot is where the eclipse is total — or annular, with a ring of sun left showing. The orange line is the path of the shadow’s center, which usually moves from west to east.',
   'הסבר קצר': 'In brief',
   'ליקוי לבנה — כדור הארץ עומד בין השמש ובין הירח, ומטיל את צלו על הירח. לעולם אינו בא אלא במילוי הירח, בסביבות ט״ו בחודש.':
-    'Lunar eclipse — the Earth stands between the Sun and the Moon, casting its shadow on the Moon. It only occurs at full moon, around the 15th of the month.',
+    'Lunar eclipse — Earth stands between the Sun and the Moon, and casts its shadow on the Moon. It can only happen at full moon, around the 15th of the month.',
   'ליקוי חמה — הירח עומד בין כדור הארץ ובין השמש, ומסתיר אותה מיושבי הארץ. לעולם אינו בא אלא סמוך למולד, בסביבות ערב ראש חודש.':
-    'Solar eclipse — the Moon stands between the Earth and the Sun, hiding it from Earth’s inhabitants. It only occurs near the molad, around the eve of Rosh Chodesh.',
+    'Solar eclipse — the Moon stands between Earth and the Sun, and hides it from the people on Earth. It can only happen near the molad, around the eve of Rosh Chodesh.',
   'המיקומים, הזמנים ואחוזי הכיסוי מחושבים במדויק (Astronomy Engine); צל הארץ מוגדל 2% כמקובל בשל האטמוספרה. להמחשה בלבד.':
-    'Positions, times and coverage percentages are computed exactly (Astronomy Engine); Earth’s shadow is enlarged 2% for the atmosphere, as customary. For illustration only.',
+    'Positions, times and coverage percentages are computed exactly (Astronomy Engine). Earth’s shadow is drawn 2% larger, the usual allowance for the atmosphere. For illustration only.',
   'תאריך הליקוי': 'Eclipse date',
   'שעה (זמן עולמי)': 'Time (UTC)',
   'אחוז הכיסוי': 'Coverage',
@@ -482,7 +484,7 @@ window.TRANSLATIONS.en = {
   'השמש מתחת לאופק': 'The sun is below the horizon',
   'הליקוי אינו נראה משם ברגע זה': 'The eclipse is not visible from there at this moment',
   'ההבדל בגודל הליקוי בין ערי הארץ הוא בעיקר מצפון לדרום; ההפרש בין מזרח למערב (ירושלים–תל אביב) זניח, שהארץ צרה.':
-    'The difference in eclipse magnitude between cities in Israel is mainly north–south; the east–west difference (Jerusalem–Tel Aviv) is negligible, as the country is narrow.',
+    'How big the eclipse looks changes mainly as you move from north to south in Israel. From east to west — Jerusalem to Tel Aviv — the difference is tiny, because the country is narrow.',
   'מכוסה': 'covered',
   'החמה מנגד, מתחת לאופק': 'The sun is opposite, below the horizon',
   'אור החמה הנשבר באוויר מאדים את הירח': 'Sunlight refracted through the air reddens the Moon',
@@ -491,7 +493,7 @@ window.TRANSLATIONS.en = {
   'כיסוי': 'coverage',
   'צל הירח על פני הארץ': 'The Moon’s shadow on Earth',
   'ההכהיה — לפי אחוז כיסוי השמש בכל מקום; הקו הכתום — מסלול מרכז הצל':
-    'Darkening — by sun-coverage percentage at each place; orange line — shadow-center path',
+    'Shading — how much of the Sun is covered at each place; orange line — the path of the shadow’s center',
   'לחצו ▶ הפעל להנעת הליקוי · בחרו ליקוי אחר בלוח הצד': 'Press ▶ Play to animate · choose another eclipse in the side panel',
 
   // ── הלוח העברי ───────────────────────────────────────────────────────
@@ -540,16 +542,16 @@ window.TRANSLATIONS.en = {
   'השנה שאחריה מעוברת': 'The following year is a leap year',
   'שנה שאחרי מעוברת היא תמיד פשוטה': 'A year following a leap year is always regular',
   'משפיע רק כשמולד תשרי חל ביום ב׳ אחרי ט״ו תקפ״ט ולפני י״ח':
-    'Matters only when the molad of Tishrei falls on Monday after 15h 589p and before 18h',
+    'This matters only when the molad of Tishrei falls on Monday, after 15 hours and 589 chalakim, and before 18 hours.',
   'משפיע רק כשמולד תשרי הבא חל ביום ג׳ אחרי ט׳ ר״ד ולפני י״ח':
-    'Matters only when the next molad of Tishrei falls on Tuesday after 9h 204p and before 18h',
+    'This matters only when the next molad of Tishrei falls on Tuesday, after 9 hours and 204 chalakim, and before 18 hours.',
   'הקדמה': 'Introduction',
   'ארבע הדחיות': 'The four postponements',
   'מקורות והערות': 'Sources and notes',
   'אין בלוח שתי שנים מעוברות רצופות — במחזור י״ט השנים המעוברות הן ג׳ ו׳ ח׳ י״א י״ד י״ז י״ט, ואין שתיים סמוכות. הצירוף הזה אינו קיים.':
-    'The calendar has no two consecutive leap years — in the 19-year cycle the leap years are 3, 6, 8, 11, 14, 17, 19, none adjacent. This combination does not occur.',
+    'The calendar never has two leap years in a row. In the 19-year cycle the leap years are 3, 6, 8, 11, 14, 17 and 19 — no two of them are next to each other. So this combination never happens.',
   'אורך השנה שהתקבל אינו מן האורכים החוקיים (353/354/355 בפשוטה, 383/384/385 במעוברת) — צירוף הנתונים שנבחר אינו נפגש בלוח.':
-    'The resulting year length is not one of the valid lengths (353/354/355 regular, 383/384/385 leap) — this combination does not occur in the calendar.',
+    'The year length that came out is not one the calendar allows: 353, 354 or 355 days in a regular year, and 383, 384 or 385 days in a leap year. This combination does not occur in the calendar.',
 
   // ── חלונית חישוב המולדות ─────────────────────────────────────────────
   'חישוב המולדות': 'Molad Calculator',
@@ -566,7 +568,7 @@ window.TRANSLATIONS.en = {
   'האמיתי מאוחר מן הממוצע ב-{h} שעות ו-{m} דקות':
     'The true molad follows the mean by {h}h {m}m',
   'בשנים רחוקות מזמננו דיוק החישוב האסטרונומי פוחת, בעיקר מחמת אי-הוודאות בקצב סיבוב הארץ.':
-    'Far from the present era the astronomical computation loses precision, mainly due to uncertainty in Earth’s rotation rate.',
+    'For years far from our own time, the astronomical calculation is less exact. The main reason: we do not know exactly how fast Earth was spinning back then.',
 
   // ── ממיר השעה היממתית ────────────────────────────────────────────────
   'ממיר שעה יממתית ⇄ שעה אזרחית': 'Calendar-Day ⇄ Civil Time Converter',
@@ -576,22 +578,22 @@ window.TRANSLATIONS.en = {
   'תאריך עברי': 'Hebrew date',
   'שניות': 'Seconds',
   'השעה בשעון ישראל. שעה 18:00 ואילך מתפרשת כליל התאריך הנבחר.':
-    'Time on the Israel clock. 18:00 onward is read as the night of the chosen date.',
+    'This is the time on the Israel clock. From 18:00 on, it counts as the night of the date you chose.',
   'השעות נמנות מתחילת הלילה של התאריך הנבחר — תתר״פ חלקים לשעה.':
-    'Hours are counted from nightfall of the chosen date — 1080 parts per hour.',
+    'The hours are counted from nightfall of the date you chose. Each hour holds 1080 chalakim (parts).',
   'הרגע בשעון ישראל': 'The moment, Israel clock',
   'תוס׳ — שעות זמניות': 'Tosafot — seasonal hours',
   'תוס׳ — שעות שוות': 'Tosafot — equal hours',
   'הגרי״מ טיקוצינסקי — חצות אמיתי': 'R. Y. M. Tukachinsky — true noon',
   'הגר״י מרצבך — חצות ממוצע': 'R. Y. Merzbach — mean noon',
   'שיטה א׳ בתוס׳ עירובין נ״ו ע״א: היממה משקיעה לשקיעה, י״ב שעות ללילה וי״ב ליום':
-    'First view in Tosafot, Eruvin 56a: the day runs sunset to sunset, 12 hours for the night and 12 for the day',
+    'First view in Tosafot, Eruvin 56a: the day runs from sunset to sunset. It is split into 12 hours for the night and 12 for the day',
   'שיטה ב׳ בתוס׳ שם: היממה משקיעה לשקיעה, בשעות שוות':
     'Second view in Tosafot there: the day runs sunset to sunset, in equal hours',
   'הלבוש סי׳ תכ״ח: היממה משש שעות אחר חצות; לפי החצות האמיתי של כל יום':
     'Levush §428: the day begins six hours after noon; per each day’s true noon',
   'הלבוש סי׳ תכ״ח: היממה משש שעות אחר חצות; לפי החצות הממוצע — תחילת היממה 17:39 בשעון החורף':
-    'Levush §428: the day begins six hours after noon; per mean noon — the day always starts at 17:39 standard time',
+    'Levush §428: the day begins six hours after noon — here counted from mean noon, so the day always starts at 17:39 standard time',
   'בשנים רחוקות מזמננו דיוק חישובי הזריחה, השקיעה והחצות פוחת, בעיקר מחמת אי-הוודאות בקצב סיבוב הארץ.':
-    'Far from the present era the sunrise, sunset and noon computations lose precision, mainly due to uncertainty in Earth’s rotation rate.',
+    'For years far from our own time, the sunrise, sunset and noon calculations are less exact. The main reason: we do not know exactly how fast Earth was spinning back then.',
 };
