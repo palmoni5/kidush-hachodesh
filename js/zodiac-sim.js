@@ -714,14 +714,14 @@
         else this._setHour(TOD_FALLBACK[kind]);
         this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
       });
-      // ארבע התקופות — היום שבו אורך השמש מגיע ל-0/90/180/270 מעלות מלקה,
-      // בשנת התאריך המוצג. השעה ביממה נשמרת, שהמשווה יראה את מקום השמש
-      // שברצועה באותה שעה עצמה בארבע התקופות.
+      // ארבע התקופות — קפיצה אל רגע התקופה המדויק: הרגע שבו אורך השמש
+      // מגיע ל-0/90/180/270 מעלות מלקה, בשנת התאריך המוצג (כמו בלשונית
+      // מהלך השמש; משוב משתמשים — שמירת השעה הקודמת הרכיבה שעת אחה"צ
+      // שרירותית על יום התקופה במקום רגעה האמיתי).
       document.querySelectorAll('#view-zodiac [data-tek]').forEach(b => b.onclick = () => {
         const d = tekufaDate(+b.dataset.tek, this.date.getFullYear());
         if (!d) return;
-        const cur = this.date;
-        this.date = new Date(d.getFullYear(), d.getMonth(), d.getDate(), cur.getHours(), cur.getMinutes(), 0);
+        this.date = new Date(d.getTime());
         this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
       });
       $('z_horizon').onchange = e => this.horizon = e.target.checked;
