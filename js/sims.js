@@ -362,8 +362,20 @@ window.Sims = (function () {
       put('yo_riseSea', 'seaLevelSunrise'); put('yo_rise', 'sunrise');
       put('yo_setSea', 'seaLevelSunset');   put('yo_set', 'sunset');
       put('yo_noon', 'chatzos');            put('yo_midnight', 'chatzosLayla');
+      otz.shownFor = d.toISOString().slice(0, 10);
+      syncOtzRefreshBtn(d);
       card.style.display = '';
     } catch (e) {}
+  }
+  // כפתור "רענן מהלוח" מוצג רק כשהכרטיס אינו מסונכרן עם תאריך האיור:
+  // גרירת מחוון היום וריצת האנימציה אינן קוראות ללוח בכל שינוי (עשרות
+  // קריאות בגרירה אחת), וגם קריאה שנכשלה משאירה את הכרטיס מאחור. בכל
+  // שאר המסלולים הכרטיס מתעדכן מאליו — והכפתור מיותר ומוסתר.
+  function syncOtzRefreshBtn(d) {
+    if (!otz.ready) return;
+    const stale = d.toISOString().slice(0, 10) !== otz.shownFor;
+    const b = $('yo_refresh');
+    if ((b.style.display === 'none') === stale) b.style.display = stale ? '' : 'none';
   }
   // שינוי העיר באפליקציה משתקף בזמן אמת — כל עוד המשתמש לא בחר עיר אחרת בכרטיס
   if (typeof window.Otzaria !== 'undefined' && Otzaria.on) {
@@ -1015,6 +1027,7 @@ window.Sims = (function () {
       if (!L($('y_dd'))) $('y_dd').value = d.getUTCDate();
       if (!L($('y_mm'))) $('y_mm').value = d.getUTCMonth() + 1;
       if (!L($('y_yy'))) $('y_yy').value = d.getUTCFullYear();
+      syncOtzRefreshBtn(d);   // הכפתור מופיע כשהתאריך שבאיור התרחק מזה שבכרטיס
     },
     bind() {
       if (this._bound) return; this._bound = true;
