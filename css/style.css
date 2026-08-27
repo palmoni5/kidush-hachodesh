@@ -239,7 +239,7 @@ aside.panel {
 nav.tabs button:focus-visible, .icon-btn:focus-visible,
 .btn-primary:focus-visible, .btn-secondary:focus-visible,
 .seg button:focus-visible, .segmented button:focus-visible,
-input:focus-visible {
+input:focus-visible, textarea:focus-visible, select:focus-visible {
   outline: 2px solid var(--color-primary); outline-offset: 2px;
 }
 
@@ -501,6 +501,63 @@ table td:first-child { opacity: 0.7; }
 .about p { font-size: 0.8em; margin: 6px 0; opacity: 0.9; }
 .about .meta { font-size: 0.7em; opacity: 0.7; direction: ltr; text-align: start; }
 .about .ctrls { margin-top: 14px; }
+
+/* ── חלון הדיווח למפתח ─────────────────────────────── */
+/* שכבת רקע מלאה עם כרטיס ממורכז. אוצריא מציגה אחריו דיאלוג אישור משלה,
+   ולכן הכרטיס כאן נשאר צנוע — טופס בלבד, בלי כפילות של אזהרות. */
+.ovl {
+  position: fixed; inset: 0; z-index: 120;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: var(--scrim);
+}
+.ovl[hidden] { display: none; }
+.ovl-card {
+  width: min(460px, 100%); max-height: 88vh; overflow: auto;
+  background: var(--color-surface-container-highest);
+  border: 1px solid var(--color-outline); border-radius: var(--radius-lg);
+  box-shadow: 0 8px 30px var(--shadow-strong); padding: 20px;
+}
+.ovl-card h2 { color: var(--color-primary); font-size: 1.05em; margin-bottom: 6px; }
+.ovl-note { font-size: 0.72em; opacity: 0.8; line-height: 1.6; margin-bottom: 14px; }
+.ovl-field { display: block; margin-bottom: 10px; }
+.ovl-field > span { font-size: 0.74em; opacity: 0.85; font-weight: 600; }
+.ovl-field select, .ovl-field input, .ovl-field textarea { width: 100%; }
+/* המונה מיושר לצד ההתחלה של השדה, והמספרים עצמם עטופים ב-bdi בכיוון LTR
+   כדי ש"27 / 4800" לא יתהפך ל"4800 / 27" בפריסה RTL */
+.ovl-count { font-size: 0.66em; opacity: 0.6; text-align: start; margin: -6px 0 10px; }
+.ovl-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+/* שורת הדיווח בתחתית העמוד — משפט שקט עם קישור, לא כפתור בסרגל הכלים */
+footer.appfoot {
+  padding: 7px 16px; font-size: 0.68em; opacity: 0.75; text-align: center;
+  border-top: 1px solid var(--color-outline);
+  background: var(--color-surface-container-high);
+  flex-shrink: 0;
+}
+/* הפעולה היא כפתור ולא <a>: אין לו כתובת, ולכן ריחוף מעליו אינו מציג URL
+   בשורת המצב של הדפדפן — אך הוא נראה כקישור ומתנהג ככזה במקלדת (Enter/רווח). */
+.linklike {
+  background: none; border: none; padding: 0; margin: 0;
+  font: inherit; color: var(--color-primary); cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.linklike:hover { opacity: 0.8; }
+.linklike:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: var(--radius-sm); }
+.ovl-hint { font-size: 0.7em; opacity: 0.75; line-height: 1.6; margin: 2px 0 4px; }
+.ovl-hint[hidden], .ovl-field[hidden] { display: none; }
+textarea {
+  padding: 7px 9px; border: 1.5px solid var(--color-outline);
+  border-radius: var(--radius-sm); font-family: var(--font-main); font-size: 0.82em;
+  color: var(--color-on-surface); background: var(--color-surface);
+  outline: none; margin-top: 3px; resize: vertical; line-height: 1.6;
+}
+textarea:focus { border-color: var(--color-primary); }
+input[type=email] {
+  width: 100%; padding: 6px 9px; border: 1.5px solid var(--color-outline);
+  border-radius: var(--radius-sm); font-family: var(--font-main); font-size: 0.82em;
+  color: var(--color-on-surface); background: var(--color-surface);
+  outline: none; margin-top: 3px; direction: ltr; text-align: start;
+}
+input[type=email]:focus { border-color: var(--color-primary); }
 
 footer {
   padding: 6px 16px; font-size: 0.62em; opacity: 0.7;

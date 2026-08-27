@@ -577,6 +577,31 @@ window.TRANSLATIONS.en = {
   'בשנים רחוקות מזמננו דיוק החישוב האסטרונומי פוחת, בעיקר מחמת אי-הוודאות בקצב סיבוב הארץ.':
     'For years far from our own time, the astronomical calculation is less exact. The main reason: we do not know exactly how fast Earth was spinning back then.',
 
+  // ── דיווח למפתח ──────────────────────────────────────────────────────
+  'נתקלתם בתקלה, בטעות בחישוב או שיש לכם הצעה?': 'Found a bug, a calculation error, or have a suggestion?',
+  'שלחו דיווח למפתח התוסף': 'Send a report to the plugin developer',
+  'דיווח על התוסף': 'Report an issue',
+  'הדיווח נשלח לאתר אוצריא ומועבר למפתח התוסף. לפני השליחה תוצג בקשת אישור עם תצוגה מקדימה של הטקסט.':
+    'The report is sent to the Otzaria site and forwarded to the plugin developer. A confirmation prompt with a preview of the text is shown before sending.',
+  'סוג הדיווח': 'Report type',
+  'תקלה בתוסף': 'Plugin malfunction',
+  'קריסה': 'Crash',
+  'טעות בתוכן או בחישוב': 'Content or calculation error',
+  'אחר (הצעה, שאלה)': 'Other (suggestion, question)',
+  'פירוט הדיווח': 'Details',
+  'מה קרה? באיזה איור? מה ציפית שיקרה?': 'What happened? In which illustration? What did you expect?',
+  'כתובת מייל לחזרה (לא חובה)': 'Reply e-mail (optional)',
+  'לדיווח תצורף כתובת המייל השמורה בהגדרות דיווח השגיאות של אוצריא.':
+    'The reply address saved in Otzaria’s error-reporting settings will be attached to the report.',
+  'לצרף את שם האיור הפעיל ואת גרסת התוסף': 'Include the active illustration and the plugin version',
+  'ביטול': 'Cancel',
+  'שלח דיווח': 'Send report',
+  'שולח…': 'Sending…',
+  'יש לפרט את הדיווח לפני השליחה.': 'Please describe the issue before sending.',
+  'הדיווח נשלח. תודה!': 'Report sent. Thank you!',
+  'שליחת הדיווח נכשלה. בדוק את החיבור לאינטרנט ונסה שוב.':
+    'Sending the report failed. Check your internet connection and try again.',
+
   // ── ממיר השעה היממתית ────────────────────────────────────────────────
   'ממיר שעה יממתית ⇄ שעה אזרחית': 'Calendar-Day ⇄ Civil Time Converter',
   'כיוון ההמרה': 'Conversion direction',
