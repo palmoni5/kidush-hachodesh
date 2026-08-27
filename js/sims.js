@@ -326,7 +326,7 @@ window.Sims = (function () {
   // הכרטיס דורש אוצריא 0.9.97+ (calendar.getCities ו-getDailyTimes עם
   // {date, city} — ראו minAppVersion במניפסט): הזמנים עוקבים אחרי התאריך
   // שבאיור, ובורר הערים נפתח על העיר הנבחרת באפליקציה. שינוי עיר באפליקציה
-  // מעדכן את הכרטיס בזמן אמת (אירוע calendar.city_changed).
+  // מעדכן את הכרטיס בזמן אמת (calendar.city_changed, ובגיבוי — settings.changed).
   const otz = { ready: false, city: null, followApp: true };
   async function loadOtzariaTimes() {
     const card = $('y_otzCard');
@@ -378,14 +378,31 @@ window.Sims = (function () {
     if ((b.style.display === 'none') === stale) b.style.display = stale ? '' : 'none';
   }
   // שינוי העיר באפליקציה משתקף בזמן אמת — כל עוד המשתמש לא בחר עיר אחרת בכרטיס
+  function applyAppCity(name) {
+    if (!otz.ready || !otz.followApp || !name || name === otz.city) return;
+    $('yo_city').value = name;
+    if ($('yo_city').value === name) { otz.city = name; loadOtzariaTimes(); }
+  }
+  // קריאת העיר הנבחרת בלוח היישר מן ההגדרות — הן לרענון יזום והן כגיבוי
+  // לאירועים: מחזירה את השם או null אם ההרשאה חסרה / מחוץ לאוצריא.
+  async function fetchAppCity() {
+    try {
+      const r = await Otzaria.call('settings.get', { key: 'key-selected-city' });
+      if (r && r.success && r.data) return r.data;
+    } catch (e) {}
+    return null;
+  }
   if (typeof window.Otzaria !== 'undefined' && Otzaria.on) {
     try {
-      Otzaria.on('calendar.city_changed', payload => {
-        if (!otz.ready || !otz.followApp) return;
-        const name = payload && (payload.city || payload.name);
-        if (!name) return;
-        $('yo_city').value = name;
-        if ($('yo_city').value === name) { otz.city = name; loadOtzariaTimes(); }
+      Otzaria.on('calendar.city_changed', payload =>
+        applyAppCity(payload && (payload.city || payload.name)));
+      // גיבוי: גרסאות אוצריא שאינן משדרות calendar.city_changed (או משדרות
+      // אותו במבנה אחר) עדיין כותבות את עיר הלוח להגדרות תחת key-selected-city
+      // (settings_repository.dart) — והכתיבה מפיצה settings.changed, שאליו
+      // התוסף כבר מנוי (עדכון שפה חי). כשהערך אינו בגוף האירוע — נשלף בקריאה.
+      Otzaria.on('settings.changed', async p => {
+        if (!p || p.key !== 'key-selected-city') return;
+        applyAppCity(p.value || await fetchAppCity());
       });
     } catch (e) {}
   }
@@ -1097,7 +1114,15 @@ window.Sims = (function () {
       });
       // זמני היום מלוח אוצריא — נטענים בכניסה ללשונית, ברענון, בהחלפת עיר
       // בכרטיס, ובקביעת תאריך באיור (במצב החדש הזמנים עוקבים אחרי תאריך האיור)
-      $('yo_refresh').onclick = () => loadOtzariaTimes();
+      // הרענון גם מיישר את העיר עם האפליקציה (כשלא נבחרה עיר אחרת בכרטיס):
+      // רשת ביטחון למקרה ששני האירועים (city_changed / settings.changed) לא הגיעו
+      $('yo_refresh').onclick = async () => {
+        if (otz.followApp) {
+          const name = await fetchAppCity();
+          if (name && name !== otz.city) { applyAppCity(name); return; }
+        }
+        loadOtzariaTimes();
+      };
       $('yo_city').onchange = e => { otz.city = e.target.value; otz.followApp = false; loadOtzariaTimes(); };
       loadOtzariaTimes();
       // גרירת העכבר/מגע לסיבוב התצוגה (~0.5° לכל פיקסל)
