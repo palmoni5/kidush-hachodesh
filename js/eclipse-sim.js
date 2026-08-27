@@ -156,7 +156,7 @@
   // בירושלים בשיא ובקצות השלב החלקי. ליקוי חמה תלוי-מקום באמת, ולכן נבנית
   // (בנגיסות, כמו הרשימה הראשית) רשימת הליקויים המקומיים לצופה בירושלים —
   // המנוע מחזיר לכל אחד גם את סוגו המקומי ואת שיעור הכיסוי שם.
-  const IL_OBS = new AE.Observer(31.78, 35.22, 750);        // ירושלים
+  const IL_OBS = new AE.Observer(31.78, 35.24, 750);        // ירושלים
   function moonUpIL(ms) {
     const t = AE.MakeTime(new Date(ms));
     const eq = AE.Equator(AE.Body.Moon, t, IL_OBS, true, true);
@@ -172,7 +172,7 @@
   // צפון–דרום; מזרח–מערב (ירושלים–ת״א, ~55 ק"מ) ההפרש כאחוז בודד, ולכן די באלה.
   const IL_CITIES = {
     safed:     { name: 'צפת',     lat: 32.965, lon: 35.496 },
-    jerusalem: { name: 'ירושלים', lat: 31.778, lon: 35.235 },
+    jerusalem: { name: 'ירושלים', lat: 31.78, lon: 35.24 },
     beersheba: { name: 'באר שבע', lat: 31.252, lon: 34.791 },
     eilat:     { name: 'אילת',    lat: 29.558, lon: 34.948 },
   };
@@ -244,28 +244,35 @@
     setTimeout(chunk, 0);
   }
 
+  // האם הליקוי עובר את תיבות הסינון (רק מלא / רק הנראים בא״י) — משמש גם את
+  // הרשימה וגם את לחצני הליקוי הבא/הקודם, כדי שינועו על אותם ליקויים בדיוק
+  function listPass(type, it) {
+    if ($('e_onlyTotal') && $('e_onlyTotal').checked && it.kind !== 'total') return false;
+    if ($('e_onlyIL') && $('e_onlyIL').checked)
+      return type === 'solar' ? !!ilSolarInfo(it.ms) : !!it.il;
+    return true;
+  }
+
   function refreshList() {
     const sel = $('e_list'); if (!sel) return;
     const type = sim.mode === 'lunar' ? 'lunar' : 'solar';
     const L = LISTS[type];
-    const only = $('e_onlyTotal') && $('e_onlyTotal').checked;
     const onlyIL = $('e_onlyIL') && $('e_onlyIL').checked;
     if (onlyIL && type === 'solar') buildILSolar();
     const loc = window.I18N ? window.I18N.dateLocale : 'he-IL';
     const cur = sim.einfo ? sim.einfo.peak.date.getTime() : 0;
     let html = '';
     if (L) for (const it of L.arr) {
-      if (only && it.kind !== 'total') continue;
+      if (!listPass(type, it)) continue;
       // בליקוי חמה הסוג ברשימה הוא העולמי; בא״י אופן הליקוי עשוי להיות אחר
       // (מלא בעולם — חלקי בא״י), ולכן מוצג לצדו גם המקומי עם שיעור הכיסוי.
       let ilTag = '';
       if (type === 'solar') {
         const il = ilSolarInfo(it.ms);
-        if (onlyIL && !il) continue;
         if (il) ilTag = ' · ' + T('בא״י') + ' ' +
           (il.kind === 'total' ? T('מלא') : il.kind === 'annular' ? T('טבעתי')
             : Math.round(il.pct * 100) + '%');
-      } else if (onlyIL && !it.il) continue;
+      }
       const lbl = it.date.toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric' }) + ' — ' + T(EK[it.kind] || it.kind) + ilTag;
       html += `<option value="${it.ms}">${lbl}</option>`;
     }
@@ -496,10 +503,14 @@
     // נקודת המבט נבחרה מחדש בכל רגע (הנקודה המכוסה ביותר בעולם באותו רגע) — היא
     // נדדה עם הצל, והירח נראה נכנס ויוצא מאותו צד של השמש. מנקודה קבועה הוא
     // חוצה את פני השמש מצד אל צד, כפי שרואה צופה אמיתי העומד במקומו.
-    if (!sim._peakLoc || sim._peakLoc.key !== sim.win.t0) {
+    // המקום תלוי גם במרחק המדומה: באפוגיאון ציר הצל עובר במקום אחר, ומהנקודה
+    // של המרחק האמיתי היה נראה רק ליקוי חלקי במקום המעבר מלא↔טבעתי.
+    const pkKey = sim.win.t0 + ':' + simKm;
+    if (!sim._peakLoc || sim._peakLoc.key !== pkKey) {
       const efp = earthFixed(sim.einfo.peak.date);
-      const ll = efLatLon(shadowGeom(efp.s, efp.m).P);
-      sim._peakLoc = { key: sim.win.t0, lat: ll.lat, lon: ll.lon };
+      const m = simKm ? mul(efp.m, simKm / len(efp.m)) : efp.m;
+      const ll = efLatLon(shadowGeom(efp.s, m).P);
+      sim._peakLoc = { key: pkKey, lat: ll.lat, lon: ll.lon };
     }
     const city = IL_CITIES[sim.viewLoc];
     const v = cityView(g, sim.t, city || sim._peakLoc);   // שדות: S,M,P,rs,rm,frac,kind,sunUp
@@ -879,6 +890,13 @@
       const pct = g ? Math.round((this.type === 'lunar' ? g.umbra : g.frac) * 100) : 0;
       const ep = $('e_pct'); if (ep) ep.textContent = pct + '%';
       const elc = $('e_loc'); if (elc && loc) elc.textContent = fmtLat(loc.lat) + ' · ' + fmtLon(loc.lon);
+      // מרחק הירח מן הארץ: כשההדגמה כבויה מוצג המרחק האמיתי ברגע המוצג,
+      // והמחוון (הנעול) עוקב אחריו — כך שהפעלת ההדגמה נפתחת מן המרחק הזה
+      if (this.mode === 'solar' && !this.distOn && g && g.distReal) {
+        const d = Math.round(g.distReal);
+        const dl = $('e_distL'); if (dl) dl.textContent = d.toLocaleString();
+        const ds = $('e_dist'); if (ds) ds.value = Math.max(PERIGEE, Math.min(APOGEE, d));
+      }
       // תאריך עברי — מתרענן רק כשהתצוגה מתחלפת (שקיעה / עלות השחר, לא חצות)
       const hk = window.HebrewDate && window.HebrewDate.key
         ? window.HebrewDate.key(this.einfo.peak.date)
@@ -911,8 +929,32 @@
         this.playing = false; $('e_play').textContent = T('▶ הפעל');
         this.hintDone = true;
       };
-      $('e_prev').onclick = () => { try { this.setEclipse(prevEcl(this.type, this.einfo.peak.date)); } catch (e) {} };
-      $('e_next').onclick = () => { try { this.setEclipse(seqNext(this.type, this.einfo)); } catch (e) {} };
+      // הליקוי הבא/הקודם נעים על הרשימה המסוננת — כשמסומנת תיבת סינון
+      // מדלגים על ליקויים שאינם ברשימה (ולא נוחתים על ליקוי שהתיבה שלו ריקה)
+      const step = dir => {
+        try {
+          const filtered = ($('e_onlyTotal') && $('e_onlyTotal').checked) ||
+                           ($('e_onlyIL') && $('e_onlyIL').checked);
+          if (!filtered) {
+            this.setEclipse(dir > 0 ? seqNext(this.type, this.einfo)
+                                    : prevEcl(this.type, this.einfo.peak.date));
+            return;
+          }
+          const L = LISTS[this.type]; if (!L) return;
+          const cur = this.einfo.peak.date.getTime();
+          let found = null;
+          if (dir > 0) {
+            for (const it of L.arr)
+              if (it.ms > cur + 60000 && listPass(this.type, it)) { found = it; break; }
+          } else {
+            for (let i = L.arr.length - 1; i >= 0; i--)
+              if (L.arr[i].ms < cur - 60000 && listPass(this.type, L.arr[i])) { found = L.arr[i]; break; }
+          }
+          if (found) this.setEclipse(nextEcl(this.type, new Date(found.ms - 5 * 86400000)));
+        } catch (e) {}
+      };
+      $('e_prev').onclick = () => step(-1);
+      $('e_next').onclick = () => step(1);
       $('e_list').onchange = e => {
         const ms = +e.target.value; if (!ms) return;
         try { this.setEclipse(nextEcl(this.type, new Date(ms - 5 * 86400000))); } catch (er) {}
@@ -964,7 +1006,9 @@
       $('e_dsim').onchange = e => {
         this.distOn = e.target.checked;
         $('e_dist').disabled = !this.distOn;
-        if (!this.distOn) { this.distKm = MEAN_DIST; $('e_dist').value = MEAN_DIST; $('e_distL').textContent = MEAN_DIST.toLocaleString(); }
+        // ההדגמה נפתחת מן המרחק האמיתי שהמחוון עוקב אחריו; בכיבוי החיווי
+        // חוזר להתעדכן מן החישוב בציור הבא (_hud)
+        if (this.distOn) this.distKm = +$('e_dist').value;
       };
       $('e_dist').oninput = e => { this.distKm = +e.target.value; $('e_distL').textContent = this.distKm.toLocaleString(); };
       const fc = $('e_follow'); if (fc) fc.onchange = e => { this.follow = e.target.checked; };

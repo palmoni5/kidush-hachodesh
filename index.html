@@ -15,7 +15,7 @@
         <button data-view="luach">הלוח העברי</button>
         <button data-view="year">מהלך השמש (שנת חמה)</button>
         <button data-view="planets">כוכבי הלכת</button>
-        <button data-view="zodiac">גלגל המלקה</button>
+        <button data-view="zodiac">גלגל המזלות</button>
         <button data-view="hours">שרי השעות</button>
         <button data-view="dateline">קו התאריך</button>
         <button data-view="eclipse">ליקויי המאורות</button>
@@ -35,9 +35,11 @@
             <div class="row"><span>שעה</span><b id="m_clock">—</b></div>
             <div class="row"><span>יום בחודש</span><b id="m_day">1</b></div>
             <div class="row"><span>אחוז הירח הנראה</span><b id="m_pct">0%</b></div>
-            <div class="row"><span>זריחת הירח (ירושלים)</span><b id="m_rise">—</b></div>
-            <div class="row"><span>שקיעת הירח (ירושלים)</span><b id="m_set">—</b></div>
-            <div class="row"><span>מיקום בשמים (ירושלים)</span><b id="m_pos">—</b></div>
+            <div class="row"><span>מקום הצפייה</span><b id="m_loc">ירושלים</b></div>
+            <div class="row"><span>השעה במקום</span><b id="m_locClock">—</b></div>
+            <div class="row"><span>זריחת הירח</span><b id="m_rise">—</b></div>
+            <div class="row"><span>שקיעת הירח</span><b id="m_set">—</b></div>
+            <div class="row"><span>מיקום בשמים</span><b id="m_pos">—</b></div>
             <div class="big" id="m_phase">מולד</div>
           </div>
         </div>
@@ -65,8 +67,12 @@
             </div>
             <label class="field" style="margin-top:8px">רגעים בחודש</label>
             <div class="ctrls">
-              <button class="btn-secondary" id="m_jNew">🌑 מולד</button>
+              <button class="btn-secondary" id="m_jNew">🌑 קיבוץ (מולד)</button>
               <button class="btn-secondary" id="m_jFull">🌕 ניגוד (ירח במילואו)</button>
+            </div>
+            <div class="ctrls" style="margin-top:6px">
+              <button class="btn-secondary" id="m_j6h">ו׳ שעות מן המולד</button>
+              <button class="btn-secondary" id="m_j18h">י״ח שעות מן המולד</button>
             </div>
             <div class="ctrls" style="margin-top:6px">
               <button class="btn-secondary" id="m_j3">ג׳ ימים מן המולד</button>
@@ -76,21 +82,70 @@
               <button class="btn-secondary" id="m_prevM">החודש הקודם</button>
               <button class="btn-secondary" id="m_nextM">החודש הבא</button>
             </div>
+            <div class="expl">
+            <div class="expl-body">
             <div class="htxt" style="margin-top:6px">מולד = השמש והירח בקיבוץ, ואין הירח נראה. ניגוד = השמש והירח משני עברי הארץ, והוא ירח מלא (ובו באים ליקויי הלבנה). ג׳ ימים מן המולד — תחילת זמן ברכת הלבנה למנהג אשכנז, וז׳ ימים — למנהג הספרדים.</div>
+            <div class="htxt" style="margin-top:6px">ו׳ שעות וי״ח שעות מן המולד — ראש השנה כ׳ ע״ב: "עשרים וארבעה שעי מכסי סיהרא" — כ״ד שעות שאין הלבנה נראית בהן סביב הקיבוץ; "לדידן — שית מעתיקא ותמני סרי מחדתא, לדידהו — שית מחדתא ותמני סרי מעתיקא". לבני ארץ ישראל ("לדידהו") שש השעות שלפני המולד הן מן הישנה ושמונה עשרה שלאחריו מן החדשה — ונמצא שהלבנה החדשה נראית כבר שש שעות מן המולד; ולבני בבל ("לדידן") שמונה עשרה שעות שלפני המולד ושש שעות שלאחריו — ואינה נראית עד שמונה עשרה שעות מן המולד. לחצו על הכפתורים והשוו את מראה הלבנה ואת מקומה בשמים בשני הרגעים — ובפרט בבחירת נהרדעא (עירו של שמואל) מול ירושלים ברשימת המקומות שלהלן.</div>
+            <div class="htxt" style="margin-top:6px">כל הזמנים הם לפי המולדות האמיתיים (ראו בלשונית הלוח העברי אודות המולד האמיתי).</div>
             <div class="htxt" style="margin-top:6px">הכפתורים מקפיצים את התאריך והשעה (המוצגים למעלה) אל הרגע המדויק של מועדים אלו בחודש המוצג — חודש הלבנה שהתאריך שבאיור נמצא בתוכו, מן המולד ועד המולד הבא. כפתורי "החודש הקודם" ו"החודש הבא" מעבירים את התצוגה חודש לבנה שלם אחורה או קדימה. כשהרגע חל בשעות היום הלבנה אינה נראית לעין — גם כשהיא מעל האופק — אלא בסמוך לשקיעה או אחר הזריחה; קדמו את השעה אל הערב (בשדות התאריך או בהפעלה) ותראו אותה בחלון השמים.</div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>מקום הצפייה</h2>
+            <label class="field">מקום</label>
+            <select id="m_city">
+              <option value="31.78,35.24" data-tz="Asia/Jerusalem" selected>ירושלים</option>
+              <option value="33.37,43.75" data-tz="Asia/Baghdad">נהרדעא (בבל)</option>
+              <option value="40.10,-74.22" data-tz="America/New_York">לייקווד</option>
+              <option value="40.71,-74.01" data-tz="America/New_York">ניו יורק</option>
+              <option value="34.05,-118.24" data-tz="America/Los_Angeles">לוס אנג'לס</option>
+              <option value="25.76,-80.19" data-tz="America/New_York">מיאמי</option>
+              <option value="43.65,-79.38" data-tz="America/Toronto">טורונטו</option>
+              <option value="19.43,-99.13" data-tz="America/Mexico_City">מקסיקו סיטי</option>
+              <option value="-23.55,-46.63" data-tz="America/Sao_Paulo">סאו פאולו</option>
+              <option value="-34.60,-58.38" data-tz="America/Argentina/Buenos_Aires">בואנוס איירס</option>
+              <option value="51.51,-0.13" data-tz="Europe/London">לונדון</option>
+              <option value="48.86,2.35" data-tz="Europe/Paris">פריז</option>
+              <option value="51.22,4.40" data-tz="Europe/Brussels">אנטוורפן</option>
+              <option value="55.76,37.62" data-tz="Europe/Moscow">מוסקבה</option>
+              <option value="-26.20,28.05" data-tz="Africa/Johannesburg">יוהנסבורג</option>
+              <option value="-33.87,151.21" data-tz="Australia/Sydney">סידני</option>
+              <option value="">מותאם אישית</option>
+            </select>
+            <label class="field">קו רוחב במעלות (צפון חיובי)</label>
+            <input type="number" id="m_lat" step="0.1" min="-89" max="89" value="31.78" />
+            <label class="field">קו אורך במעלות (מזרח חיובי)</label>
+            <input type="number" id="m_lon" step="0.1" min="-180" max="180" value="35.24" />
+            <div class="expl">
+            <div class="expl-body">
+            <div class="htxt" style="margin-top:8px">מקום הצפייה קובע את חלון "הירח בשמים", את מיקום הירח (כיוון וגובה) ואת זמני זריחתו ושקיעתו — והם מוצגים בשעון האזרחי של אותו מקום (כולל שעון קיץ), שהוא "השעה במקום" שב-HUD. מופע הירח ואחוז הארתו כמעט שווים בכל העולם, אך שעת ראייתו ומקומו בשמים משתנים ממקום למקום — וזה עיקר עניינו של קידוש החודש על פי הראייה.</div>
+            <div class="htxt" style="margin-top:6px">התאריך והשעה שבשדות הבקרה נשארים בשעון המקומי של המכשיר; רגע אחד הוא לכל המקומות, וכל מקום רואה אותו בשעונו שלו.</div>
+            <div class="htxt" style="margin-top:6px">נהרדעא — עירו של שמואל ומרכז ישיבות בבל, על נהר פרת סמוך למפגש נהר מלכא (בקירוב 33.4° צפון, 43.8° מזרח, באזור אנבר שבעיראק). היא מובאת כאן כדי להעמיד את "לדידן" של בני בבל מול "לדידהו" של בני ארץ ישראל שבראש השנה כ׳ ע״ב.</div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
+            </div>
           </div>
           <div class="card">
             <h2>מקרא</h2>
             <div class="htxt">
               <span class="seasondot" style="background:var(--ill-sun)"></span> שמש — מקור האור<br>
               <span class="seasondot" style="background:var(--ill-blue)"></span> כדור הארץ<br>
-              <span class="seasondot" style="background:var(--color-outline)"></span> ירח — מקיף את הארץ<br><br>
+              <span class="seasondot" style="background:var(--color-outline)"></span> ירח — מקיף את הארץ
+            </div>
+            <div class="expl">
+            <div class="expl-body">
+            <div class="htxt" style="margin-top:6px">
               חודש הלבנה (סינודי) = 29.53 יום<br>
               (= כ"ט יום י"ב שעות ותשצ"ג חלקים = הזמן שבין מולד למולד).<br><br>
               הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.<br><br>
-              זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק ירושלים — להמחשה בלבד.<br><br>
-              חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל ירושלים לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.<br><br>
+              זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק המקום הנבחר ובשעונו — להמחשה בלבד.<br><br>
+              חלון "הירח בשמים" מציג את מיקום הירח בכיפת השמים מעל המקום הנבחר לרגע שבאיור, בצורתו הנראית — כדרך שמחפשים אותו בקידוש החודש על פי הראייה ובברכת הלבנה. השמש מסומנת גם היא, להבנת קרבתם.<br><br>
               לבנה שמעל האופק בשעות היום אינה נראית לעין מפני אור החמה, אלא בסמוך לשקיעה או אחר הזריחה — וראו רש"י שבת קנ"ו ע"א ד"ה אכיל לא דיליה: "כלבנה המסגת גבול החמה למשול אף ביום".
+            </div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
             </div>
           </div>
         </aside>
@@ -138,6 +193,53 @@
               </div>
             </div>
           </div>
+
+          <!-- ממיר השעה היממתית: שעות וחלקים ⇄ תאריך עברי ושעה אזרחית, לפי
+               ארבע השיטות במניין שעות היממה. עיקר תפקידו המרת שעה יממתית
+               לשעה אזרחית, ולכן זה הכיוון הראשון וברירת המחדל; ההיפוך —
+               להתלמד ולתרגל. גלוי תמיד, גם בשנת מעבדה —
+               התאריך שלו עצמאי ואינו תלוי בשנה המוצגת. -->
+          <div class="card luach-molad" id="l_convBox">
+            <h2>ממיר שעה יממתית ⇄ שעה אזרחית</h2>
+            <div class="lm-grid">
+              <div>
+                <label class="field">כיוון ההמרה</label>
+                <select id="lc_dir">
+                  <option value="y2c">משעה יממתית לשעה אזרחית</option>
+                  <option value="c2y">משעה אזרחית לשעה יממתית</option>
+                </select>
+                <label class="field" style="margin-top:8px">תאריך עברי</label>
+                <div class="lc-row">
+                  <select id="lc_day"></select>
+                  <select id="lc_month"></select>
+                  <input type="number" id="lc_year" min="1" max="9999" value="5786" />
+                </div>
+                <div id="lc_civIn" style="display:none">
+                  <div class="lc-row lc-time">
+                    <label class="field">שעה<input type="number" id="lc_ch" min="0" max="23" value="12" /></label>
+                    <label class="field">דקות<input type="number" id="lc_cm" min="0" max="59" value="0" /></label>
+                    <label class="field">שניות<input type="number" id="lc_cs" min="0" max="59" value="0" /></label>
+                  </div>
+                  <div class="htxt lc-hint">השעה בשעון ישראל. שעה 18:00 ואילך מתפרשת כליל התאריך הנבחר.</div>
+                </div>
+                <div id="lc_yemIn">
+                  <div class="lc-row lc-time">
+                    <label class="field">שעות<input type="number" id="lc_h" min="0" max="23" value="0" /></label>
+                    <label class="field">חלקים<input type="number" id="lc_p" min="0" max="1079" value="0" /></label>
+                  </div>
+                  <div class="htxt lc-hint">השעות נמנות מתחילת הלילה של התאריך הנבחר — תתר״פ חלקים לשעה.</div>
+                </div>
+                <div class="lm-out" id="lc_out"></div>
+                <div class="lm-note" id="lc_note" style="display:none">בשנים רחוקות מזמננו דיוק חישובי הזריחה, השקיעה והחצות פוחת, בעיקר מחמת אי-הוודאות בקצב סיבוב הארץ.</div>
+              </div>
+              <div class="htxt lm-expl">
+                <b>השעה היממתית של חז״ל</b> — היממה נחלקת לכ״ד שעות הנמנות מתחילת הלילה, וכל שעה לתתר״פ (1080) חלקים: כל חלק שלוש שניות ושליש, ובדקה 18 חלקים. כך נמסרים בלוחות ובספרים זמני המולדות והתקופות — "שעה פלונית וכך וכך חלקים".<br><br>
+                מאימתי נמנית היממה? <b>שיטת התוס׳</b> (עירובין נ״ו ע״א ד״ה ואין) — משקיעה לשקיעה, ונסתפקו שם אם השעות <b>זמניות</b> — הלילה נחלק לי״ב שעות והיום לי״ב, ארוכות וקצרות כפי העונה, ואף החלק משתנה עמהן — או <b>שוות</b>, שעות רגילות הנמנות מן השקיעה. <b>שיטת הלבוש</b> (או״ח סי׳ תכ״ח) — היממה מתחילה בזמן קבוע, שש שעות אחר חצות היום, בין בחורף בין בקיץ; והיא המקובלת. וגם בה שתי דרכים: <b>הגרי״מ טיקוצינסקי</b> (לוח ארץ ישראל) — שש שעות אחר החצות האמיתי של אותו היום, הנע בין העונות בכחצי שעה; <b>הגר״י מרצבך</b> (עלה יונה עמ׳ ל״ו) — שש שעות אחר החצות הממוצע, שבירושלים הוא 11:39 בשעון החורף, ונמצא שתחילת היממה קבועה לעולם ב-17:39. בדרך זו נוקטת גם חלונית חישוב המולדות שלמעלה.<br><br>
+                שימו לב: סמוך לתחילת הלילה עשויות השיטות להיחלק גם <b>ביום עצמו</b> — רגע שהוא לשיטה אחת סוף היום הקודם הוא לחברתה תחילת היום הבא; לכן כל שורה מציגה גם את התאריך שלה.<br><br>
+                השעון האזרחי כאן הוא <b>שעון ישראל</b>, כולל שעון קיץ בשנים שנהג. הנפקא-מינה המעשית: זמן המולד בשעוננו — להכרזת המולד ולברכת הלבנה — וזמן התקופה למקפידים שלא לשתות מים בשעת התקופה; וטבלה מדוקדקת של זמנים אלה בסוף לוח עתים לבינה (פרק י׳).
+              </div>
+            </div>
+          </div>
         </div>
         <aside class="panel">
           <div class="card" id="l_yearBox">
@@ -171,7 +273,7 @@
             <div class="htxt" style="margin-top:6px">השעות נמנות מתחילת הלילה — שש בערב. שעה 18 היא חצות היום, ומכאן "מולד זקן".</div>
             <div class="chk"><input type="checkbox" id="l_leap" /><label for="l_leap">השנה מעוברת</label></div>
             <div class="chk"><input type="checkbox" id="l_prevLeap" /><label for="l_prevLeap">השנה שלפניה מעוברת</label></div>
-            <div class="htxt" style="margin:2px 0 4px">משפיע רק כשמולד תשרי חל ביום ב׳ אחרי ט״ו תקפ״ט ולפני י״ח</div>
+            <div class="htxt" id="l_prevHint" style="margin:2px 0 4px">—</div>
             <div class="chk"><input type="checkbox" id="l_nextLeap" /><label for="l_nextLeap">השנה שאחריה מעוברת</label></div>
             <div class="htxt" id="l_nextHint" style="margin-top:2px">—</div>
           </div>
@@ -224,7 +326,7 @@
             <div class="row"><span>זוית השמש מצפון/דרום למקום הצופה</span><b id="y_zen">—</b></div>
             <div class="row"><span>עונה / תקופה</span><b id="y_season">אביב</b></div>
             <div class="row"><span>תאריך</span><b id="y_date">—</b></div>
-            <div class="row"><span>שעה שמשית (חצות אמיתי = 12:00)</span><b id="y_solar">—</b></div>
+            <div class="row"><span>שעה שמשית (החצות האמיתי נחשב כ-12:00)</span><b id="y_solar">—</b></div>
             <div class="row"><span>זריחה / שקיעה</span><b id="y_rise">—</b></div>
             <div class="row"><span>אורך היום</span><b id="y_daylen">12:00</b></div>
             <div class="row"><span>עומק בחצות הלילה</span><b id="y_mid">-58°</b></div>
@@ -271,10 +373,27 @@
             </div>
           </div>
           <div class="card">
+            <h2>מדוע מסלול השמש נודד בין קיץ לחורף?</h2>
+            <div class="ill-inset" style="position:relative;height:200px;margin-top:4px"><canvas id="seasonsCanvas"></canvas></div>
+            <div class="htxt" id="ss_now" style="margin-top:6px">—</div>
+            <div class="expl">
+            <div class="expl-body">
+            <div class="htxt" style="margin-top:6px">ציר הסיבוב של כדור הארץ נטוי כ־23.44° ממאונך למישור מסלולו סביב השמש, וכיוונו קבוע בחלל — הוא מצביע תמיד אל אותה נקודה בשמים. לכן בתקופת תמוז חצי הכדור הצפוני רכון אל השמש והיא נראית גבוה (מעל קו ההיפוך הצפוני), בתקופת טבת הוא רכון ממנה והלאה והיא נמוכה (מעל קו ההיפוך הדרומי), ובניסן ותשרי הציר ניצב לכיוון השמש — והיא מעל קו המשווה. לחצו על כפתורי התקופות או גררו את "יום מתקופת ניסן" — והארץ תנוע במסלולה.</div>
+            <div class="htxt" style="margin-top:6px">הנקודה הצהובה שעל הכדור היא המקום שהשמש ניצבת מעליו באותו רגע, והיא מראה מעל איזה קו רוחב היא עומדת: בתקופות ניסן ותשרי היא על קו המשווה ממש, ובתמוז ובטבת על קווי ההיפוך של-23.44 מעלות צפונה ודרומה. קרן השמש נמשכת עד שפת הכדור בלבד, כדי שיהיה ניכר לאן היא מגיעה. האיור, ככל הלשונית, מחושב אסטרונומית: סימוני התקופות עומדים ברגעיהן האמיתיים, ולכן אינם מחלקים את השנה לרבעים שווים בזמן כתקופת שמואל — שהעונות האמיתיות אינן שוות באורכן (האביב והקיץ ארוכים מן הסתו והחורף) — אף שבמסלול עצמו הם רחוקים זה מזה תשעים מעלות בשווה.</div>
+            <div class="htxt" style="margin-top:6px">ומפני מה נראה הכדור בתקופת ניסן כולו כמעט בצד הלילה, ובתשרי כולו מואר? משום שהאיור הוא מבט מן הצד, ובתקופת ניסן הארץ עומדת ביננו ובין השמש — ונמצא שאנו רואים את צדה שאינו מואר, ובתשרי היא מעבר לשמש ואנו רואים את צד היום — כענין מופעי הלבנה ממש. בשתי התקופות האלו הנקודה שהשמש מעליה על קו המשווה בשווה, וכשהיא נופלת בצד הרחוק של הכדור היא מסומנת כטבעת ריקה.</div>
+            <div class="htxt" style="margin-top:6px">האותיות שעל הכדור: צ ו־ד הם קצות ציר הסיבוב — הקוטב הצפוני והקוטב הדרומי, והמעגל הניצב להם הוא קו המשווה, שהוא קו רוחב אפס (ראו המקרא שבשולי האיור). מזרח ומערב אינם מסומנים, שאינם נקודות קבועות באיור: הכדור מסתובב סביב אותו ציר פעם ביממה, וכל נקודה שבמשווה פונה במשך היום לכל הרוחות. את המזרח והמערב רואים באיור הגדול, שהוא מבט מן הארץ.</div>
+            <div class="htxt" style="margin-top:6px">ובמבט מן הארץ, כדרך חז״ל והרמב״ם: השמש מהלכת בגלגל הנוטה (גלגל המזלות), שחציו נוטה צפונה וחציו דרומה מקו המשווה — ולכן מסלולה היומי שבאיור הגדול נודד צפונה ודרומה במשך השנה. את הגלגל הנטוי עצמו רואים ב"מבט הצופה" שבלשונית גלגל המזלות.</div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
+            </div>
+          </div>
+          <div class="card">
             <h2>מיקום הצופה</h2>
             <label class="field">עיר</label>
             <select id="y_city">
-              <option value="31.78,35.22" data-tz="Asia/Jerusalem" selected>ירושלים</option>
+              <option value="31.78,35.24" data-tz="Asia/Jerusalem" selected>ירושלים</option>
+              <option value="33.37,43.75" data-tz="Asia/Baghdad">נהרדעא (בבל)</option>
+              <option value="40.10,-74.22" data-tz="America/New_York">לייקווד</option>
               <option value="40.71,-74.01" data-tz="America/New_York">ניו יורק</option>
               <option value="34.05,-118.24" data-tz="America/Los_Angeles">לוס אנג'לס</option>
               <option value="25.76,-80.19" data-tz="America/New_York">מיאמי</option>
@@ -293,8 +412,13 @@
             <label class="field">קו רוחב במעלות (צפון חיובי)</label>
             <input type="number" id="y_lat" step="0.1" min="-89" max="89" value="31.78" />
             <label class="field">קו אורך במעלות (מזרח חיובי)</label>
-            <input type="number" id="y_lon" step="0.1" min="-180" max="180" value="35.22" />
-            <div class="htxt" style="margin-top:8px">השעון שבאיור הוא השעון האזרחי במקום הנבחר — כולל שעון קיץ, ההפרש שבין אזור הזמן לקו האורך של המקום, והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך.</div>
+            <input type="number" id="y_lon" step="0.1" min="-180" max="180" value="35.24" />
+            <div class="expl">
+            <div class="expl-body">
+            <div class="htxt" style="margin-top:8px">השעון שבאיור הוא השעון האזרחי במקום הנבחר, כולל שעון קיץ. לצדו מוצגת השעה השמשית — שעון שבו רגע החצות האמיתי של אותו יום (מעבר השמש במרידיאן) נחשב 12:00 בדיוק, והשעות נמנות ממנו. כל ההבדל בין שני השעונים — שלושה הפרשים: שעון הקיץ; ההפרש שבין אזור הזמן לקו האורך של המקום — בירושלים, למשל, 5.24 מעלות מזרחית לקו האורך 30° שהשעון מכוון לפיו, שהן כ-21 דקות; והפרש "השעות העקומות" (משוואת הזמן). ב"מותאם אישית" אזור הזמן מוערך לפי קו האורך.</div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
+            </div>
           </div>
           <div class="card" id="y_otzCard" style="display:none">
             <h2>זמני היום — לוח אוצריא</h2>
@@ -314,7 +438,7 @@
             <div class="ctrls" style="margin-top:8px">
               <button class="btn-secondary" id="yo_refresh">↻ רענן מהלוח</button>
             </div>
-            <div class="htxt" style="margin-top:6px" id="yo_note">זמנים הלכתיים מחושבי לוח אוצריא (כולל גובה המקום), לתאריך המוצג באיור ולעיר שנבחרה כאן. ברירת המחדל — העיר הנבחרת באפליקציה, והיא מתעדכנת עם שינויה שם.</div>
+            <div class="htxt" style="margin-top:6px" id="yo_note">זמנים הלכתיים מחושבי לוח אוצריא (כולל גובה המקום), לתאריך המוצג באיור ולעיר שנבחרה כאן. ברירת המחדל — העיר הנבחרת באפליקציה, והיא מתעדכנת עם שינויה שם. כפתור הרענון מופיע רק כשהכרטיס נשאר מאחורי התאריך שבאיור — אחרי גרירת מחוון היום או הפעלת האנימציה.</div>
           </div>
           <div class="card">
             <h2>שנת החמה — הלכה</h2>
@@ -323,25 +447,54 @@
               <tr><td>תקופת רב אדא</td><td>365י' 5ש' 997ח' 48ר'</td></tr>
               <tr><td>כל תקופה (של שמואל)</td><td>91 ימים 7.5 שעות</td></tr>
             </table>
+            <div class="expl">
+            <div class="expl-body">
             <div class="htxt" style="margin-top:8px">ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז וטבת (הקיצון).</div>
+            <div class="htxt" style="margin-top:8px">לחצני התקופות שבאיור קופצים אל רגעי התקופה האמיתיים, המחושבים אסטרונומית — והם שונים מתקופת שמואל ומתקופת רב אדא, שהן שנות ממוצע. עיין רמב״ם הלכות קידוש החודש פרקים ט–י.</div>
             <div class="htxt" style="margin-top:8px">מצפון לקו המשוה: תמוז=קיץ, טבת=חורף. מדרום לקו המשוה: תמוז=חורף, טבת=קיץ.</div>
             <div class="htxt" style="margin-top:8px">הזמנים באיור (זריחה, שקיעה, חצות, השעה השמשית ומיקום השמש) מחושבים אסטרונומית במדויק (Astronomy Engine) לגובה פני הים. ייתכנו הבדלים קלים מהלוחות בשל גובה המקום ושיטות החישוב — אין לסמוך עליהם להלכה.</div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
+            </div>
           </div>
         </aside>
       </section>
 
-      <!-- ═══ גלגל המלקה והמזלות ═══ -->
+      <!-- ═══ גלגל המזלות (המלקה) ═══ -->
       <section class="view" id="view-zodiac">
         <div class="stage"><canvas id="zodiacCanvas"></canvas>
           <div class="hud">
             <div class="row"><span>תאריך</span><b id="z_date">—</b></div>
             <div class="row"><span>עברי</span><b id="z_date_he">—</b></div>
             <div class="row"><span>שעה</span><b id="z_clock">—</b></div>
+            <div class="row"><span>השמש במזל</span><b id="z_sun">—</b></div>
             <div class="row"><span>מזל עולה (במזרח)</span><b id="z_asc">—</b></div>
             <div class="row"><span>מזל באמצע הרקיע</span><b id="z_mc">—</b></div>
+            <div class="row"><span>הקשת מאמצע הרקיע למזל העולה</span><b id="z_arc">—</b></div>
           </div>
         </div>
         <aside class="panel">
+          <div class="card">
+            <h2>מבט</h2>
+            <div class="seg seg-2">
+              <button data-zview="wheel" class="active">מבט־על על הגלגל</button>
+              <button data-zview="observer">מבט הצופה (הרקיע)</button>
+            </div>
+            <div class="ctrls" style="margin-top:8px;display:none" id="z_gazeRow">
+              <button class="btn-secondary" id="z_gazeE">🌅 מבט למזרח</button>
+              <button class="btn-secondary" id="z_gazeS">מבט מהצד (לדרום)</button>
+            </div>
+            <div class="expl">
+            <div class="expl-body">
+            <div class="htxt" style="margin-top:6px">במבט־על אתם מביטים על הגלגל מבחוץ, מצדו הצפוני של מישור המזלות (מישור המלקה) — הארץ במרכז, ושנים־עשר המזלות סביבה כסדרם. זו מעין מפה ולא תמונה של הרקיע: היא מראה באיזה מזל עומד כל גרם, ולא את גובהו מעל האופק. לכן אף קו האופק מצויר בו כקו החוצה את הגלגל — קו החיתוך של מישור האופק של הצופה בגלגל — וחצי הגלגל המוצל הוא מה שמתחת לארץ. את הגובה שברקיע ממש רואים ב"מבט הצופה".</div>
+            <div class="htxt" style="margin-top:6px">במבט הצופה אתם עומדים על הארץ: רצועת המזלות נטויה על פני הרקיע — חציה נוטה צפונה וחציה דרומה מקו המשווה השמימי. גררו את האיור לסיבוב המבט, בחרו "שעות" והפעילו — ותראו את המזלות עולים מן המזרח והשמש נישאת עמם.</div>
+            <div class="htxt" style="margin-top:6px"><b>מהו משווה השמים?</b> עיגול גדול ברקיע, העומד כנגד קו המשווה של הארץ ממש — כאילו נמתח משווה הארץ ועלה עד הרקיע. הוא באמצע בין שני הקטבים השמימיים שסביבם סובב כל הרקיע פעם ביממה, וכל כוכב מהלך בסיבובו היומי במעגל המקביל לו. וגלגל המזלות נטוי עליו כ־23.44° — חציו צפונה ממנו וחציו דרומה.</div>
+            <div class="htxt" style="margin-top:6px"><b>למה הרצועה נראית נוטה תמיד לדרום?</b> משום שהצופה עומד בקו רוחב צפוני. הציר שסביבו מסתובב כל הרקיע מצביע אל הקוטב השמימי שבצפון, וגובהו מעל האופק שוה בדיוק לקו הרוחב (בירושלים 31.8°); ממילא משווה השמים נמתח מנקודת המזרח, דרך הדרום בגובה 58° (90° פחות 31.8°), אל נקודת המערב — כל קמרונו בחצי הדרומי של הרקיע. ורצועת המזלות חובקת את משווה השמים, חציה עד 23.44° צפונה וחציה עד 23.44° דרומה, ולכן גם שיאה בדרום — בין 34° ל־82°. שנו את קו הרוחב שבכרטיס "האופק ומזל עולה" למינוס 31.8 (דרום) והתמונה תתהפך והרצועה תיטה לצפון; בקו רוחב 0 משווה השמים עובר ממש מעל הראש, ולכן הרצועה אינה נוטה עוד לצד אחד קבוע — אבל נטייתה אינה מתבטלת: היא נשארת נטויה 23.44° למשווה השמים, ובמשך היממה היא מתנדנדת סביב הזניט ונוטה חליפות צפונה ודרומה. גלגל המזלות עצמו עובר בדיוק מעל הראש רק ברגעים שנקודת השוויון — 0° טלה או 0° מאזניים — נמצאת בזניט.</div>
+            <div class="htxt" style="margin-top:6px"><b>ולמה התנועה נראית מעוקלת?</b> שני טעמים. האחד: הסיבוב היומי אינו סביב הנקודה שמעל הראש אלא סביב הציר השמימי הנטוי שבצפון, ולכן כל גרם מהלך במעגל הנטוי לאופק בכ־58° — עולה במזרח באלכסון, מגיע לשיאו בדרום, ושוקע במערב באלכסון. והשני: האיור הוא היטל של כיפת הרקיע כולה על שטח שטוח, כמבט עדשה רחבה, וכל מעגל שבו נראה מתעקל. הגלגל עצמו מסתובב בשוה סביב צירו — העיקום הוא במבט ולא בגלגל.</div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
+            </div>
+          </div>
           <div class="card">
             <h2>בקרת זמן</h2>
             <div class="ctrls">
@@ -373,9 +526,29 @@
               <button data-rh="shevat">ר״ח שבט</button>
               <button data-rh="adar">ר״ח אדר</button>
             </div>
-            <div class="seg seg-2" style="margin-top:6px">
-              <button data-tod="6">🌅 בוקר (06:00)</button>
-              <button data-tod="21">🌙 לילה (21:00)</button>
+            <label class="field" style="margin-top:8px">רגעי היום (לתאריך ולמקום המוצגים)</label>
+            <div class="seg" style="grid-template-columns:1fr 1fr 1fr">
+              <button data-sev="rise">🌅 זריחה</button>
+              <button data-sev="set">🌇 שקיעה</button>
+              <button data-sev="mid">🌙 חצות</button>
+            </div>
+            <div class="expl">
+            <div class="expl-body">
+            <div class="htxt" style="margin-top:6px">הרגעים מחושבים לתאריך ולמקום שנבחרו, ולא לשעת שעון קבועה — בירושלים השקיעה נעה בין 16:39 בטבת ל-19:47 בתמוז. ברגע הזריחה השמש עומדת בנקודה העולה, ולכן המזל העולה הוא המזל שהשמש בו; ברגע השקיעה היא בנקודה השוקעת שמנגד; ובחצות הלילה היא בנקודה הנמוכה שמתחת לארץ, והמזל שכנגדה עומד באמצע הרקיע.</div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
+            </div>
+            <label class="field" style="margin-top:8px">ארבע התקופות (בשנת התאריך המוצג)</label>
+            <div class="seg" style="grid-template-columns:1fr 1fr 1fr 1fr">
+              <button data-tek="0">ניסן</button><button data-tek="90">תמוז</button>
+              <button data-tek="180">תשרי</button><button data-tek="270">טבת</button>
+            </div>
+            <div class="expl">
+            <div class="expl-body">
+            <div class="htxt" style="margin-top:6px">נטיית הרצועה עצמה אינה משתנה כלל — הקבוע הוא הגלגל הנטוי. מה שנודד במשך השנה הוא מקום השמש שבו: בתקופת תמוז היא בקצה הצפוני שברצועה ולכן עולה גבוה, בתקופת טבת בקצה הדרומי ולכן נמוכה, ובניסן ובתשרי היא על משווה השמים עצמו. הלחיצה מעבירה אל רגע התקופה המדויק, המחושב אסטרונומית; בחרו "מבט הצופה" כדי לראות את גובה השמש שברקיע.</div>
+            <div class="htxt" style="margin-top:6px">וכך הן מוגדרות בגלגל: תקופת ניסן היא תמיד כשהשמש מתחילה להכנס למזל טלה, תקופת תמוז — למזל סרטן, תקופת תשרי — למזל מאזנים, ותקופת טבת — למזל גדי (רמב״ם, הלכות קידוש החודש פ״ט ה״ג).</div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
             </div>
             <label class="field" style="margin-top:8px">שעה ביממה (גרירה): <b id="z_hourL">12:00</b></label>
             <input type="range" id="z_hour" min="0" max="24" step="0.02" value="12" />
@@ -386,12 +559,18 @@
               <label for="z_horizon">הצג את קו האופק ואת המזל העולה</label></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:6px">
               <label class="field">קו רוחב °<input type="number" id="z_lat" step="0.01" value="31.78" /></label>
-              <label class="field">קו אורך °<input type="number" id="z_lon" step="0.01" value="35.22" /></label>
+              <label class="field">קו אורך °<input type="number" id="z_lon" step="0.01" value="35.24" /></label>
             </div>
+            <div class="expl">
+            <div class="expl-body">
             <div class="htxt" style="margin-top:8px">
-              המזל העולה הוא הנקודה שבגלגל המלקה העולה באותו רגע באופק המזרחי. הגלגל כולו מסתובב סביב הארץ פעם ביממה, ולכן כל שנים-עשר המזלות עולים ושוקעים בכל יום — בערך מזל לכל שעתיים.<br><br>
-              כשהאופק מוצג, הגלגל מסובב לפי הרגע והמקום: המזרח (המזל העולה) בצד שמאל, המערב (השוקע) מנגד, אמצע הרקיע למעלה, וחצי הגלגל המוצל שלמטה הוא מה שמתחת לאופק. בחרו "שעות" בבקרת הזמן והפעילו — ותראו את המזלות עולים זה אחר זה.<br><br>
+              המזל העולה הוא הנקודה שבגלגל המזלות (הוא "גלגל המלקה") העולה באותו רגע באופק המזרחי. הגלגל כולו מסתובב סביב הארץ פעם ביממה, ולכן כל שנים-עשר המזלות עולים ושוקעים בכל יום — בערך מזל לכל שעתיים.<br><br>
+              כשהאופק מוצג, הגלגל מסובב לפי הרגע והמקום: המזרח (המזל העולה) בצד שמאל, המערב (השוקע) מנגד, וחצי הגלגל המוצל הוא מה שמתחת לאופק. בחרו "שעות" בבקרת הזמן והפעילו — ותראו את המזלות עולים זה אחר זה.<br><br>
+              קו אמצע הרקיע (המקווקו) אינו ניצב לקו האופק, והוא נע במשך היממה — וכך צריך להיות. הכיוון בשמים אמנם קבוע, קו חצי השמים שבדרום, אבל הקו שבאיור מסמן את נקודת הגלגל שנמצאת שם באותו רגע — והקשת שעל הגלגל בין הנקודה העולה לנקודה שבחצי השמים משתנה, מפני שהגלגל נטוי כ-23.44° לקו המשווה. בירושלים היא נעה בין 71° ל-108° במקום 90°, בלונדון בין 54° ל-126°, וסמוך לקו המשווה כמעט אינה משתנה. הקשת עצמה מוצגת בלוח הנתונים, ומכאן שאין לקבע את שני הקווים גם יחד — והעוגן כאן הוא המזל העולה.<br><br>
               סדר עליית המזלות — ראו ראש השנה י״א ע״ב–י״ב ע״א וברש״י שם.
+            </div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
             </div>
           </div>
           <div class="card">
@@ -439,7 +618,7 @@
             <h2>מיקום הצופה</h2>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
               <label class="field">קו רוחב °<input type="number" id="h_lat" step="0.01" value="31.78" /></label>
-              <label class="field">קו אורך °<input type="number" id="h_lon" step="0.01" value="35.22" /></label>
+              <label class="field">קו אורך °<input type="number" id="h_lon" step="0.01" value="35.24" /></label>
             </div>
             <div class="htxt" style="margin-top:6px">השעות הזמניות מחושבות מהזריחה עד השקיעה (יום) ומהשקיעה עד הזריחה (לילה) במקום הנבחר, כל אחת מחולקת לשתים-עשרה.</div>
           </div>
@@ -478,8 +657,9 @@
             <div class="row"><span>שעון ישראל</span><b id="d_iltime">—</b></div>
             <div class="row"><span>מרכז המבט</span><b id="d_center">—</b></div>
             <div class="row"><span style="color:#dfe6ef">קו זמן יקום מתואם (גריניץ')</span><b>0°</b></div>
-            <div class="row"><span style="color:#ffd24d">חזון איש</span><b>125.2° מזרח</b></div>
-            <div class="row"><span style="color:#5ad2ff">הגרי"מ טוקצינסקי</span><b>144.8° מערב</b></div>
+            <div class="row"><span style="color:#7ee081">ירושלים</span><b>35.24° מזרח</b></div>
+            <div class="row"><span style="color:#ffd24d">חזון איש</span><b>125.24° מזרח</b></div>
+            <div class="row"><span style="color:#5ad2ff">הגרי"מ טיקוצינסקי</span><b>144.76° מערב</b></div>
             <div class="row"><span style="color:#ff6b6b">הסכמי אוה"ע</span><b>180°</b></div>
           </div>
         </div>
@@ -529,29 +709,39 @@
             <h2>הצגת הקווים</h2>
             <div class="chk"><input type="checkbox" id="d_utc" checked /><label for="d_utc">קו זמן יקום מתואם (גריניץ')</label></div>
             <div class="chk"><input type="checkbox" id="d_ci" checked /><label for="d_ci">קו התאריך — שיטת החזו"א</label></div>
-            <div class="chk"><input type="checkbox" id="d_grit" checked /><label for="d_grit">קו התאריך — שיטת הגרי"מ טוקצינסקי</label></div>
+            <div class="chk"><input type="checkbox" id="d_grit" checked /><label for="d_grit">קו התאריך — שיטת הגרי"מ טיקוצינסקי</label></div>
             <div class="chk"><input type="checkbox" id="d_idl" checked /><label for="d_idl">קו התאריך — הסכמי אומות העולם</label></div>
             <div class="chk"><input type="checkbox" id="d_grid" checked /><label for="d_grid">רשת קווי אורך ורוחב</label></div>
           </div>
           <div class="card">
             <h2>קווי האורך והרוחב</h2>
+            <div class="expl">
+            <div class="expl-body">
             <div class="htxt">
               <b>קווי האורך</b> יוצאים מקוטב אל קוטב וחוצים את קו המשוה, ומודדים מזרח ומערב מקו גריניץ' (0°) עד 180° לכל צד. <b>קווי הרוחב</b> מקבילים לקו המשוה, ומודדים צפון ודרום מ-0° שבמשוה עד 90° שבקטבים.<br><br>
               הרשת שעל הגלובוס מסומנת <b>בכל 15 מעלות</b>, לאורך ולרוחב. במקווקו מסומנים חוג הסרטן (23.44° צפון) וחוג הגדי (23.44° דרום), ומעגלי הקוטב — הצפוני והדרומי (66.56° צפון ודרום).<br><br>
               <b>15 מעלות = שעה</b> — הכדור מסתובב 360 מעלות ביממה, ונמצא שהשמש נעה מעל פניו 15 מעלות בכל שעה. מכאן שכל תנועה של 15 מעלות מזרחה הזמן מתקדם בשעה, וכל 15 מעלות מערבה הזמן מתאחר בשעה — וכל רצועה שבין שני קווי אורך שברשת היא שעה.<br><br>
               עשרים וארבע רצועות של 15 מעלות הן עשרים וארבע שעות, היממה כולה. לפיכך המקיף את הכדור כולו מרויח או מפסיד יממה שלמה — וכאן נצרך קו התאריך, שבו מתחלף היום.
             </div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
+            </div>
           </div>
           <div class="card">
             <h2>מקרא</h2>
+            <div class="expl">
+            <div class="expl-body">
             <div class="htxt">
               <span class="seasondot" style="background:#dfe6ef"></span> <b>קו זמן יקום מתואם (UTC)</b> — קו גריניץ', 0°.<br><br>
               <span class="seasondot" style="background:#ffd24d"></span> <b>קו התאריך שיטת החזו"א</b> — 90 מעלות מזרחית לירושלים (125.24° מזרח). כל מה שמחובר יבשתית למערב מקו התאריך נדון כמו המערב, ולכן הקו נוטה אל סוף היבשת (הקו הישר העובר בתוך היבשת מסומן במקווקו).<br><br>
-              <span class="seasondot" style="background:#5ad2ff"></span> <b>קו התאריך הגרי"מ טוקצינסקי</b> — 180 מעלות מירושלים (144.76° מערב). קו מקווקו תכלת — שטח בספק של הגרי"מ: מערב אלסקה, מקו התאריך שלו עד מיצר ברינג, שהסתפק אם הוא נדון כמזרח הקו (שהוא מחובר אליו יבשתית) או כמערבו.<br><br>
+              <span class="seasondot" style="background:#5ad2ff"></span> <b>קו התאריך הגרי"מ טיקוצינסקי</b> — 180 מעלות מירושלים (144.76° מערב). קו מקווקו תכלת — שטח בספק של הגרי"מ: מערב אלסקה, מקו התאריך שלו עד מיצר ברינג, שהסתפק אם הוא נדון כמזרח הקו (שהוא מחובר אליו יבשתית) או כמערבו.<br><br>
               <span class="seasondot" style="background:#ff6b6b"></span> <b>קו התאריך הסכמי אוה"ע</b> — 180 מעלות מקו זמן יקום מתואם.<br><br>
-              <span class="seasondot" style="background:#7ee081"></span> ירושלים (35.24° מזרח).<br><br>
+              <span class="seasondot" style="background:#7ee081"></span> ירושלים (35.24° מזרח). הקו המקווקו — קו האורך שעליו שוכנת ירושלים, וממנו נמדדים שני קווי התאריך שבמחלוקת.<br><br>
               הערה: מהלך הקו לאורך חופי היבשות מצויר בקירוב, להמחשת העיקרון בלבד.<br><br>
-              <b>מקורות:</b> חזון איש, או"ח סי' ס"ד; הגרי"מ טוקצינסקי, ספר "היומם בכדור הארץ".
+              <b>מקורות:</b> חזון איש, או"ח סי' ס"ד; הגרי"מ טיקוצינסקי, ספר "היומם בכדור הארץ".
+            </div>
+            </div>
+            <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
             </div>
           </div>
         </aside>
@@ -659,7 +849,7 @@
               <label for="e_dsim">שליטה ידנית במרחק (הדגמה)</label></div>
             <label class="field">מרחק: <b id="e_distL">384,400</b> ק״מ</label>
             <input type="range" id="e_dist" min="356500" max="406700" step="100" value="384400" disabled />
-            <div class="htxt" style="margin-top:6px">ככל שהירח רחוק יותר מכדור הארץ הוא נראה קטן יותר, ואינו מספיק לכסות את כל השמש — והליקוי נעשה טבעתי. קרבו את הירח וראו את הליקוי נעשה מלא.</div>
+            <div class="htxt" style="margin-top:6px">ככל שהירח רחוק יותר מכדור הארץ הוא נראה קטן יותר, ואינו מספיק לכסות את כל השמש — והליקוי נעשה טבעתי. קרבו את הירח וראו את הליקוי נעשה מלא. כשההדגמה כבויה מוצג מרחקו האמיתי של הירח ברגע המוצג.</div>
           </div>
           <div class="card" data-emode-card="globe" style="display:none">
             <h2>הגלובוס</h2>

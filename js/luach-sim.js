@@ -107,22 +107,24 @@
 
   // תאריך ושעה בשעון ישראל (Asia/Jerusalem — כולל שעון קיץ בשנים שנהג,
   // וזמן ירושלים המקומי בשנים שקדמו לשעון אזורים). fallback: UTC+2 קבוע.
-  function fmtIsrael(date) {
+  function fmtIsrael(date, sec) {
     try {
       const parts = new Intl.DateTimeFormat('en-GB', {
         timeZone: 'Asia/Jerusalem', era: 'short', weekday: 'short',
         year: 'numeric', month: 'numeric', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
       }).formatToParts(date);
       const g = t => { const p = parts.find(x => x.type === t); return p ? p.value : ''; };
       const wd = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[g('weekday')];
       const era = /^b/i.test(g('era')) ? ' ' + T('לפנה״ס') : '';
       // התאריך והשעה עטופים ב-ltr — בלי זה סדר שני רצפי הספרות מתהפך ב-RTL
-      return `${T(DOW_FULL[wd] || '')}, <span dir="ltr">${+g('day')}.${+g('month')}.${+g('year')}</span>${era} ${g('hour')}:${g('minute')}`;
+      return `${T(DOW_FULL[wd] || '')}, <span dir="ltr">${+g('day')}.${+g('month')}.${+g('year')}</span>${era} ` +
+        `${g('hour')}:${g('minute')}${sec ? ':' + g('second') : ''}`;
     } catch (_) {
       const d = new Date(date.getTime() + 2 * 3600000);
       const pad = n => String(n).padStart(2, '0');
-      return `${T(DOW_FULL[d.getUTCDay()])}, <span dir="ltr">${fmtDMY(d)}</span> ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+      return `${T(DOW_FULL[d.getUTCDay()])}, <span dir="ltr">${fmtDMY(d)}</span> ` +
+        `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}${sec ? ':' + pad(d.getUTCSeconds()) : ''}`;
     }
   }
 
@@ -165,6 +167,215 @@
     // מחוץ לטווח 1600–2200 הדיוק האסטרונומי פוחת (אי-ודאות ΔT) — מוצגת הערה
     const gy = new Date(inst.utc).getUTCFullYear();
     $('lm_note').style.display = (gy < 1600 || gy > 2200) ? '' : 'none';
+  }
+
+  // ── ממיר שעה יממתית ⇄ שעה אזרחית ────────────────────────────────────
+  // ארבע דרכים למניין שעות היממה (ההסבר בכרטיס):
+  //   tosZ  — משקיעה לשקיעה בשעות זמניות (שיטה א׳ בתוס׳ עירובין נ״ו ע״א);
+  //   tosE  — משקיעה לשקיעה בשעות שוות (שיטה ב׳ שם);
+  //   grimt — הלבוש כפירוש הגרי״מ טיקוצינסקי: שש שעות אחר החצות האמיתי;
+  //   merz  — הלבוש כפירוש הגר״י מרצבך: שש שעות אחר החצות הממוצע — תחילת
+  //           היממה קבועה ב-18:00 זמן ירושלים האמצעי (17:39 שעון החורף),
+  //           היא המוסכמה שחלונית חישוב המולדות נוקטת בה.
+  const HOUR_MS = 3600000, DAY_MS = 86400000, PART_MS = 10000 / 3;
+  // חצות ליל היום abs, בציר הזמן המקומי-האמצעי (getUTC* קורא אותו כשעון קיר)
+  const EPOCH0 = H.absToDate(0).getTime();
+  const localMidnight = abs => EPOCH0 + abs * DAY_MS;
+
+  // זריחה, שקיעה וחצות אמיתי (מעבר המרידיאן) בירושלים ליום האזרחי abs — UTC ms
+  const _sunCache = new Map();
+  function sunEvents(abs) {
+    if (_sunCache.has(abs)) return _sunCache.get(abs);
+    let out = null;
+    try {
+      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.24, 0);
+      const t0 = AE.MakeTime(new Date(localMidnight(abs) - JLM_MS));
+      const rise = AE.SearchRiseSet(AE.Body.Sun, obs, +1, t0, 1.2);
+      const set = AE.SearchRiseSet(AE.Body.Sun, obs, -1, t0, 1.2);
+      const noon = AE.SearchHourAngle(AE.Body.Sun, obs, 0, t0);
+      if (rise && set && noon)
+        out = { rise: rise.date.getTime(), set: set.date.getTime(), noon: noon.time.date.getTime() };
+    } catch (_) {}
+    if (_sunCache.size > 400) _sunCache.clear();
+    _sunCache.set(abs, out);
+    return out;
+  }
+
+  // תחילת היממה של היום העברי שמספרו abs, לפי כל שיטה — UTC ms
+  const startMerz = abs => localMidnight(abs) - 6 * HOUR_MS - JLM_MS;
+  const startGrimt = abs => { const e = sunEvents(abs - 1); return e ? e.noon + 6 * HOUR_MS : null; };
+  const startTos = abs => { const e = sunEvents(abs - 1); return e ? e.set : null; };
+
+  // קריאה יממתית {abs,h,p} → רגע UTC. בשעות זמניות (tosZ) שעות 0–11 הן
+  // י״ב חלקי הלילה ו-12–23 י״ב חלקי היום, והחלק — 1/1080 של שעה זמנית.
+  function yemToUtc(shita, abs, h, p) {
+    const off = h * HOUR_MS + p * PART_MS;
+    if (shita === 'merz') return startMerz(abs) + off;
+    if (shita === 'grimt') { const s = startGrimt(abs); return s == null ? null : s + off; }
+    if (shita === 'tosE') { const s = startTos(abs); return s == null ? null : s + off; }
+    const e0 = sunEvents(abs - 1), e1 = sunEvents(abs);
+    if (!e0 || !e1) return null;
+    const f = h + p / 1080;
+    return f < 12
+      ? e0.set + f * (e1.rise - e0.set) / 12
+      : e1.rise + (f - 12) * (e1.set - e1.rise) / 12;
+  }
+
+  // רגע UTC → קריאה יממתית לפי שיטה. החלקים מעוגלים לחלק הקרוב.
+  function utcToYem(shita, utc) {
+    if (shita === 'merz') {
+      const x = utc + JLM_MS + 6 * HOUR_MS - EPOCH0;
+      const abs = Math.floor(x / DAY_MS);
+      return packYem(abs, x - abs * DAY_MS);
+    }
+    const X = Math.floor((utc + JLM_MS - EPOCH0) / DAY_MS);  // היום האזרחי של הרגע
+    if (shita === 'grimt' || shita === 'tosE') {
+      const startOf = shita === 'grimt' ? startGrimt : startTos;
+      const sNext = startOf(X + 1);
+      if (sNext == null) return null;
+      if (utc >= sNext) return packYem(X + 1, utc - sNext);
+      const s = startOf(X);
+      return s == null ? null : packYem(X, utc - s);
+    }
+    // tosZ — איתור הקטע (לילה/יום) שהרגע בתוכו, ומידתו בשעות זמניות
+    const eX = sunEvents(X);
+    if (!eX) return null;
+    if (utc >= eX.set) {
+      const eN = sunEvents(X + 1);
+      return eN ? packZman(X + 1, 12 * (utc - eX.set) / (eN.rise - eX.set)) : null;
+    }
+    if (utc < eX.rise) {
+      const eP = sunEvents(X - 1);
+      return eP ? packZman(X, 12 * (utc - eP.set) / (eX.rise - eP.set)) : null;
+    }
+    return packZman(X, 12 + 12 * (utc - eX.rise) / (eX.set - eX.rise));
+  }
+  function packYem(abs, t) {
+    let h = Math.floor(t / HOUR_MS), p = Math.round((t - h * HOUR_MS) / PART_MS);
+    if (p === 1080) { p = 0; h++; }
+    if (h >= 24) { h -= 24; abs++; }
+    return { abs, h, p };
+  }
+  function packZman(abs, f) {
+    let h = Math.floor(f), p = Math.round((f - h) * 1080);
+    if (p === 1080) { p = 0; h++; }
+    if (h >= 24) { h -= 24; abs++; }
+    return { abs, h, p };
+  }
+
+  // שעון קיר ישראלי → UTC. Intl נותן רק את הכיוון ההפוך, ולכן מנחשים UTC+2
+  // ומתקנים בשתי איטרציות (די בהן גם סביב מעברי שעון הקיץ). שנים לפנה״ס
+  // נבנות ב-setUTCFullYear — ‎Date.UTC ממפה 0–99 למאה ה-20.
+  const _wallFmt = (() => {
+    try {
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Jerusalem', era: 'short',
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+      });
+    } catch (_) { return null; }
+  })();
+  function wallOf(utc) {
+    const parts = _wallFmt.formatToParts(new Date(utc));
+    const g = t => { const p = parts.find(x => x.type === t); return p ? p.value : '0'; };
+    let y = +g('year');
+    if (/^b/i.test(g('era'))) y = 1 - y;
+    const w = new Date(0);
+    w.setUTCFullYear(y, +g('month') - 1, +g('day'));
+    w.setUTCHours(+g('hour') % 24, +g('minute'), +g('second'), 0);
+    return w.getTime();
+  }
+  function israelUtcFrom(y, mo, d, hh, mm, ss) {
+    const w = new Date(0);
+    w.setUTCFullYear(y, mo, d);
+    w.setUTCHours(hh, mm, ss, 0);
+    const want = w.getTime();
+    if (!_wallFmt) return want - 2 * HOUR_MS;
+    let utc = want - 2 * HOUR_MS;
+    try {
+      for (let i = 0; i < 2; i++) utc += want - wallOf(utc);
+    } catch (_) { return want - 2 * HOUR_MS; }
+    return utc;
+  }
+
+  // תאריך עברי ממספר יום — כמו H.fromGregorian, אבל על abs ישירות (בטוח גם
+  // בשנים לועזיות 0–99, שבהן מסלול ה-Date המקומי משבש את המאה)
+  function hebOfAbs(abs) {
+    let y = Math.max(1, Math.round(5785 + (abs - H.roshHashanaAbs(5785)) / 365.2468));
+    while (y > 1 && H.roshHashanaAbs(y) > abs) y--;
+    while (H.roshHashanaAbs(y + 1) <= abs) y++;
+    for (const m of H.yearTable(y).months)
+      if (abs >= m.startAbs && abs <= m.endAbs)
+        return { year: y, month: m.name, day: abs - m.startAbs + 1 };
+    return null;
+  }
+
+  const SHITOT = [
+    { key: 'tosZ', label: 'תוס׳ — שעות זמניות', src: 'שיטה א׳ בתוס׳ עירובין נ״ו ע״א: היממה משקיעה לשקיעה, י״ב שעות ללילה וי״ב ליום' },
+    { key: 'tosE', label: 'תוס׳ — שעות שוות', src: 'שיטה ב׳ בתוס׳ שם: היממה משקיעה לשקיעה, בשעות שוות' },
+    { key: 'grimt', label: 'הגרי״מ טיקוצינסקי — חצות אמיתי', src: 'הלבוש סי׳ תכ״ח: היממה משש שעות אחר חצות; לפי החצות האמיתי של כל יום' },
+    { key: 'merz', label: 'הגר״י מרצבך — חצות ממוצע', src: 'הלבוש סי׳ תכ״ח: היממה משש שעות אחר חצות; לפי החצות הממוצע — תחילת היממה 17:39 בשעון החורף' },
+  ];
+
+  // כיוון ברירת המחדל — משעה יממתית לשעה אזרחית: זה עיקר תפקיד הממיר,
+  // וההיפוך משמש להתלמד ולתרגל את המרת השעות
+  const conv = {
+    dir: 'y2c',
+    hy: 5786, mi: 0, day: 1,
+    ch: 12, cm: 0, cs: 0, h: 0, p: 0,
+  };
+
+  function hebLabel(abs) {
+    const hd = hebOfAbs(abs);
+    if (!hd) return '—';
+    let s = `${T(DOW_FULL[(abs + 1) % 7])} ${H.hebNum(hd.day)} ${T(hd.month)}`;
+    if (hd.year !== conv.hy) s += ' ' + H.hebYearName(hd.year);
+    return s;
+  }
+
+  function renderConv() {
+    if (!$('l_convBox')) return;
+    $('lc_civIn').style.display = conv.dir === 'c2y' ? '' : 'none';
+    $('lc_yemIn').style.display = conv.dir === 'y2c' ? '' : 'none';
+
+    // רשימות החודש והיום תלויות בשנה (עיבור, חסרה/שלמה) — נבנות בכל רינדור
+    const months = H.yearTable(conv.hy).months;
+    conv.mi = Math.min(conv.mi, months.length - 1);
+    const mSel = $('lc_month');
+    mSel.innerHTML = months.map((m, k) => `<option value="${k}">${T(m.name)}</option>`).join('');
+    mSel.value = String(conv.mi);
+    const mLen = months[conv.mi].len;
+    conv.day = Math.min(conv.day, mLen);
+    const dSel = $('lc_day');
+    dSel.innerHTML = Array.from({ length: mLen }, (_, k) =>
+      `<option value="${k + 1}">${H.hebNum(k + 1)}</option>`).join('');
+    dSel.value = String(conv.day);
+    const habs = months[conv.mi].startAbs + conv.day - 1;
+
+    const row = (label, title, val) =>
+      `<div class="lm-row"><span title="${T(title)}">${T(label)}</span><b>${val}</b></div>`;
+    let html = '';
+    if (conv.dir === 'c2y') {
+      // שעה 18:00 ואילך — ליל התאריך הנבחר, כלומר ערבו של היום האזרחי הקודם
+      const cd = H.absToDate(conv.ch >= 18 ? habs - 1 : habs);
+      const utc = israelUtcFrom(cd.getUTCFullYear(), cd.getUTCMonth(), cd.getUTCDate(),
+        conv.ch, conv.cm, conv.cs);
+      html += row('הרגע בשעון ישראל', '', fmtIsrael(new Date(utc), true));
+      for (const s of SHITOT) {
+        const r = utcToYem(s.key, utc);
+        html += row(s.label, s.src, r
+          ? `${hebLabel(r.abs)} — ${r.h} ${T('שעות')} ${r.p} ${T('חלקים')}`
+          : '—');
+      }
+    } else {
+      for (const s of SHITOT) {
+        const utc = yemToUtc(s.key, habs, conv.h, conv.p);
+        html += row(s.label, s.src, utc == null ? '—' : fmtIsrael(new Date(utc), true));
+      }
+    }
+    $('lc_out').innerHTML = html;
+    const gy = H.absToDate(habs).getUTCFullYear();
+    $('lc_note').style.display = (gy < 1600 || gy > 2200) ? '' : 'none';
   }
 
   function dechiyaPhrase(info) {
@@ -257,12 +468,18 @@
       $('l_customBox').style.display = on ? '' : 'none';
       $('l_yearBox').style.display = on ? 'none' : '';
       // חלונית המולדות טעונה שנה אמיתית — למולד לועזי ולקיבוץ האסטרונומי
+      // (ממיר השעה נשאר גלוי: התאריך שלו עצמאי ואינו תלוי בשנה המוצגת)
       $('l_moladBox').style.display = on ? 'none' : '';
       $('l_customBtn').textContent = T(on ? '↩ חזרה לשנה אמיתית' : '🧪 שנת מעבדה');
       if (!on) return;
-      const nx = $('l_nextLeap');
+      const pv = $('l_prevLeap'), nx = $('l_nextLeap');
+      if (this.c.leap) { this.c.prevLeap = false; pv.checked = false; pv.disabled = true; }
+      else pv.disabled = false;
       if (this.c.leap) { this.c.nextLeap = false; nx.checked = false; nx.disabled = true; }
       else nx.disabled = false;
+      $('l_prevHint').textContent = this.c.leap
+        ? T('שנה שלפני מעוברת היא תמיד פשוטה')
+        : T('משפיע רק כשמולד תשרי חל ביום ב׳ אחרי ט״ו תקפ״ט ולפני י״ח');
       $('l_nextHint').textContent = this.c.leap
         ? T('שנה שאחרי מעוברת היא תמיד פשוטה')
         : T('משפיע רק כשמולד תשרי הבא חל ביום ג׳ אחרי ט׳ ר״ד ולפני י״ח');
@@ -330,11 +547,54 @@
       for (const [id, key] of [['l_leap', 'leap'], ['l_prevLeap', 'prevLeap'], ['l_nextLeap', 'nextLeap']]) {
         $(id).onchange = e => { this.c[key] = e.target.checked; this._syncCustom(); redraw(); };
       }
+
+      // ── ממיר השעה היממתית ──
+      // נפתח מכוון לרגע הנוכחי. מ-18:00 התאריך היממתי הוא כבר של מחר —
+      // ולפי כלל הקלט (שעה 18+ היא ליל התאריך הנבחר) נבחר יום המחרת.
+      {
+        const now = new Date();
+        try {
+          const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Jerusalem',
+            hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23',
+          }).formatToParts(now);
+          const g = t => +((parts.find(x => x.type === t) || {}).value || 0);
+          conv.ch = g('hour'); conv.cm = g('minute'); conv.cs = g('second');
+        } catch (_) {
+          conv.ch = now.getHours(); conv.cm = now.getMinutes(); conv.cs = now.getSeconds();
+        }
+        const hd = H.fromGregorian(conv.ch >= 18 ? new Date(now.getTime() + DAY_MS) : now);
+        if (hd) { conv.hy = hd.year; conv.mi = hd.monthIdx; conv.day = hd.day; }
+        $('lc_year').value = conv.hy;
+        $('lc_ch').value = conv.ch; $('lc_cm').value = conv.cm; $('lc_cs').value = conv.cs;
+      }
+      $('lc_dir').onchange = e => { conv.dir = e.target.value; renderConv(); };
+      $('lc_year').onchange = e => {
+        conv.hy = Math.max(1, Math.min(9999, +e.target.value || conv.hy));
+        e.target.value = conv.hy;
+        renderConv();
+      };
+      $('lc_month').onchange = e => { conv.mi = +e.target.value; renderConv(); };
+      $('lc_day').onchange = e => { conv.day = +e.target.value; renderConv(); };
+      const cnum = (id, key, min, max) => {
+        $(id).oninput = e => {
+          conv[key] = Math.max(min, Math.min(max, +e.target.value || 0));
+          renderConv();
+        };
+      };
+      cnum('lc_ch', 'ch', 0, 23); cnum('lc_cm', 'cm', 0, 59); cnum('lc_cs', 'cs', 0, 59);
+      cnum('lc_h', 'h', 0, 23); cnum('lc_p', 'p', 0, 1079);
+
       this.draw();
+      renderConv();
     },
   };
 
-  sim.onLanguage = () => { if (sim._bound) { sim._sig = null; sim._syncCustom(); sim.draw(); } };
+  sim.onLanguage = () => {
+    if (!sim._bound) return;
+    sim._sig = null; sim._syncCustom(); sim.draw();
+    renderConv();
+  };
 
   window.Sims.luach = sim;
 })();

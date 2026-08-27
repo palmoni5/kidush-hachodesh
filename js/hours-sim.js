@@ -189,7 +189,7 @@
 
   // ══ מצב האיור ═════════════════════════════════════════════════════════
   const sim = {
-    date: new Date(), playing: false, speed: 1, lat: 31.78, lon: 35.22, _bound: false,
+    date: new Date(), playing: false, speed: 1, lat: 31.78, lon: 35.24, _bound: false,
     step(dt) { this.date = new Date(this.date.getTime() + this.speed * dt * 3600000); },
 
     draw() {

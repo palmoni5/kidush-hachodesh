@@ -90,33 +90,104 @@ window.Sims = (function () {
     }
     return c;
   }
+  // התאמת מידות לקנבס משני היושב בכרטיס שבפאנל (ולא בבמה) — המזעריות
+  // הגדולות של fit() (280×240) היו גולשות מגבולות הכרטיס הצר.
+  function fitInset(canvas) {
+    let c = _fitCache.get(canvas);
+    if (!c) {
+      const r = canvas.parentElement.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const W = Math.max(180, r.width), H = Math.max(140, r.height);
+      const ctx = canvas.getContext('2d');
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c = { ctx, W, H };
+      _fitCache.set(canvas, c);
+    }
+    return c;
+  }
   function sprite(ctx, im, cx, cy, w, h) {
     if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h);
     else { ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, w / 2, 0, 2 * Math.PI); ctx.fill(); }
   }
-  // גיל הירח היום (ימים מאז מולד) לפי מולד ידוע — 6.1.2000 18:14 UT
-  const REF_NEW = Date.UTC(2000, 0, 6, 18, 14, 0);   // מולד ממוצע ידוע
-  function moonAgeAt(ms) {
-    const a = ((((ms - REF_NEW) / 86400000) % A.SYNODIC) + A.SYNODIC) % A.SYNODIC;
-    // שגיאת צף זעירה מתחת לאפס מתעטפת לסוף החודש (29.5299…) — מיושרת לאפס,
-    // שלא יוצג "יום 30" מיד אחרי קפיצה למולד
-    return a >= A.SYNODIC - 1e-7 ? 0 : a;
-  }
-  // זריחת/שקיעת הירח בירושלים ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
-  const _jlmT = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
-  function moonRiseSet(date) {
+  // ── שרשרת הקיבוצים האמיתיים ─────────────────────────────────────────
+  // גיל הירח ורגעי החודש נמנים מן הקיבוץ (המולד) האסטרונומי האמיתי, ולא
+  // ממולד ממוצע: אורך החודש האמיתי נע בין כ-29.27 לכ-29.83 ימים, והקיבוץ
+  // סוטה מן המולד הממוצע עד כי״ד שעות, כפי מהירות הירח במסלולו.
+  // חיפוש המופע יקר, ולכן החודש המוצג נשמר במטמון ומחושב מחדש רק כשהרגע
+  // המוצג יוצא מגבולותיו.
+  const MEAN_LUN = A.SYNODIC;
+  const REF_NEW = Date.UTC(2026, 7, 12, 17, 37, 11);   // קיבוץ ידוע — לגיבוי בלבד
+  function moonPhaseAfter(deg, ms) {
     try {
-      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.22, 0);
+      const AE = window.Astronomy;
+      const t = AE.SearchMoonPhase(deg, AE.MakeTime(new Date(ms)), 31);
+      return t ? t.date.getTime() : null;
+    } catch (_) { return null; }
+  }
+  let _lun = null;                                     // {t0, t1, len} של החודש שבמטמון
+  function lunation(ms) {
+    if (_lun && ms >= _lun.t0 && ms < _lun.t1) return _lun;
+    // בכל חלון של 30 יום יש קיבוץ אחד לפחות, ולכן הראשון שנמצא אינו לאחר ms;
+    // משם מדלגים קדימה עד שהחודש שבידינו הוא זה שהרגע המוצג בתוכו
+    let t0 = moonPhaseAfter(0, ms - 30 * 86400000), t1 = null;
+    if (t0 != null) {
+      for (let k = 0; k < 3; k++) {
+        t1 = moonPhaseAfter(0, t0 + 86400000);
+        if (t1 == null || t1 > ms) break;
+        t0 = t1;
+      }
+    }
+    if (t0 == null || t1 == null) {                    // גיבוי: שרשרת ממוצעת מקיבוץ ידוע
+      const a = ((((ms - REF_NEW) / 86400000) % MEAN_LUN) + MEAN_LUN) % MEAN_LUN;
+      t0 = ms - a * 86400000; t1 = t0 + MEAN_LUN * 86400000;
+    }
+    _lun = { t0, t1, len: (t1 - t0) / 86400000 };
+    return _lun;
+  }
+  const moonAgeAt = ms => (ms - lunation(ms).t0) / 86400000;
+  // זווית המופע האמיתית (0° קיבוץ, 180° ניגוד) מומרת ל״יום שקול״ בחודש ממוצע,
+  // כדי שחישובי הציור והתאורה שנבנו על החודש הממוצע יישארו כשהם — ויקבלו
+  // מעתה את המופע האמיתי
+  function phaseDayAt(ms) {
+    try {
+      const AE = window.Astronomy;
+      return AE.MoonPhase(AE.MakeTime(new Date(ms))) / 360 * MEAN_LUN;
+    } catch (_) { return moonAgeAt(ms); }
+  }
+  // ── שעון המקום הנבחר ──────────────────────────────────────────────────
+  // הרגע שבאיור אחד הוא לכל העולם, וכל מקום רואה אותו בשעונו שלו: זמני
+  // זריחת הירח ושקיעתו וה"שעה במקום" מוצגים בשעון האזרחי של מקום הצפייה
+  // (כולל שעון קיץ). ב"מותאם אישית" — אין אזור זמן ידוע, והשעון מוערך מקו
+  // האורך (15 מעלות לשעה), כדרך שנעשה בלשונית מהלך השמש.
+  const _placeFmt = Object.create(null);
+  function fmtAtPlace(date, loc) {
+    if (loc && loc.tz) {
+      try {
+        const f = _placeFmt[loc.tz] || (_placeFmt[loc.tz] =
+          new Intl.DateTimeFormat('he-IL', { timeZone: loc.tz, hour: '2-digit', minute: '2-digit', hour12: false }));
+        return f.format(date);
+      } catch (e) {}
+    }
+    const off = Math.round(((loc && loc.lon) || 0) / 15);
+    const d = new Date(date.getTime() + off * 3600000);
+    return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+  }
+  // זריחת/שקיעת הירח במקום הנבחר, ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
+  function moonRiseSet(date, loc) {
+    try {
+      const AE = window.Astronomy, obs = new AE.Observer(loc.lat, loc.lon, 0);
       const t = AE.MakeTime(date);
       const r = AE.SearchRiseSet(AE.Body.Moon, obs, +1, t, 1.2);
       const s = AE.SearchRiseSet(AE.Body.Moon, obs, -1, t, 1.2);
-      return { rise: r ? _jlmT.format(r.date) : '—', set: s ? _jlmT.format(s.date) : '—' };
+      return { rise: r ? fmtAtPlace(r.date, loc) : '—', set: s ? fmtAtPlace(s.date, loc) : '—' };
     } catch (e) { return { rise: '—', set: '—' }; }
   }
-  // מיקום הירח והשמש בכיפת השמים מעל ירושלים לרגע נתון (Astronomy Engine)
-  function moonSkyPos(date) {
+  // מיקום הירח והשמש בכיפת השמים מעל המקום הנבחר לרגע נתון (Astronomy Engine)
+  function moonSkyPos(date, loc) {
     try {
-      const AE = window.Astronomy, obs = new AE.Observer(31.78, 35.22, 0), t = AE.MakeTime(date);
+      const AE = window.Astronomy, obs = new AE.Observer(loc.lat, loc.lon, 0), t = AE.MakeTime(date);
       const eqM = AE.Equator(AE.Body.Moon, t, obs, true, true);
       const hM = AE.Horizon(t, obs, eqM.ra, eqM.dec, 'normal');
       const eqS = AE.Equator(AE.Body.Sun, t, obs, true, true);
@@ -130,7 +201,8 @@ window.Sims = (function () {
   // חלון תצפית השמים: עיגול כיפת השמים (כמו בלשונית כוכבי הלכת) ובו הירח
   // במיקומו הנוכחי ובצורתו הנראית, והשמש להקשר. מרכז העיגול = זניט,
   // השפה = האופק; מזרח משמאל (מבט אל-על, כבלשונית כוכבי הלכת).
-  function drawMoonSky(ctx, cx, cy, R, pos, day) {
+  // placeName — שם מקום הצפייה הנבחר, לכותרת החלון.
+  function drawMoonSky(ctx, cx, cy, R, pos, day, placeName) {
     ctx.strokeStyle = cv('--ill-grid'); ctx.lineWidth = 1;
     for (const alt of [30, 60]) {
       const rr = (90 - alt) / 90 * R;
@@ -145,7 +217,7 @@ window.Sims = (function () {
     ctx.fillText(T('צפון'), cx, cy - R - 8); ctx.fillText(T('דרום'), cx, cy + R + 8);
     ctx.fillText(T('מזרח'), cx - R - 14, cy); ctx.fillText(T('מערב'), cx + R + 14, cy);
     ctx.fillStyle = cv('--ill-muted'); ctx.font = '10px sans-serif';
-    ctx.fillText(T('הירח בשמים (ירושלים)'), cx, cy - R - 22);
+    ctx.fillText(T('הירח בשמים') + ' — ' + T(placeName || 'ירושלים'), cx, cy - R - 22);
     if (!pos) return;
     const place = o => {
       const rr = (90 - Math.max(o.alt, 0)) / 90 * R, a = o.az * Math.PI / 180;
@@ -186,16 +258,48 @@ window.Sims = (function () {
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(T(txt), W / 2, 8);
   }
-  // נקודת ייחוס לשנת החמה — שוויון אביב (תקופת ניסן) 20.3.2000 07:35 UT
+  // נקודת ייחוס לנפילה הסכמטית — שוויון אביב (תקופת ניסן) 20.3.2000 07:35 UT
   const SPRING_REF = Date.UTC(2000, 2, 20, 7, 35, 0);
-  // יום בשנת החמה (מתקופת ניסן) ושעה נוכחית באזור הזמן שנבחר
+  // מחזור השנה המוצג — אסטרונומי כולו (Astronomy Engine): מתקופת ניסן האמיתית
+  // (שוויון האביב) האחרונה ועד הבאה. "יום 0" הוא רגע התקופה עצמו, אורך השנה
+  // הוא המרווח האמיתי בין שני השוויונים (כ-365.2424 יום), ו-tek הם ימי ארבע
+  // התקופות האמיתיות במחזור — שאינן רבעים שווים, שהעונות אינן שוות באורכן
+  // (המסלול אליפטי — הארץ איטית ברחקה, וקיץ הצפון ארוך מחורפו): תשרי נופלת
+  // כ-4 ימים אחרי רבע שנת שמואל הסכמטי. כשהמנוע אינו זמין — נפילה למחזור
+  // הסכמטי (שנת שמואל של 365.25 יום המעוגנת בשוויון האביב של 2000, tek=null).
+  let _span = null;
+  function yearSpan() {
+    if (_span && Date.now() < _span.end) return _span;
+    try {
+      const AE = window.Astronomy;
+      let y = new Date().getUTCFullYear();
+      if (AE.Seasons(y).mar_equinox.date.getTime() > Date.now()) y--;
+      const s = AE.Seasons(y);
+      const start = s.mar_equinox.date.getTime();
+      const end = AE.Seasons(y + 1).mar_equinox.date.getTime();
+      const d = t => (t.date.getTime() - start) / 86400000;
+      return (_span = { start, end, days: (end - start) / 86400000,
+                        tek: [0, d(s.jun_solstice), d(s.sep_equinox), d(s.dec_solstice)] });
+    } catch (e) {
+      const cyc = A.SOLAR_YEAR * 86400000;
+      const start = SPRING_REF + Math.floor((Date.now() - SPRING_REF) / cyc) * cyc;
+      return { start, end: start + cyc, days: A.SOLAR_YEAR, tek: null };   // לא נשמר — שהמנוע ינוסה שוב
+    }
+  }
+  // יום בשנת החמה (מתקופת ניסן האמיתית) ושעה נוכחית באזור הזמן שנבחר
   function solarToday(tz) {
     const now = new Date();
-    const dayY = ((((now.getTime() - SPRING_REF) / 86400000) % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
+    const dayY = (now.getTime() - yearSpan().start) / 86400000;
     const off = tzOffsetHours(tz, now);
     const hour = off === null ? now.getHours() + now.getMinutes() / 60
                               : (((now.getTime() / 3600000 + off) % 24) + 24) % 24;
     return { dayY, hour };
+  }
+  // רגע התקופה האמיתי שבמחזור השנה המוצג. i: 0=ניסן (שוויון מרץ), 1=תמוז,
+  // 2=תשרי, 3=טבת. null כשהמנוע אינו זמין — ואז הלחצנים נופלים לרבעים הסכמטיים.
+  function tekufaMoment(i) {
+    const s = yearSpan();
+    return s.tek ? new Date(s.start + s.tek[i] * 86400000) : null;
   }
   // היסט אזור הזמן (שעות) לתאריך נתון — כולל שעון קיץ, מנתוני ה-IANA של הדפדפן.
   // מוחזר null כשאין אזור זמן ידוע (מיקום "מותאם אישית") — ואז מעריכים לפי קו האורך.
@@ -258,8 +362,20 @@ window.Sims = (function () {
       put('yo_riseSea', 'seaLevelSunrise'); put('yo_rise', 'sunrise');
       put('yo_setSea', 'seaLevelSunset');   put('yo_set', 'sunset');
       put('yo_noon', 'chatzos');            put('yo_midnight', 'chatzosLayla');
+      otz.shownFor = d.toISOString().slice(0, 10);
+      syncOtzRefreshBtn(d);
       card.style.display = '';
     } catch (e) {}
+  }
+  // כפתור "רענן מהלוח" מוצג רק כשהכרטיס אינו מסונכרן עם תאריך האיור:
+  // גרירת מחוון היום וריצת האנימציה אינן קוראות ללוח בכל שינוי (עשרות
+  // קריאות בגרירה אחת), וגם קריאה שנכשלה משאירה את הכרטיס מאחור. בכל
+  // שאר המסלולים הכרטיס מתעדכן מאליו — והכפתור מיותר ומוסתר.
+  function syncOtzRefreshBtn(d) {
+    if (!otz.ready) return;
+    const stale = d.toISOString().slice(0, 10) !== otz.shownFor;
+    const b = $('yo_refresh');
+    if ((b.style.display === 'none') === stale) b.style.display = stale ? '' : 'none';
   }
   // שינוי העיר באפליקציה משתקף בזמן אמת — כל עוד המשתמש לא בחר עיר אחרת בכרטיס
   if (typeof window.Otzaria !== 'undefined' && Otzaria.on) {
@@ -281,16 +397,15 @@ window.Sims = (function () {
     const B = 2 * Math.PI * (N - 81) / 364;
     return (9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B)) / 60;
   }
-  // יום בשנת החמה מתאריך לועזי (נדגם בצהרי היום)
+  // יום בשנת החמה מתאריך לועזי (נדגם בצהרי היום) — ממופה מחזורית אל השנה המוצגת
   function dayYFromDate(Y, M, D) {
-    return ((((Date.UTC(Y, M - 1, D, 12) - SPRING_REF) / 86400000) % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
+    const s = yearSpan();
+    return ((((Date.UTC(Y, M - 1, D, 12) - s.start) / 86400000) % s.days) + s.days) % s.days;
   }
-  // תאריך לועזי מיום בשנת החמה — ממופה למחזור השנה שמכיל את היום הנוכחי
+  // תאריך לועזי מיום בשנת החמה המוצגת
   const GREG_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
   function dayYToDate(dayY) {
-    const cyc = A.SOLAR_YEAR * 86400000;
-    const n = Math.floor((Date.now() - SPRING_REF) / cyc);
-    return new Date(SPRING_REF + n * cyc + dayY * 86400000);
+    return new Date(yearSpan().start + dayY * 86400000);
   }
   function dayYToDateLabel(dayY) {
     const d = dayYToDate(dayY);
@@ -304,24 +419,30 @@ window.Sims = (function () {
   // כך יש לכל מצב תאריך ושעה של ממש, וכפתורי ג׳/ז׳ מן המולד קופצים אל הרגע
   // האמיתי בחודש, שרואים בו שהוא יום או לילה. day נגזר מ-t בכל ציור.
   const moon = {
-    t: Date.now(), day: 0, speed: 2, playing: false, hintDone: false, _bound: false,
+    t: Date.now(), day: 0, phase: 0, speed: 2, playing: false, hintDone: false, _bound: false,
+    // מקום הצפייה — קובע את חלון "הירח בשמים", את מיקום הירח ואת זמני
+    // זריחתו ושקיעתו (המוצגים בשעון האזרחי של אותו מקום). המופע עצמו ואחוז
+    // ההארה כמעט שווים בכל העולם, אך שעת הראייה והמקום בשמים תלויי מקום —
+    // וזה עיקרו של קידוש החודש על פי הראייה.
+    loc: { lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', name: 'ירושלים' },
     step(dt) { if (this.playing) this.t += this.speed * dt * 86400000; },
-    // תחילת החודש המוצג — רגע המולד (הממוצע) שהרגע הנוכחי בתוך חודשו.
-    // נגזר מ-t עצמו, ולכן החודש מתחלף רק כש-t חוצה מולד (הפעלה, תאריך ידני,
+    // תחילת החודש המוצג — רגע הקיבוץ האמיתי שהרגע הנוכחי בתוך חודשו.
+    // נגזר מ-t עצמו, ולכן החודש מתחלף רק כש-t חוצה קיבוץ (הפעלה, תאריך ידני,
     // "הירח היום") או בכפתורי החודש הקודם/הבא — לא בלחיצות על רגעי החודש.
-    _monthT0() { return this.t - moonAgeAt(this.t) * 86400000; },
+    _monthT0() { return lunation(this.t).t0; },
     draw() {
       this.day = moonAgeAt(this.t);
+      this.phase = phaseDayAt(this.t);
       const simDate = new Date(this.t);
       const { ctx, W, H } = fit($('moonCanvas'));
       ctx.clearRect(0, 0, W, H);
       // עדכון ה-HUD תחילה: hudInset מודד את גובה ה-HUD, ולכן יש לעדכן את תוכנו
       // (שאורכו משתנה לפי המופע) לפני מדידת moonTop — אחרת הפריים הראשון נמדד
       // לפי ערכי ברירת המחדל שב-HTML, ומדידה-מחדש מאוחרת מקפיצה את האיור.
-      const pct = Math.round(A.moonIllum(this.day) * 100);
-      $('m_day').textContent = Math.floor(this.day % A.SYNODIC) + 1;
+      const pct = Math.round(A.moonIllum(this.phase) * 100);
+      $('m_day').textContent = Math.floor(this.day) + 1;
       $('m_pct').textContent = pct + '%';
-      $('m_phase').textContent = T(A.moonPhaseLabel(this.day));
+      $('m_phase').textContent = T(A.moonPhaseLabel(this.phase));
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
       $('m_clock').textContent = simDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
@@ -335,21 +456,24 @@ window.Sims = (function () {
       }
       // זריחת/שקיעת הירח — ליממה של התאריך המוצג.
       // החיפוש יקר, ולכן מחושב רק כשהיום המוצג משתנה בפועל (רבע יממה).
-      const rsKey = Math.floor(this.t / 21600000);
+      const rsKey = Math.floor(this.t / 21600000) + '|' + this.loc.lat + ',' + this.loc.lon + ',' + this.loc.tz;
       if (this._rsKey !== rsKey) {
         this._rsKey = rsKey;
         const d = new Date(this.t);
         d.setHours(0, 0, 0, 0);
-        this._rs = moonRiseSet(d);
+        this._rs = moonRiseSet(d, this.loc);
       }
       $('m_rise').textContent = this._rs.rise;
       $('m_set').textContent = this._rs.set;
+      // מקום הצפייה והשעה שבו לרגע המוצג — הרגע אחד, והשעון משתנה ממקום למקום
+      $('m_loc').textContent = T(this.loc.name);
+      $('m_locClock').textContent = fmtAtPlace(simDate, this.loc);
       // במסך צר מורידים את כל ההרכב מתחת ל-HUD (top=0 בדסקטופ → פריסה מקורית)
       if (_layout.moonTop === null) _layout.moonTop = hudInset($('moonCanvas'), W, 0);
       const top = _layout.moonTop;
       const earthX = W * 0.60, earthY = top + (H - top) * 0.56, sunX = W * 0.13, sunY = earthY;
       const orbitR = Math.min(W, H - top) * 0.19;
-      const ang = Math.PI - 2 * Math.PI * (this.day / A.SYNODIC);
+      const ang = Math.PI - 2 * Math.PI * (this.phase / MEAN_LUN);
       const mx = earthX + Math.cos(ang) * orbitR, my = earthY + Math.sin(ang) * orbitR;
       // קרני שמש (עד אזור הארץ/הירח בלבד) + מסלול
       const rayEnd = earthX + orbitR + 26;
@@ -386,14 +510,14 @@ window.Sims = (function () {
       const vx = W - vR - 16, vy = H - vR - 20;
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(T('הירח מכדור הארץ'), vx, vy - vR - 12);
-      drawPhase(ctx, vx, vy, vR, this.day);
+      drawPhase(ctx, vx, vy, vR, this.phase);
       // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
-      const pos = moonSkyPos(simDate);
+      const pos = moonSkyPos(simDate, this.loc);
       if (W >= 520) {
         const dR = Math.max(50, Math.min(W * 0.12, (H - top) * 0.16, 92));
         const rtl = getComputedStyle(document.body).direction !== 'ltr';
         const dx = rtl ? 24 + dR + 14 : W - 24 - dR - 14;
-        drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.day);
+        drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.phase, this.loc.name);
       }
       // לבנה מעל האופק בשעות היום — מעל האופק, אך אור החמה מסתירה מן העין
       const daylight = pos && pos.sun.alt > 0 && pos.moon.alt > 0;
@@ -418,22 +542,54 @@ window.Sims = (function () {
         stop(); this._syncDate();
       }; };
       jump('m_jNew', 0);
-      jump('m_jFull', A.SYNODIC / 2);
+      // ר"ה כ' ע"ב: כ"ד שעות מכוסה הלבנה סביב הקיבוץ — "לדידן" (בבל) י"ח מהן
+      // לאחר המולד, ו"לדידהו" (ארץ ישראל) שש בלבד; ומכאן שני הרגעים הללו,
+      // שהם הראשונים שאפשר בהם לראות את הלבנה החדשה לשתי הלשונות.
+      jump('m_j6h', 0.25);
+      jump('m_j18h', 0.75);
       jump('m_j3', 3);
       jump('m_j7', 7);
-      // מעבר מפורש בין חודשים — הזזה בחודש סינודי שלם: היום בחודש נשמר,
-      // וכפתורי הרגעים מכוונים מעתה אל החודש החדש
+      // הניגוד אינו נופל בדיוק באמצע החודש — הירח אינו נע במהירות אחידה;
+      // לכן הוא נדרש כמופע אמיתי (180°) ולא כמחצית אורך החודש
+      $('m_jFull').onclick = () => {
+        const t0 = this._monthT0();
+        const f = moonPhaseAfter(180, t0);
+        this.t = f == null ? t0 + lunation(t0).len / 2 * 86400000 : f;
+        stop(); this._syncDate();
+      };
+      // מעבר מפורש בין חודשים — אל הקיבוץ האמיתי הסמוך; היום בחודש נשמר
+      // בקירוב, וכפתורי הרגעים מכוונים מעתה אל החודש החדש
       const shiftMonth = (id, dir) => { const b = $(id); if (b) b.onclick = () => {
-        this.t += dir * A.SYNODIC * 86400000;
+        const cur = lunation(this.t), age = this.t - cur.t0;
+        // אורכי החודשים אינם שווים; גיל שאינו נכנס בחודש היעד נקטע, שלא יזלוג
+        const nt0 = dir > 0 ? cur.t1 : lunation(cur.t0 - 1000).t0;
+        const nxt = lunation(nt0 + 1000);
+        this.t = nt0 + Math.min(age, nxt.t1 - nt0 - 1000);
         stop(); this._syncDate();
       }; };
       shiftMonth('m_prevM', -1);
       shiftMonth('m_nextM', +1);
       $('m_today').onclick = () => { this.t = Date.now(); stop(); this._syncDate(); };
       $('m_speed').oninput = e => { this.speed = +e.target.value; $('m_spdL').textContent = this.speed.toFixed(1); };
-      // גרירת "יום בחודש" — מציבה את הרגע בתוך החודש המוצג; טווח המחוון
-      // (0–29.53) קצר מהחודש הסינודי, ולכן גם קצהו אינו גולש למולד הבא
-      $('m_scrub').oninput = e => { this.t = this._monthT0() + (+e.target.value) * 86400000; stop(); this._syncDate(); };
+      // גרירת "יום בחודש" — מציבה את הרגע בתוך החודש המוצג. טווח המחוון נקבע
+      // באורכו האמיתי של החודש (sync), והקצה נקטע שלא יגלוש אל הקיבוץ הבא
+      $('m_scrub').oninput = e => {
+        const cur = lunation(this.t);
+        this.t = cur.t0 + Math.min(+e.target.value * 86400000, cur.t1 - cur.t0 - 1000);
+        stop(); this._syncDate();
+      };
+      // מקום הצפייה: בחירה מן הרשימה קובעת רוחב+אורך+אזור זמן; עריכה ידנית
+      // של הקואורדינטות מעבירה ל"מותאם אישית" (ואז אזור הזמן מוערך מקו האורך).
+      $('m_city').onchange = e => {
+        const opt = e.target.selectedOptions[0], v = e.target.value;
+        if (!v) { this.loc = { lat: this.loc.lat, lon: this.loc.lon, tz: null, name: 'מותאם אישית' }; return; }
+        const [la, lo] = v.split(',').map(Number);
+        $('m_lat').value = la; $('m_lon').value = lo;
+        this.loc = { lat: la, lon: lo, tz: opt.dataset.tz || null, name: opt.textContent.trim() };
+      };
+      const mCustom = () => { $('m_city').value = ''; this.loc.tz = null; this.loc.name = 'מותאם אישית'; };
+      $('m_lat').oninput = e => { this.loc.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); mCustom(); };
+      $('m_lon').oninput = e => { this.loc.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); mCustom(); };
       $('m_go').onclick = () => {
         const y = +$('m_yy').value, m = +$('m_mm').value, d = +$('m_dd').value;
         if (!y || !m || !d) return;
@@ -448,7 +604,10 @@ window.Sims = (function () {
       set('m_hh', d.getHours()); set('m_mi', d.getMinutes());
     },
     sync() {
-      if (document.activeElement !== $('m_scrub')) $('m_scrub').value = (this.day % A.SYNODIC).toFixed(2);
+      // טווח המחוון הוא אורכו האמיתי של החודש המוצג (29.27–29.83 ימים)
+      const sc = $('m_scrub');
+      sc.max = lunation(this.t).len.toFixed(2);
+      if (document.activeElement !== sc) sc.value = this.day.toFixed(2);
       this._syncDate();
     },
   };
@@ -486,7 +645,7 @@ window.Sims = (function () {
       ctx.drawImage(IMG.moonReal, cx - R, cy - R, 2 * R, 2 * R);
       ctx.filter = 'none';
     } else drawMoonDisc(ctx, cx, cy, R);
-    const theta = 2 * Math.PI * (day % A.SYNODIC) / A.SYNODIC, a = R * Math.cos(theta);
+    const theta = 2 * Math.PI * (day % MEAN_LUN) / MEAN_LUN, a = R * Math.cos(theta);
     const waning = A.moonWaning(day), limb = waning ? 1 : -1, term = waning ? -1 : 1, N = 72;
     ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
     for (let i = 0; i <= N; i++) { const u = Math.PI * i / N; ctx.lineTo(cx + limb * R * Math.sin(u), cy - R * Math.cos(u)); }
@@ -500,9 +659,9 @@ window.Sims = (function () {
   const year = {
     // hour = השעון האזרחי במקום הנבחר (כולל שעון קיץ). ההמרה לזוית השעה נעשית
     // ב-solarHour(): הפחתת היסט אזור הזמן, הוספת קו האורך המקומי ומשוואת הזמן.
-    hour: 12, dayY: 0, lat: 31.78, lon: 35.22, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
+    hour: 12, dayY: 0, lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
     speed: 2, playing: false, auto: true, viewAz: 90, hintDone: false, _bound: false,
-    step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % A.SOLAR_YEAR; } } },
+    step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % yearSpan().days; } } },
     // היסט אזור הזמן בשעות; ללא אזור זמן ידוע — הערכה לפי קו האורך
     tzOff() {
       const o = tzOffsetHours(this.tz, dayYToDate(this.dayY));
@@ -641,15 +800,183 @@ window.Sims = (function () {
       }
       if (!this.hintDone) drawHint(ctx, W, 'גררו לסיבוב · ▶ הפעל להנעה');
       this.hud(v.U, sn);
+      this.drawSeasons(dec);
+    },
+    // ── מדוע מסלול השמש נודד? — איור עזר בפאנל ─────────────────────────
+    // מבט אלכסוני על מסלול הארץ סביב השמש, מצפון למישור המסלול (מישור המלקה):
+    // המסלול נראה כאליפסה. ציר הסיבוב נטוי 23.44° וכיוונו קבוע בחלל, ולכן
+    // בתקופת תמוז החצי הצפוני רכון אל השמש ובטבת ממנה והלאה.
+    //
+    // ההיטל מחושב בשלושה ממדים ממש: EX ימינה במסך, EUP מעלה, ו-EV לעומק (אל
+    // הצופה). זה תיקון עיקרי: קודם צוירו קו המשווה וגבול היום־לילה כקווים
+    // *ניצבים על המסך* לציר שעל המסך — ומכיוון שההיטל אלכסוני יצא שהקרן מן
+    // השמש פגעה בקו המשווה בימים 43 ו-226 מתקופת ניסן במקום בתקופות ניסן
+    // ותשרי עצמן, וגבול היום־לילה לא התאים לכיוון השמש. כאן קו המשווה, גבול
+    // היום־לילה והנקודה שהשמש מעליה כולם היטלים של מעגלים בחלל — ולכן הם
+    // מתאימים לכיוון השמש בכל נקודה שבמסלול.
+    drawSeasons(dec) {
+      const c = $('seasonsCanvas'); if (!c) return;
+      const { ctx, W, H } = fitInset(c);
+      ctx.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2 + 4;
+      const a = Math.min(W * 0.38, 130), b = a * 0.44;
+      // בסיס ההיטל. גובה נקודת המבט מעל מישור המסלול נגזר מיחס האליפסה עצמו
+      // (b/a = sin α), ולכן המסלול והכדור מצוירים באותו היטל בדיוק.
+      const sinA = b / a, cosA = Math.sqrt(1 - sinA * sinA);
+      const EX = [1, 0, 0], EUP = [0, sinA, cosA], EV = [0, -cosA, sinA];
+      const dot3 = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+      const cross3 = (u, v) => [u[1]*v[2] - u[2]*v[1], u[2]*v[0] - u[0]*v[2], u[0]*v[1] - u[1]*v[0]];
+      const norm3 = u => { const m = Math.hypot(u[0], u[1], u[2]) || 1; return [u[0]/m, u[1]/m, u[2]/m]; };
+      // מסלול הארץ (סכמטי)
+      ctx.strokeStyle = cv('--ill-line'); ctx.lineWidth = 1; ctx.setLineDash([4, 5]);
+      ctx.beginPath(); ctx.ellipse(cx, cy, a, b, 0, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+      // מיקום על המסלול: תקופת תמוז מימין (שם הציר הקבוע רכון אל השמש), טבת
+      // משמאל, ותקופות השוויון בקצות האליפסה. הארץ נעה נגד כיוון השעון — כמות
+      // שהיא נראית ממש מצפון למישור המסלול. הזוית נגזרת מאורך המלקה האמיתי
+      // של השמש (Astronomy Engine): ארבע התקופות רחוקות זו מזו 90° באורך
+      // המלקה בשווה אף שאינן שוות בזמן, וכך רוחב הנקודה הצהובה שעל הכדור
+      // (sin ε · sin λ) שווה בדיוק לנטייה האמיתית שבשורת הנתונים. בלי המנוע —
+      // נפילה לתנועה סכמטית אחידה ברבעים שווים.
+      const lam = d => {
+        try {
+          const AE = window.Astronomy;
+          return (AE.SunPosition(AE.MakeTime(dayYToDate(d))).elon - 90) * Math.PI / 180;
+        } catch (e) { return 2 * Math.PI * (d - 91.31) / A.SOLAR_YEAR; }
+      };
+      const orbit = d => { const l = lam(d); return [Math.cos(l), Math.sin(l), 0]; };
+      const scr = P => ({ x: cx + a * dot3(P, EX), y: cy - a * dot3(P, EUP) });
+      // השמש במרכז
+      const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, 26);
+      g.addColorStop(0, cv('--ill-sun-glow')); g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 26, 0, 2 * Math.PI); ctx.fill();
+      sprite(ctx, IMG.sun, cx, cy, 26, 26);
+      // ארבע התקופות על המסלול — ברגעיהן האמיתיים (רבעים סכמטיים בלי המנוע).
+      // הנקודות כאן, והשמות בסוף הציור (אחרי הכדור), שהכדור לא יכסה את שם
+      // התקופה שהוא עומד בה
+      const spn = yearSpan(), tkd = spn.tek || [0, 91.31, 182.62, 273.94];
+      const TEKUFOT = [[tkd[0], 'ניסן'], [tkd[1], 'תמוז'], [tkd[2], 'תשרי'], [tkd[3], 'טבת']];
+      ctx.fillStyle = cv('--ill-muted');
+      for (const [d] of TEKUFOT) {
+        const q = scr(orbit(d));
+        ctx.beginPath(); ctx.arc(q.x, q.y, 2, 0, 2 * Math.PI); ctx.fill();
+      }
+      // ── הארץ ביומה ──
+      const dayY = ((this.dayY % spn.days) + spn.days) % spn.days;
+      const E = orbit(dayY), p = scr(E), er = 11;
+      const sv = norm3([-E[0], -E[1], -E[2]]);          // כיוון השמש מן הארץ
+      const eps = 23.44 * Math.PI / 180;
+      const N3 = [-Math.sin(eps), 0, Math.cos(eps)];    // ציר הסיבוב — קבוע בחלל
+      // נקודה על פני הכדור (וקטור יחידה) → מסך
+      const sph = P => ({ x: p.x + er * dot3(P, EX), y: p.y - er * dot3(P, EUP) });
+      const ang = P => { const q = sph(P); return Math.atan2(q.y - p.y, q.x - p.x); };
+      // קרן השמש — עד שפת הכדור בלבד. קודם נמשכה עד מרכז הכדור, וממילא חצתה
+      // תמיד את קו המשווה ולא ניתן היה לראות בה מעל איזה קו רוחב השמש עומדת.
+      { const dx = p.x - cx, dy = p.y - cy, m = Math.hypot(dx, dy) || 1;
+        ctx.strokeStyle = cv('--ill-ray'); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.x - dx / m * er, p.y - dy / m * er); ctx.stroke(); }
+      sprite(ctx, IMG.earth, p.x, p.y, 2 * er, 2 * er);
+      // ── צד הלילה ──
+      // האזור שאין השמש זורחת בו ושהצופה רואה אותו: מחצית גבול היום־לילה
+      // (מעגל הניצב לכיוון השמש) הפונה אל הצופה, ואחריה מחצית שפת הכדור
+      // שמנגד לשמש. שתי המחציות נפגשות בדיוק בקצות הגבול, ולכן הצורה נסגרת.
+      { const u1 = norm3(cross3(sv, EV));               // בגבול, ובמישור המסך
+        const u2 = cross3(sv, u1);                      // בגבול, לכיוון העומק
+        const sgn = dot3(u2, EV) >= 0 ? 1 : -1;         // המחצית הפונה אל הצופה
+        ctx.save(); ctx.beginPath(); ctx.arc(p.x, p.y, er, 0, 2 * Math.PI); ctx.clip();
+        ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
+        const NS = 36;
+        for (let i = 0; i <= NS; i++) {
+          const t = sgn * Math.PI * i / NS;
+          const P = [u1[0]*Math.cos(t) + u2[0]*Math.sin(t), u1[1]*Math.cos(t) + u2[1]*Math.sin(t),
+                     u1[2]*Math.cos(t) + u2[2]*Math.sin(t)];
+          const q = sph(P); if (i) ctx.lineTo(q.x, q.y); else ctx.moveTo(q.x, q.y);
+        }
+        // שפת הכדור מקצה הגבול בחזרה, דרך הכיוון שמנגד לשמש
+        const a1 = ang(u1), a2 = ang([-u1[0], -u1[1], -u1[2]]);
+        const asun = ang([-sv[0], -sv[1], -sv[2]]);   // כיוון "מנגד לשמש" במסך
+        const nrm = x => ((x % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+        const ccw = !(nrm(asun - a2) < nrm(a1 - a2));
+        ctx.arc(p.x, p.y, er, a2, a1, ccw);
+        ctx.closePath(); ctx.fill(); ctx.restore(); }
+      // ── קו המשווה — היטל המעגל הניצב לציר ──
+      // דו-גוני (בהיר מלא ומעליו קווקוו כהה) כדי שייראה על צד היום ועל צד
+      // הלילה ובשתי פלטות האיור; החצי הרחוק עמום.
+      { const w1 = norm3(cross3(N3, EV)), w2 = cross3(N3, w1);
+        const pts = [];
+        for (let i = 0; i <= 72; i++) {
+          const t = 2 * Math.PI * i / 72;
+          const P = [w1[0]*Math.cos(t) + w2[0]*Math.sin(t), w1[1]*Math.cos(t) + w2[1]*Math.sin(t),
+                     w1[2]*Math.cos(t) + w2[2]*Math.sin(t)];
+          pts.push({ q: sph(P), near: dot3(P, EV) >= 0 });
+        }
+        const run = near => { ctx.beginPath();
+          for (let i = 0; i < pts.length - 1; i++) {
+            if (pts[i].near !== near || pts[i+1].near !== near) continue;
+            ctx.moveTo(pts[i].q.x, pts[i].q.y); ctx.lineTo(pts[i+1].q.x, pts[i+1].q.y);
+          } ctx.stroke(); };
+        ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.lineWidth = 2.6; run(true);
+        ctx.strokeStyle = 'rgba(18,24,44,0.95)'; ctx.lineWidth = 1.3;
+        ctx.setLineDash([2.5, 2.5]); run(true); ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(160,170,190,0.45)'; ctx.lineWidth = 1;
+        ctx.setLineDash([2, 3]); run(false); ctx.setLineDash([]); }
+      // ── ציר הסיבוב ──
+      const pn = sph(N3), ps = sph([-N3[0], -N3[1], -N3[2]]);
+      ctx.strokeStyle = cv('--ill-text'); ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(p.x + (pn.x - p.x) * 1.7, p.y + (pn.y - p.y) * 1.7);
+      ctx.lineTo(p.x + (ps.x - p.x) * 1.7, p.y + (ps.y - p.y) * 1.7);
+      ctx.stroke();
+      // ── הנקודה שהשמש עומדת מעליה ──
+      // היא הקישור בין האיור ובין השורה שמתחתיו: בתקופות ניסן ותשרי היא על קו
+      // המשווה ממש, ובתמוז ובטבת על קווי ההיפוך. כשהיא בצדו הרחוק של הכדור
+      // (הארץ בין הצופה ובין השמש) היא מסומנת כטבעת ריקה.
+      { const q = sph(sv), vis = dot3(sv, EV) >= 0;
+        ctx.beginPath(); ctx.arc(q.x, q.y, 2.6, 0, 2 * Math.PI);
+        if (vis) { ctx.fillStyle = '#ffd257'; ctx.fill(); ctx.strokeStyle = 'rgba(60,40,0,0.8)'; }
+        else { ctx.strokeStyle = 'rgba(255,210,87,0.85)'; }
+        ctx.lineWidth = 1.1; ctx.stroke(); }
+      // סימון הכיוונים על הכדור: צ/ד בקצות הציר. מזרח ומערב אינם מסומנים —
+      // אינם נקודות קבועות באיור, שהרי הכדור מסתובב סביב הציר פעם ביממה.
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = cv('--ill-text');
+      // אות ראשונה של שם הרוח (צ/ד; באנגלית N/S) — 'צ' לבדה משמשת כמפתח
+      // תרגום אחר (צדק, בשצ"ם חנכ"ל), ולכן נגזרת כאן מן המילה המלאה
+      ctx.fillText(T('צפון').charAt(0), p.x + (pn.x - p.x) * 2.3, p.y + (pn.y - p.y) * 2.3);
+      ctx.fillText(T('דרום').charAt(0), p.x + (ps.x - p.x) * 2.3, p.y + (ps.y - p.y) * 2.3);
+      // מקרא בשולי האיור — הכדור קטן מלהכיל שמות מלאים
+      ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+      ctx.fillStyle = cv('--ill-muted');
+      { const txt = T('צפון').charAt(0) + '=' + T('צפון') + ' · ' + T('דרום').charAt(0) + '=' + T('דרום') +
+          ' · ' + T('המעגל הניצב לציר — קו המשווה');
+        // הקנבס צר, ואורך המקרא משתנה עם השפה — הגופן מוקטן עד שהוא נכנס
+        let fs = 8;
+        ctx.font = fs + 'px sans-serif';
+        while (fs > 6 && ctx.measureText(txt).width > W - 12) { fs -= 0.5; ctx.font = fs + 'px sans-serif'; }
+        ctx.fillText(txt, W - 6, H - 4); }
+      // שמות התקופות — בקצות המסלול האופקיים (תמוז וטבת) הצמודים לשולי
+      // הקנבס השם נכתב מעל הנקודה, שלא ייחתך בשוליים ולא ייבלע בכדור
+      ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = cv('--ill-muted');
+      for (const [d, n] of TEKUFOT) {
+        const q = scr(orbit(d)), side = Math.abs(q.x - cx) > a * 0.7;
+        const lx = side ? Math.min(Math.max(q.x, 22), W - 22) : q.x;
+        const ly = side ? q.y - er - 22 : q.y + (q.y - cy) / b * (er + 22);   // מחוץ לכדור ולאותיות שבקצות הציר
+        ctx.fillText(T(n), lx, ly);
+      }
+      // השורה החיה שמתחת לאיור: קו הרוחב שהשמש ניצבת מעליו כעת
+      const el = $('ss_now');
+      if (el) el.textContent = T('השמש עומדת כעת מעל קו רוחב') + ' ' + fmtNS(dec) +
+        (Math.abs(dec) < 0.05 ? ' — ' + T('קו המשווה') : '');
     },
     season() {
       // מדרום לקו המשוה העונות מהופכות: תקופת תמוז שם חורף ותקופת טבת קיץ.
       // סמוך לקו המשוה (3°±) אין קיץ וחורף — מוצג שם התקופה בלבד.
       const south = this.lat < 0, nearEq = Math.abs(this.lat) <= 3;
-      const t = ((this.dayY % A.SOLAR_YEAR) + A.SOLAR_YEAR) % A.SOLAR_YEAR;
-      if (t < 91.31) return nearEq ? { n: 'תקופת ניסן', c: '--ill-spring' } : south ? { n: 'סתיו · ניסן', c: '--ill-autumn' } : { n: 'אביב · ניסן', c: '--ill-spring' };
-      if (t < 182.62) return nearEq ? { n: 'תקופת תמוז', c: '--ill-summer' } : south ? { n: 'חורף · תמוז', c: '--ill-winter' } : { n: 'קיץ · תמוז', c: '--ill-summer' };
-      if (t < 273.94) return nearEq ? { n: 'תקופת תשרי', c: '--ill-autumn' } : south ? { n: 'אביב · תשרי', c: '--ill-spring' } : { n: 'סתיו · תשרי', c: '--ill-autumn' };
+      const s = yearSpan(), tk = s.tek || [0, 91.31, 182.62, 273.94];
+      const t = ((this.dayY % s.days) + s.days) % s.days;
+      if (t < tk[1]) return nearEq ? { n: 'תקופת ניסן', c: '--ill-spring' } : south ? { n: 'סתיו · ניסן', c: '--ill-autumn' } : { n: 'אביב · ניסן', c: '--ill-spring' };
+      if (t < tk[2]) return nearEq ? { n: 'תקופת תמוז', c: '--ill-summer' } : south ? { n: 'חורף · תמוז', c: '--ill-winter' } : { n: 'קיץ · תמוז', c: '--ill-summer' };
+      if (t < tk[3]) return nearEq ? { n: 'תקופת תשרי', c: '--ill-autumn' } : south ? { n: 'אביב · תשרי', c: '--ill-spring' } : { n: 'סתיו · תשרי', c: '--ill-autumn' };
       return nearEq ? { n: 'תקופת טבת', c: '--ill-winter' } : south ? { n: 'קיץ · טבת', c: '--ill-summer' } : { n: 'חורף · טבת', c: '--ill-winter' };
     },
     hud(Unow, sn) {
@@ -693,6 +1020,14 @@ window.Sims = (function () {
       $('y_azL').textContent = this.faceLabel();
       if (document.activeElement !== $('y_hour')) $('y_hour').value = this.hour;
       if (document.activeElement !== $('y_dayY')) $('y_dayY').value = this.dayY;
+      // שדות "או לפי תאריך" עוקבים אחרי היום המוצג באיור (ולא נשארים על תאריך
+      // ישן) — כך קפיצה של יום אחד מהמקום הנוכחי יוצאת ממנו ולא מהיום שהוזן
+      // קודם. שדה בפוקוס או שהוזן ולא אושר אינו נדרס (__fieldLocked).
+      const d = dayYToDate(this.dayY), L = window.__fieldLocked || (el => document.activeElement === el);
+      if (!L($('y_dd'))) $('y_dd').value = d.getUTCDate();
+      if (!L($('y_mm'))) $('y_mm').value = d.getUTCMonth() + 1;
+      if (!L($('y_yy'))) $('y_yy').value = d.getUTCFullYear();
+      syncOtzRefreshBtn(d);   // הכפתור מופיע כשהתאריך שבאיור התרחק מזה שבכרטיס
     },
     bind() {
       if (this._bound) return; this._bound = true;
@@ -741,7 +1076,25 @@ window.Sims = (function () {
       $('y_rotR').onclick = () => { this.viewAz = (this.viewAz + 10) % 360; };
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };
       $('y_rot0').onclick = () => { this.viewAz = 90; };
-      document.querySelectorAll('#view-year .seg button').forEach(b => b.onclick = () => this.dayY = +b.dataset.d);
+      // לחצני התקופות — קפיצה אל רגע התקופה האמיתי (שוויון/היפוך), בתאריך
+      // ובשעון האזרחיים של המקום הנבחר, כך שהשמש עומדת בדיוק על קו השוויון או
+      // ההיפוך. dayY נגזר מהרגע עצמו — לא במיפוי המחזורי של dayYFromDate,
+      // שבקצה המחזור (תקופת ניסן, יום 0) היה עוטף את היום אל סוף הפס ומרכיב
+      // את שעת התקופה על תאריך של שנה אחרת. instant() בונה את הרגע מהיום
+      // ומהשעון האזרחיים — כשהיום האזרחי המקומי שונה מיום ה-UTC מוסטים יום
+      // ושעה יחדיו, והרגע נשמר. data-d (רבעי שנת שמואל) — נפילה בלי המנוע.
+      document.querySelectorAll('#view-year .seg button').forEach((b, i) => b.onclick = () => {
+        const m = tekufaMoment(i);
+        if (m) {
+          const o = tzOffsetHours(this.tz, m), off = o === null ? Math.round(this.lon / 15) : o;
+          let dayY = (m.getTime() - yearSpan().start) / 86400000;
+          let hour = ((m.getTime() / 3600000) % 24 + 24) % 24 + off;
+          if (hour >= 24) { hour -= 24; dayY += 1; }
+          else if (hour < 0) { hour += 24; dayY -= 1; }
+          this.dayY = dayY; this.hour = hour;
+        } else this.dayY = +b.dataset.d;
+        loadOtzariaTimes();   // כרטיס הלוח עוקב אחרי תאריך האיור
+      });
       // זמני היום מלוח אוצריא — נטענים בכניסה ללשונית, ברענון, בהחלפת עיר
       // בכרטיס, ובקביעת תאריך באיור (במצב החדש הזמנים עוקבים אחרי תאריך האיור)
       $('yo_refresh').onclick = () => loadOtzariaTimes();
@@ -884,7 +1237,7 @@ window.Sims = (function () {
     { k: 'saturn', n: 'שבתאי' }, { k: 'uranus', n: 'אורנוס' }, { k: 'neptune', n: 'נפטון' },
   ];
   const planets = {
-    sky: null, lat: 31.78, lon: 35.22, _bound: false,
+    sky: null, lat: 31.78, lon: 35.24, _bound: false,
     step() {},
     inputToUTC() {
       const Y = +$('p_year').value, M = +$('p_month').value, D = +$('p_day').value, h = +$('p_hour').value, mi = +$('p_min').value;
@@ -932,7 +1285,7 @@ window.Sims = (function () {
     },
     bind() {
       if (this._bound) return; this._bound = true;
-      $('p_lat').value = 31.78; $('p_lon').value = 35.22; this.setNow();
+      $('p_lat').value = 31.78; $('p_lon').value = 35.24; this.setNow();
       $('p_go').onclick = () => this.compute();
       $('p_now').onclick = () => { this.setNow(); this.compute(); };
       this.compute();

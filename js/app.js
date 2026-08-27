@@ -175,6 +175,14 @@
   }
   enhanceNumberInputs();
 
+  // ── הסברים נגללים: "ראה עוד" פותח את ההסבר המלא, ולחיצה נוספת מסתירה ──
+  document.addEventListener('click', e => {
+    const t = e.target.closest && e.target.closest('.expl-toggle');
+    if (!t) return;
+    const open = t.closest('.expl').classList.toggle('open');
+    t.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
   // ── שמירת ערכים שהוזנו בשדות תאריך/שעה ──────────────────────────────
   // sync() של האיורים כותב לשדות שאינם בפוקוס, ולכן מילוי של כמה שדות ברצף
   // (יום ואז חודש) איפס את הראשון ברגע שהפוקוס עבר הלאה. שדה שהמשתמש שינה
@@ -186,7 +194,8 @@
   }, true);
   document.addEventListener('click', e => {
     const btn = e.target.closest && e.target.closest('button');
-    if (btn && !btn.closest('.numstep'))
+    // כפתורי "ראה עוד" רק פותחים הסבר — אינם מאשרים ערכים שהוקלדו
+    if (btn && !btn.closest('.numstep') && !btn.classList.contains('expl-toggle'))
       document.querySelectorAll('input[type=number][data-dirty]').forEach(i => delete i.dataset.dirty);
   }, true);
   // עוזר לפונקציות ה-sync: אין לדרוס שדה בפוקוס או שדה שהוזן ולא אושר
