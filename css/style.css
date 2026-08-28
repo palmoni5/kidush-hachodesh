@@ -481,6 +481,31 @@ table td:first-child { opacity: 0.7; }
 .hud .clock { font-size: 1.1em; font-weight: 600; color: var(--ill-blue); text-align: center; direction: ltr; }
 .hud .st { text-align: center; font-size: 0.6em; margin-top: 2px; color: var(--ill-text); }
 
+/* ── חלונית איור נלווה בפינת הבמה ───────────────────
+   איור שהוא חלק מן ההמחשה עצמה (ולא הסבר נלווה) יושב בפינת הבמה כחלונית
+   בפלטת האיור, בצד ה-HUD ומתחתיו — הרצועה ההיא שמורה לו ממילא (stageLayout),
+   ולכן הכיפה אינה מצוירת תחתיו. במסך צר החלונית מועברת אל הכרטיס שבלוח הצד
+   (#y_tiltSlot) ומתפשטת שם ככרטיס רגיל. */
+.stage-inset {
+  position: absolute; inset-block-end: 12px; inset-inline-start: 12px;
+  width: 258px; padding: 8px 10px 9px;
+  background: var(--ill-panel); border: 1px solid var(--ill-line);
+  border-radius: var(--radius-md); color: var(--ill-text);
+}
+.stage-inset h3 {
+  font-size: 0.66em; font-weight: 600; text-align: center;
+  color: var(--ill-blue); margin-bottom: 5px;
+}
+.stage-inset .ti-canvas { position: relative; height: 186px; }
+.stage-inset .htxt { margin-top: 5px; text-align: center; font-size: 0.6em; color: var(--ill-text); }
+#y_tiltSlot .stage-inset {
+  position: static; width: auto; padding: 0;
+  background: none; border: 0; color: inherit;
+}
+#y_tiltSlot .stage-inset h3 { display: none; }
+#y_tiltSlot .stage-inset .ti-canvas { height: 200px; margin-top: 4px; }
+#y_tiltSlot .stage-inset .htxt { margin-top: 6px; text-align: start; font-size: 0.72em; color: inherit; }
+
 /* ── מסך אודות ─────────────────────────────────────── */
 .scrim {
   position: fixed; inset: 0; background: var(--scrim);

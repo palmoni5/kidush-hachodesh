@@ -331,6 +331,15 @@
             <div class="row"><span>אורך היום</span><b id="y_daylen">12:00</b></div>
             <div class="row"><span>עומק בחצות הלילה</span><b id="y_mid">-58°</b></div>
           </div>
+          <!-- נטיית כדור הארץ — אינה עוד הסבר נלווה אלא חלק מן ההמחשה עצמה,
+               ולכן היא יושבת בפינת הבמה (כדוגמת חלון השמים שבמופעי הירח)
+               ובפינה שמנגד לכיפה. במסך צר אין בבמה פינה פנויה, והחלונית
+               חוזרת אל הכרטיס שבלוח הצד (#y_tiltSlot) — ראו placeTilt. -->
+          <div class="stage-inset" id="y_tiltInset">
+            <h3>נטיית כדור הארץ ביחס לשמש</h3>
+            <div class="ill-inset ti-canvas"><canvas id="seasonsCanvas"></canvas></div>
+            <div class="htxt" id="ss_now">—</div>
+          </div>
         </div>
         <aside class="panel">
           <div class="card">
@@ -374,8 +383,7 @@
           </div>
           <div class="card">
             <h2>מדוע מסלול השמש נודד בין קיץ לחורף?</h2>
-            <div class="ill-inset" style="position:relative;height:200px;margin-top:4px"><canvas id="seasonsCanvas"></canvas></div>
-            <div class="htxt" id="ss_now" style="margin-top:6px">—</div>
+            <div id="y_tiltSlot"></div>
             <div class="expl">
             <div class="expl-body">
             <div class="htxt" style="margin-top:6px">ציר הסיבוב של כדור הארץ נטוי כ־23.44° ממאונך למישור מסלולו סביב השמש, וכיוונו קבוע בחלל — הוא מצביע תמיד אל אותה נקודה בשמים. לכן בתקופת תמוז חצי הכדור הצפוני רכון אל השמש והיא נראית גבוה (מעל קו ההיפוך הצפוני), בתקופת טבת הוא רכון ממנה והלאה והיא נמוכה (מעל קו ההיפוך הדרומי), ובניסן ותשרי הציר ניצב לכיוון השמש — והיא מעל קו המשווה. לחצו על כפתורי התקופות או גררו את "יום מתקופת ניסן" — והארץ תנוע במסלולה.</div>

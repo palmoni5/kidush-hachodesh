@@ -57,16 +57,19 @@ window.Sims = (function () {
     if (!hud) { L = { x: 0, y: 0, w: W, h: H }; }
     else {
       const sr = stage.getBoundingClientRect(), hr = hud.getBoundingClientRect();
+      // חלונית איור בפינת הבמה (אם יש) יושבת באותו צד עצמו, ולכן הרצועה
+      // השמורה נמדדת לפי הרחב שבשניהם
+      const ins = stage.querySelector('.stage-inset'), ir = ins && ins.getBoundingClientRect();
       if (mode === 'below' || (window.innerWidth || W) < 760) {
         const top = Math.max(0, hr.bottom - sr.top + 8);
         L = { x: 0, y: top, w: W, h: Math.max(80, H - top) };
       } else if ((hr.left + hr.right) / 2 < (sr.left + sr.right) / 2) {
         // ה-HUD בצד שמאל (פריסת LTR) — האזור הפנוי מימינו
-        const reserve = Math.max(0, hr.right - sr.left + 10);
+        const reserve = Math.max(0, hr.right - sr.left + 10, ir ? ir.right - sr.left + 10 : 0);
         L = { x: Math.min(reserve, W - 120), y: 0, w: Math.max(120, W - reserve), h: H };
       } else {
         // ה-HUD בצד ימין (פריסת RTL) — האזור הפנוי משמאלו
-        const reserve = Math.max(0, sr.right - hr.left + 10);
+        const reserve = Math.max(0, sr.right - hr.left + 10, ir ? sr.right - ir.left + 10 : 0);
         L = { x: 0, y: 0, w: Math.max(120, W - reserve), h: H };
       }
     }
@@ -753,7 +756,21 @@ window.Sims = (function () {
       }
       ctx.setLineDash([]);
     },
+    // ── מקומה של חלונית הנטייה ─────────────────────────────────────────
+    // האיור הזה אינו הסבר נלווה אלא חלק מן ההמחשה, ולכן מקומו בבמה עצמה —
+    // בפינה שמתחת ל-HUD, ברצועה ששמורה לו ממילא ואין הכיפה מצוירת בה. במסך
+    // צר אין בבמה פינה פנויה (ה-HUD נערם בראש והכיפה תופסת את השאר), ושם הוא
+    // חוזר אל הכרטיס שבלוח הצד. המעבר מאפס את מטמון המידות והפריסה.
+    placeTilt() {
+      const box = $('y_tiltInset'), slot = $('y_tiltSlot'), c = $('yearCanvas');
+      if (!box || !slot || !c) return;
+      const target = (window.innerWidth || 0) >= 760 ? c.parentElement : slot;
+      if (box.parentElement === target) return;
+      target.appendChild(box);
+      clearFitCache();
+    },
     draw() {
+      this.placeTilt();
       const { ctx, W, H } = fit($('yearCanvas'));
       ctx.clearRect(0, 0, W, H);
       // cy מוסט מעט מטה ו-R מוקטן כדי לפנות מקום לשורת ההסבר בראש (פסגת המסלול במרכז-עליון).
