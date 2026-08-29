@@ -124,6 +124,17 @@
     return { asc, mc };
   }
 
+  // זוית השעה של השמש במקום הצופה (0° = חצות היום, גדלה במשך היממה).
+  // היא המידה של הסיבוב היומי: מרידיאן הצופה מרוחק ממרידיאן חצות היום
+  // בדיוק בשיעורה, ומכאן מקומו של הצופה על הכדור במבט מבחוץ.
+  function sunHourAngle(date, lat, lon) {
+    try {
+      const t = AE.MakeTime(date);
+      const eq = AE.Equator(AE.Body.Sun, t, new AE.Observer(lat, lon, 0), true, true);
+      return rev360(AE.SiderealTime(t) * 15 + lon - eq.ra * 15);
+    } catch (_) { return 0; }
+  }
+
   // ══ ראשי חודשים — א' בחודש עברי הקרוב (מהיום והלאה) ═══════════════════
   // הנידונים ברש"י ותוס' ר"ה וב"מ: ניסן, שבט, ואדר (בשנה מעוברת — אדר ב',
   // הסמוך לניסן). מחושב מן המולד (js/hebrew-calendar.js) ולא מלוח ה-Intl,
@@ -273,26 +284,11 @@
   // אורך מלקה → זווית קנבס: 0° = ימין, גדל נגד כיוון השעון
   function L2A(lon) { return -lon * RAD; }
 
-  function drawWheel(ctx, W, H, date, hz) {
-    ctx.clearRect(0, 0, W, H);
-    // כשמוצג האופק הגלגל מסובב כך שהמזל העולה יושב במזרח (שמאל), אמצע הרקיע למעלה,
-    // וחצי הגלגל שמתחת לאופק למטה — כך נראית עליית המזלות כפי שהיא בשמים.
-    // בלי האופק נשמרת התצוגה הקבועה: 0° טלה מימין.
-    const rot = hz ? (180 + hz.asc) * RAD : 0;
-    const A = lon => -lon * RAD + rot;
-    // אזור הציור הפנוי מה-HUD (רצועה מימין במסך רחב, בראש במסך צר)
-    const L = window.Sims.stageLayout(document.getElementById('zodiacCanvas'), W, H);
-    const cx = L.x + L.w / 2, cy = L.y + L.h / 2;
-    const maxR  = Math.min(L.w, L.h) * 0.46;
-    const outerR = maxR;
-    const innerR = maxR * 0.74;
-    const bodyR  = maxR * 0.54;
-
-    // ── רקע כללי ──
-    ctx.fillStyle = cv('--ill-bg') || '#060616';
-    ctx.beginPath(); ctx.arc(cx, cy, outerR + 2, 0, 2 * PI); ctx.fill();
-
-    // ── רינג 12 מזלות ──
+  // ── רינג שנים-עשר המזלות ──────────────────────────────────────────────
+  // משותף למבט-על ולמבט מבחוץ: אותו גלגל ממש, ורק מקומו של הצופה בו משתנה.
+  // A היא פונקציית אורך-מלקה → זווית-קנבס של האיור הקורא (במבט-על היא מסובבת
+  // לפי המזל העולה, ובמבט מבחוץ קבועה), ו-hiSign מזל שיודגש (‎-1 = אין).
+  function drawRing(ctx, cx, cy, innerR, outerR, A, fontSize, hiSign) {
     for (let i = 0; i < 12; i++) {
       const a0 = A(i * 30), a1 = A((i + 1) * 30);
       ctx.fillStyle = ELEM[ELEM_I[i]];
@@ -314,21 +310,45 @@
     }
 
     // תוויות מזלות
-    const fontSize = Math.max(9, Math.min(13, maxR * 0.073));
-    ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const labelR = (innerR + outerR) / 2;
     for (let i = 0; i < 12; i++) {
       const midA = A(i * 30 + 15);
+      ctx.font = (i === hiSign ? 'bold ' : '') + fontSize + 'px sans-serif';
       ctx.fillStyle = cv('--ill-text') || '#e0e0e0';
       drawSignLabel(ctx, T(SIGNS[i]), cx + labelR * Math.cos(midA), cy + labelR * Math.sin(midA), fontSize);
     }
+    ctx.font = `${fontSize}px sans-serif`;
 
     // מסגרות רינג
     ctx.strokeStyle = cv('--ill-line') || 'rgba(255,255,255,0.35)';
     ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, 2 * PI); ctx.stroke();
     ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, 2 * PI); ctx.stroke();
+  }
+
+  function drawWheel(ctx, W, H, date, hz) {
+    ctx.clearRect(0, 0, W, H);
+    // כשמוצג האופק הגלגל מסובב כך שהמזל העולה יושב במזרח (שמאל), אמצע הרקיע למעלה,
+    // וחצי הגלגל שמתחת לאופק למטה — כך נראית עליית המזלות כפי שהיא בשמים.
+    // בלי האופק נשמרת התצוגה הקבועה: 0° טלה מימין.
+    const rot = hz ? (180 + hz.asc) * RAD : 0;
+    const A = lon => -lon * RAD + rot;
+    // אזור הציור הפנוי מה-HUD (רצועה מימין במסך רחב, בראש במסך צר)
+    const L = window.Sims.stageLayout(document.getElementById('zodiacCanvas'), W, H);
+    const cx = L.x + L.w / 2, cy = L.y + L.h / 2;
+    const maxR  = Math.min(L.w, L.h) * 0.46;
+    const outerR = maxR;
+    const innerR = maxR * 0.74;
+    const bodyR  = maxR * 0.54;
+
+    // ── רקע כללי ──
+    ctx.fillStyle = cv('--ill-bg') || '#060616';
+    ctx.beginPath(); ctx.arc(cx, cy, outerR + 2, 0, 2 * PI); ctx.fill();
+
+    // ── רינג 12 מזלות ──
+    const fontSize = Math.max(9, Math.min(13, maxR * 0.073));
+    drawRing(ctx, cx, cy, innerR, outerR, A, fontSize, -1);
 
     // ── אזור פנימי (חלל) ──
     ctx.fillStyle = cv('--ill-space') || '#04040e';
@@ -590,6 +610,151 @@
       L.x + L.w / 2, L.y + 6);
   }
 
+  // ══ מבט מבחוץ — הארץ, השמש והמזלות כאחד ═══════════════════════════════
+  // שני המבטים שקדמו לו עומדים שניהם על הארץ: האחד מפה של הגלגל והשני תמונת
+  // הרקיע. כאן יוצא הצופה אל מחוץ למערכת כולה ורואה את שלושתם יחד — ומתברר
+  // מה מסובב את הגלגל ומה מוליך את השמש בו:
+  //   · המזלות קבועים — רצועת כוכבים רחוקה, שאינה זזה כלל.
+  //   · הארץ סובבת סביב עצמה פעם ביממה — וזהו הסיבוב היומי של הגלגל כולו.
+  //   · הארץ מקיפה את השמש פעם בשנה — ומכאן נדידת השמש בין המזלות.
+  // הקו הצהוב הוא קו הראייה מן הארץ דרך השמש אל הרצועה, והוא הנותן את
+  // התשובה לשאלה "באיזה מזל השמש": בתקופת תמוז הארץ עומדת בצד גדי, ולכן
+  // השמש נראית מנגד — בראש סרטן.
+  // הציור אינו קנה מידה: המזלות רחוקים לאין ערוך ממסלול הארץ, והם מצוירים
+  // כטבעת סמוכה. הכיוונים בלבד אמיתיים — ולכן קו הראייה נמתח מן הארץ דרך
+  // השמש עצמה, שכך הוא מדויק בכל מקום שבמסלול.
+  function drawExternal(ctx, W, H, date, st) {
+    ctx.clearRect(0, 0, W, H);
+    const L = window.Sims.stageLayout(document.getElementById('zodiacCanvas'), W, H);
+    const cx = L.x + L.w / 2, cy = L.y + L.h / 2 + 8;
+    const maxR = Math.min(L.w, L.h) * 0.45;
+    const outerR = maxR, innerR = maxR * 0.79, orbR = maxR * 0.48;
+    const A = lon => -lon * RAD;                       // כמו במבט-על: 0° טלה מימין
+    const px = (lon, r) => ({ x: cx + r * Math.cos(A(lon)), y: cy + r * Math.sin(A(lon)) });
+
+    const lons = getLongitudes(date);
+    const sunLon = rev360(lons.sun);                   // אורך השמש כפי שהיא נראית מן הארץ
+    const earthLon = rev360(sunLon + 180);             // ומכאן מקום הארץ סביב השמש
+    const sunSign = Math.floor(sunLon / 30);
+
+    // ── רקע, רינג המזלות, והחלל שבתוכו ──
+    ctx.fillStyle = cv('--ill-bg') || '#060616';
+    ctx.beginPath(); ctx.arc(cx, cy, outerR + 2, 0, 2 * PI); ctx.fill();
+    const fontSize = Math.max(9, Math.min(13, maxR * 0.073));
+    drawRing(ctx, cx, cy, innerR, outerR, A, fontSize, sunSign);
+    ctx.fillStyle = cv('--ill-space') || '#04040e';
+    ctx.beginPath(); ctx.arc(cx, cy, innerR - 1, 0, 2 * PI); ctx.fill();
+
+    // ── מסלול הארץ סביב השמש, וארבע התקופות שעליו ──
+    ctx.strokeStyle = cv('--ill-line') || 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1; ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.arc(cx, cy, orbR, 0, 2 * PI); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font = `${Math.max(8, fontSize - 3)}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const [sl, name] of [[0, 'ניסן'], [90, 'תמוז'], [180, 'תשרי'], [270, 'טבת']]) {
+      const p = px(sl + 180, orbR), q = px(sl + 180, orbR - 14);
+      ctx.fillStyle = cv('--ill-muted') || '#999';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, 2 * PI); ctx.fill();
+      ctx.fillText(T(name), q.x, q.y);
+    }
+
+    const eP = px(earthLon, orbR);
+
+    // ── קו הראייה: מן הארץ, דרך השמש, אל המזל שהיא נראית בו ──
+    { const hit = px(sunLon, innerR - 3);
+      ctx.strokeStyle = 'rgba(255,200,80,0.75)'; ctx.lineWidth = 1.6;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(eP.x, eP.y); ctx.lineTo(hit.x, hit.y); ctx.stroke();
+      ctx.setLineDash([]); }
+    // והקו שמנגד — המזל שכנגד השמש, העומד באמצע הרקיע בחצות הלילה
+    { const hit = px(earthLon, innerR - 3);
+      ctx.strokeStyle = isLight() ? 'rgba(60,70,110,0.45)' : 'rgba(160,180,255,0.35)';
+      ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
+      ctx.beginPath(); ctx.moveTo(eP.x, eP.y); ctx.lineTo(hit.x, hit.y); ctx.stroke();
+      ctx.setLineDash([]); }
+
+    // ── השמש במרכז ──
+    { const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 26);
+      g.addColorStop(0, 'rgba(245,200,66,0.75)'); g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 26, 0, 2 * PI); ctx.fill();
+      ctx.fillStyle = '#f5c842'; ctx.beginPath(); ctx.arc(cx, cy, 9, 0, 2 * PI); ctx.fill();
+      ctx.font = `bold ${Math.max(9, fontSize - 2)}px sans-serif`;
+      ctx.fillStyle = labelCol('#f5c842');
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(T('שמש'), cx, cy + 13); }
+
+    // ── הארץ: גופה, צד הלילה שבה, והסיבוב היומי ──
+    const er = Math.max(10, maxR * 0.062);
+    { const g = ctx.createRadialGradient(eP.x - er * 0.3, eP.y - er * 0.35, 1, eP.x, eP.y, er);
+      g.addColorStop(0, '#4888ff'); g.addColorStop(0.6, '#1850b8'); g.addColorStop(1, '#0c2848');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(eP.x, eP.y, er, 0, 2 * PI); ctx.fill(); }
+    // חצי הכדור שמנגד לשמש — הוא הלילה. כיוון השמש מן הארץ הוא A(sunLon) ממש,
+    // שהרי הקו היוצא מן הארץ באותה זווית עובר במרכז, ושם השמש עומדת.
+    { const a = A(sunLon);
+      ctx.save(); ctx.beginPath(); ctx.arc(eP.x, eP.y, er, 0, 2 * PI); ctx.clip();
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.beginPath(); ctx.arc(eP.x, eP.y, er, a + PI / 2, a + 3 * PI / 2);
+      ctx.closePath(); ctx.fill(); ctx.restore(); }
+    ctx.strokeStyle = 'rgba(80,140,255,0.55)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(eP.x, eP.y, er, 0, 2 * PI); ctx.stroke();
+    // מרידיאן הצופה — מרוחק ממרידיאן חצות היום כשיעור זוית השעה, ומקיף את
+    // הכדור פעם ביממה. כשהוא פונה אל השמש — חצות היום; מנגד — חצות הלילה.
+    { const obsLon = rev360(sunLon + sunHourAngle(date, st.lat, st.lon));
+      const a = A(obsLon), ox = eP.x + er * Math.cos(a), oy = eP.y + er * Math.sin(a);
+      ctx.strokeStyle = '#ff5a4d'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(eP.x, eP.y); ctx.lineTo(ox, oy); ctx.stroke();
+      ctx.fillStyle = '#ff5a4d';
+      ctx.beginPath(); ctx.arc(ox, oy, 2.8, 0, 2 * PI); ctx.fill();
+      ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = labelCol('#ff5a4d');
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(T('צופה'), eP.x + (er + 12) * Math.cos(a), eP.y + (er + 12) * Math.sin(a)); }
+    // התווית מרוחקת מן הכדור כשיעור מסלול הירח, בכיוון השמש — שם היא פנויה
+    // מתווית הצופה (שמקומה על שפת הכדור) ומן התווית שעל הרצועה שמנגד.
+    { ctx.font = `bold ${Math.max(9, fontSize - 2)}px sans-serif`;
+      ctx.fillStyle = labelCol('#4888ff');
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const a = A(sunLon), d = er * 2.6 + 13;
+      ctx.fillText(T('ארץ'), eP.x + d * Math.cos(a), eP.y + d * Math.sin(a)); }
+
+    // ── הירח סביב הארץ — כיוונו אמיתי, ומרחקו מוגדל כדי שייראה ──
+    { const mLon = rev360(lons.moon ?? 0), mr = er * 2.6;
+      const a = A(mLon), mx = eP.x + mr * Math.cos(a), my = eP.y + mr * Math.sin(a);
+      ctx.strokeStyle = isLight() ? 'rgba(60,60,60,0.22)' : 'rgba(200,200,200,0.20)';
+      ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.arc(eP.x, eP.y, mr, 0, 2 * PI); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#c8c8c8';
+      ctx.beginPath(); ctx.arc(mx, my, 3.6, 0, 2 * PI); ctx.fill();
+      const sa = A(sunLon);                              // צד הלילה של הירח — כשל הארץ
+      ctx.save(); ctx.beginPath(); ctx.arc(mx, my, 3.6, 0, 2 * PI); ctx.clip();
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.beginPath(); ctx.arc(mx, my, 3.6, sa + PI / 2, sa + 3 * PI / 2);
+      ctx.closePath(); ctx.fill(); ctx.restore();
+      ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = labelCol('#c8c8c8');
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(T('ירח'), mx + 11 * Math.cos(a), my + 11 * Math.sin(a)); }
+
+    // ── תוויות על הרצועה ──
+    const tagAt = (lon, r, txt, col) => {
+      ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const p = px(lon, r), w = ctx.measureText(txt).width + 8, h = 16;
+      const x = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, p.x));
+      const y = Math.max(h / 2 + 2, Math.min(H - h / 2 - 2, p.y));
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+      ctx.fillStyle = col; ctx.fillText(txt, x, y);
+    };
+    tagAt(sunLon, innerR - 16, T('כאן נראית השמש'), '#f5c842');
+    tagAt(earthLon, innerR - 10, T('המזל שכנגד'), '#b8c8ff');
+
+    // ── שורת ההסבר שבראש הבמה (הגופן מוקטן עד שהיא נכנסת ברוחב) ──
+    { const txt = T('המזלות עומדים · הארץ מקיפה את השמש בשנה וסובבת סביב עצמה ביממה');
+      let fs = 12; ctx.font = fs + 'px sans-serif';
+      while (fs > 8 && ctx.measureText(txt).width > L.w - 10) { fs -= 0.5; ctx.font = fs + 'px sans-serif'; }
+      ctx.fillStyle = cv('--ill-muted') || '#999';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(txt, L.x + L.w / 2, L.y + 6); }
+  }
+
   // ══ פאנל מיקומים ══════════════════════════════════════════════════════
   function updateLegend(date) {
     const el = document.getElementById('z_legend'); if (!el) return;
@@ -618,7 +783,7 @@
     RANGE: { day: { min: 0.1, max: 30, step: 0.1 }, hour: { min: 0.02, max: 6, step: 0.02 } },
     unit: 'hour',             // 'hour' — עליית המזלות ביממה (ברירת מחדל); 'day' — מהלך המזלות בשנה
     horizon: true,
-    view: 'wheel',            // 'wheel' — מבט-על על הגלגל; 'observer' — הרצועה ברקיע מעל הצופה
+    view: 'wheel',            // 'wheel' — מבט-על; 'observer' — הרצועה ברקיע; 'external' — כל המערכת מבחוץ
     viewAz: 270,              // כיוון המבט במבט הצופה (270 = פנים אל המזרח, כיוון הזריחה)
     lat: 31.78, lon: 35.24,
     _bound: false,
@@ -631,6 +796,7 @@
       // במבט הצופה האופק הוא עצם האיור — נקודות האופק מחושבות תמיד
       const hz = (this.horizon || this.view === 'observer') ? horizonPoints(this.date, this.lat, this.lon) : null;
       if (this.view === 'observer') drawObserver(ctx, W, H, this.date, this, hz);
+      else if (this.view === 'external') drawExternal(ctx, W, H, this.date, this);
       else drawWheel(ctx, W, H, this.date, this.horizon ? hz : null);
       $('z_clock').textContent = this.date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
       const zs = $('z_sun');

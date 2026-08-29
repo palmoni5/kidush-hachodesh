@@ -834,7 +834,7 @@ window.Sims = (function () {
       }
       if (!this.hintDone) drawHint(ctx, W, 'גררו לסיבוב · ▶ הפעל להנעה');
       this.hud(v.U, sn);
-      this.drawSeasons(dec);
+      this.drawSeasons(dec, sn.H);
     },
     // ── מדוע מסלול השמש נודד? — איור עזר בפאנל ─────────────────────────
     // מבט אלכסוני על מסלול הארץ סביב השמש, מצפון למישור המסלול (מישור המלקה):
@@ -848,7 +848,7 @@ window.Sims = (function () {
     // ותשרי עצמן, וגבול היום־לילה לא התאים לכיוון השמש. כאן קו המשווה, גבול
     // היום־לילה והנקודה שהשמש מעליה כולם היטלים של מעגלים בחלל — ולכן הם
     // מתאימים לכיוון השמש בכל נקודה שבמסלול.
-    drawSeasons(dec) {
+    drawSeasons(dec, hourAng) {
       const c = $('seasonsCanvas'); if (!c) return;
       const { ctx, W, H } = fitInset(c);
       ctx.clearRect(0, 0, W, H);
@@ -953,6 +953,39 @@ window.Sims = (function () {
         ctx.setLineDash([2.5, 2.5]); run(true); ctx.setLineDash([]);
         ctx.strokeStyle = 'rgba(160,170,190,0.45)'; ctx.lineWidth = 1;
         ctx.setLineDash([2, 3]); run(false); ctx.setLineDash([]); }
+      // ── הסיבוב היומי — קו האורך של הצופה ──────────────────────────
+      // עד כאן היה הכדור עומד באיור, וסיבובו היומי נזכר בהסבר בלבד. הקו
+      // האדום הוא קו האורך של הצופה והנקודה שעליו מקומו ממש; שניהם מקיפים
+      // את הציר פעם ביממה. כשהם פונים אל השמש — שם חצות היום, וכשהם מנגד —
+      // חצות הלילה. הזווית נגזרת מזוית השעה האמיתית של השמש: מרידיאן
+      // חצות היום הוא הכיוון שבמישור המשווה הפונה אל השמש, ומרידיאן הצופה
+      // מרוחק ממנו כשיעור זוית השעה — בכיוון הסיבוב, שהוא נגד כיוון השעון מן הקוטב
+      // הצפוני. משום כך בשעה 18:00 (H=90°) הצופה רבע-סיבוב אחרי חצות היום.
+      { const svn = dot3(sv, N3);
+        const en = norm3([sv[0] - svn * N3[0], sv[1] - svn * N3[1], sv[2] - svn * N3[2]]);
+        const wn = cross3(N3, en);
+        const hr = (hourAng || 0) * Math.PI / 180, ch = Math.cos(hr), sh = Math.sin(hr);
+        const u = [en[0] * ch + wn[0] * sh, en[1] * ch + wn[1] * sh, en[2] * ch + wn[2] * sh];
+        let prev = null;
+        for (let i = 0; i <= 24; i++) {                 // חצי המרידיאן שהצופה עליו — מקוטב לקוטב
+          const t = -Math.PI / 2 + Math.PI * i / 24, ct = Math.cos(t), stt = Math.sin(t);
+          const P = [u[0] * ct + N3[0] * stt, u[1] * ct + N3[1] * stt, u[2] * ct + N3[2] * stt];
+          const q = sph(P), near = dot3(P, EV) >= 0;
+          if (prev) {
+            const vis = prev.near && near;
+            ctx.strokeStyle = vis ? 'rgba(255,110,90,0.95)' : 'rgba(255,110,90,0.28)';
+            ctx.lineWidth = vis ? 1.4 : 1;
+            ctx.beginPath(); ctx.moveTo(prev.q.x, prev.q.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+          }
+          prev = { q, near };
+        }
+        const la = this.lat * Math.PI / 180, cl = Math.cos(la), sl = Math.sin(la);
+        const Po = [u[0] * cl + N3[0] * sl, u[1] * cl + N3[1] * sl, u[2] * cl + N3[2] * sl];
+        const qo = sph(Po);                             // מקום הצופה — מלא כשהוא לצדנו, טבעת כשהוא מנגד
+        ctx.beginPath(); ctx.arc(qo.x, qo.y, 2.4, 0, 2 * Math.PI);
+        if (dot3(Po, EV) >= 0) { ctx.fillStyle = '#ff5a4d'; ctx.fill(); }
+        else { ctx.strokeStyle = 'rgba(255,90,77,0.85)'; ctx.lineWidth = 1.1; ctx.stroke(); } }
+
       // ── ציר הסיבוב ──
       const pn = sph(N3), ps = sph([-N3[0], -N3[1], -N3[2]]);
       ctx.strokeStyle = cv('--ill-text'); ctx.lineWidth = 1.6;
