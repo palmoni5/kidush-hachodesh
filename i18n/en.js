@@ -29,6 +29,8 @@ window.TRANSLATIONS.en = {
   'מקרא': 'Legend',
   'ראה עוד ▾': 'Read more ▾',
   'הסתר ▴': 'Hide ▴',
+  'מנוע החישוב האסטרונומי לא נטען — האיורים מוצגים במצב קירוב סכמטי (שנת שמואל וחודש ממוצע), לא בערכים אסטרונומיים מדויקים.':
+    'The astronomy engine failed to load — the diagrams are shown in a schematic approximation mode (the Shmuel year and a mean month), not in precise astronomical values.',
   'בקרה': 'Controls',
   'בקרת זמן': 'Time controls',
   'תאריך': 'Date',
