@@ -899,14 +899,20 @@
       });
       this._setUnit('hour');
       // מבט-על על הגלגל ⇄ מבט הצופה על הרקיע
+      // ההסבר שבכרטיס "מבט" מוצג לפי המבט הפעיל בלבד: כל פסקה מסומנת
+      // ב-data-zexpl עם המבט שהיא מבארת, ומחליף המבט מציג רק את פסקאותיו
+      const syncExpl = () => document.querySelectorAll('#view-zodiac [data-zexpl]')
+        .forEach(p => { p.hidden = p.dataset.zexpl !== this.view; });
       const cnv = $('zodiacCanvas');
       document.querySelectorAll('#view-zodiac [data-zview]').forEach(b => b.onclick = () => {
         document.querySelectorAll('#view-zodiac [data-zview]').forEach(x => x.classList.toggle('active', x === b));
         this.view = b.dataset.zview;
+        syncExpl();
         const obs = this.view === 'observer';
         const row = $('z_gazeRow'); if (row) row.style.display = obs ? '' : 'none';
         cnv.style.cursor = obs ? 'grab' : '';
       });
+      syncExpl();
       const gaze = (id, az) => { const b = $(id); if (b) b.onclick = () => { this.viewAz = az; }; };
       gaze('z_gazeE', 270);   // פנים אל המזרח — המזלות עולים מלפנים
       gaze('z_gazeS', 0);     // פנים אל הדרום — הרצועה נמתחת ממזרח (משמאל) למערב
