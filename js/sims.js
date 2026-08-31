@@ -177,6 +177,21 @@ window.Sims = (function () {
     const d = new Date(date.getTime() + off * 3600000);
     return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
   }
+  // חצות הלילה האזרחי של מקום הצפייה ליממה שהרגע ms בתוכה — תחילת חיפוש
+  // זריחת/שקיעת הירח. ההיסט נלקח מאזור הזמן של המקום (וב"מותאם אישית" —
+  // מקו האורך), ולא משעון המכשיר: מחשב בישראל שמציג את ניו יורק היה מתחיל
+  // את החיפוש ב-17:00–18:00 של היום הקודם בשעון ניו יורק.
+  function placeMidnight(ms, loc) {
+    let off = loc && loc.tz ? tzOffsetHours(loc.tz, new Date(ms)) : null;
+    if (off === null) off = Math.round(((loc && loc.lon) || 0) / 15);
+    const wallMid = Math.floor((ms + off * 3600000) / 86400000) * 86400000;
+    let utc = wallMid - off * 3600000;
+    if (loc && loc.tz) {   // עידון על גבול שעון קיץ: ההיסט בחצות עשוי להיות אחר
+      const o2 = tzOffsetHours(loc.tz, new Date(utc));
+      if (o2 !== null && o2 !== off) utc = wallMid - o2 * 3600000;
+    }
+    return utc;
+  }
   // זריחת/שקיעת הירח במקום הנבחר, ביממה שמתחילה ב-date (Astronomy Engine; בקירוב)
   function moonRiseSet(date, loc) {
     try {
@@ -484,20 +499,21 @@ window.Sims = (function () {
         this._heKey = heKey;
         window.HebrewDate(simDate).then(s => { if (s && this._heKey === heKey) $('m_date_he').textContent = s; });
       }
-      // זריחת/שקיעת הירח — ליממה של התאריך המוצג.
-      // החיפוש יקר, ולכן מחושב רק כשהיום המוצג משתנה בפועל (רבע יממה).
-      const rsKey = Math.floor(this.t / 21600000) + '|' + this.loc.lat + ',' + this.loc.lon + ',' + this.loc.tz;
+      // זריחת/שקיעת הירח — ליממה האזרחית של התאריך המוצג במקום הנבחר.
+      // החיפוש יקר, ולכן מחושב רק כשחצות המקום (או המקום עצמו) משתנה בפועל.
+      const mid = placeMidnight(this.t, this.loc);
+      const rsKey = mid + '|' + this.loc.lat + ',' + this.loc.lon + ',' + this.loc.tz;
       if (this._rsKey !== rsKey) {
         this._rsKey = rsKey;
-        const d = new Date(this.t);
-        d.setHours(0, 0, 0, 0);
-        this._rs = moonRiseSet(d, this.loc);
+        this._rs = moonRiseSet(new Date(mid), this.loc);
       }
       $('m_rise').textContent = this._rs.rise;
       $('m_set').textContent = this._rs.set;
-      // מקום הצפייה והשעה שבו לרגע המוצג — הרגע אחד, והשעון משתנה ממקום למקום
+      // מקום הצפייה והשעה שבו לרגע המוצג — הרגע אחד, והשעון משתנה ממקום למקום.
+      // ב"מותאם אישית" השעון משוער מקו האורך (זמן שמש ממוצע) — ומסומן ככזה.
       $('m_loc').textContent = T(this.loc.name);
-      $('m_locClock').textContent = fmtAtPlace(simDate, this.loc);
+      $('m_locClock').textContent = fmtAtPlace(simDate, this.loc)
+        + (this.loc.tz ? '' : ' (' + T('זמן שמש ממוצע') + ')');
       // במסך צר מורידים את כל ההרכב מתחת ל-HUD (top=0 בדסקטופ → פריסה מקורית)
       if (_layout.moonTop === null) _layout.moonTop = hudInset($('moonCanvas'), W, 0);
       const top = _layout.moonTop;
@@ -1076,7 +1092,8 @@ window.Sims = (function () {
       const altNow = Math.asin(Unow) * 180 / Math.PI;
       const s = this.season();
       $('y_clock').textContent = fmtH(this.hour);
-      $('y_tz').textContent = T('שעון מקומי') + ' — ' + T(this.cityName) + ' (' + fmtOff(this.tzOff()) + ')';
+      $('y_tz').textContent = (this.tz ? T('שעון מקומי') : T('זמן שמש ממוצע (משוער)'))
+        + ' — ' + T(this.cityName) + ' (' + fmtOff(this.tzOff()) + ')';
       $('y_updown').textContent = altNow > 0 ? T('השמש מעל האופק ☀') : T('השמש מתחת לאופק 🌙');
       $('y_alt').textContent = altNow.toFixed(0) + '°';
       // נטיית השמש — זוית השמש מצפון/דרום לקו המשוה
