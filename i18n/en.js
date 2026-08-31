@@ -85,6 +85,14 @@ window.TRANSLATIONS.en = {
   // ── מופעי הירח ───────────────────────────────────────────────────────
   'יום בחודש': 'Day of month',
   'אחוז הירח הנראה': 'Illuminated fraction',
+  'מרחק מהשמש': 'Distance from the Sun',
+  'ממזרח לשמש': 'east of the Sun',
+  'ממערב לשמש': 'west of the Sun',
+  '"מרחק מהשמש" שלמעלה הוא המרחק שבין מקום הירח למקום השמש במעלות (הפרש אורכם על גלגל המזלות), והוא העיקר הקובע אם תיראה הלבנה החדשה: כתב הרמב"ם (הלכות קידוש החודש פי"ז ה"ג) שאם היה מרחק זה — "האורך הראשון" — תשע מעלות או פחות, אי אפשר שייראה הירח בכל ארץ ישראל; ואם היה חמש עשרה מעלות או יותר, אי אפשר שלא ייראה. ובעל המאור (ראש השנה כ\' ע"ב) נתן שיעור לראיית הירח מרחק שתים עשרה מעלות מן השמש. מן המולד ועד הניגוד הירח ממזרח לשמש — שוקע אחריה ונראה במערב לאחר השקיעה; ומן הניגוד ואילך הוא ממערב לה — זורח לפניה ונראה במזרח לפנות בוקר.':
+    '"Distance from the Sun" above is the angle between the Moon and the Sun in degrees (the difference of their longitudes on the zodiac wheel). It is the main thing that decides whether the new moon can be seen. The Rambam (Hilchos Kiddush HaChodesh 17:3) writes that if this distance — the "first longitude" — is nine degrees or less, the moon cannot be seen anywhere in Eretz Yisrael; and if it is fifteen degrees or more, it cannot fail to be seen. The Baal HaMaor (Rosh Hashanah 20b) gives twelve degrees from the Sun as the measure for sighting the moon. From the molad until the opposition the Moon is east of the Sun — it sets after it and is seen in the west after sunset; from the opposition on it is west of the Sun — it rises before it and is seen in the east toward morning.',
+  '🌒 רגע הראייה': '🌒 Sighting time',
+  'כפתור "רגע הראייה" מעמיד את התצוגה על עת הראייה של החודש המוצג — כשליש שעה אחר שקיעת החמה הראשונה שלאחר הקיבוץ, במקום הצפייה הנבחר. זו העת שחשבון הרמב"ם (הלכות קידוש החודש פרק י"ד) מכוון אליה, ובה נמדד המרחק מהשמש ("האורך הראשון") הקובע אם תיראה הלבנה החדשה בלילה זה.':
+    'The "Sighting time" button sets the display to the sighting time of the shown month — about a third of an hour after the first sunset following the conjunction, at the chosen viewing location. This is the moment the Rambam\'s calculation (Hilchos Kiddush HaChodesh ch. 14) is aimed at, when the distance from the Sun (the "first longitude") that decides whether the new moon will be seen that night is measured.',
   'זריחת הירח': 'Moonrise',
   'שקיעת הירח': 'Moonset',
   'מקום הצפייה': 'Viewing location',

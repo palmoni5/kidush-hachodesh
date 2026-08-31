@@ -462,6 +462,14 @@ window.Sims = (function () {
       const pct = Math.round(A.moonIllum(this.phase) * 100);
       $('m_day').textContent = Math.floor(this.day) + 1;
       $('m_pct').textContent = pct + '%';
+      // מרחק הירח מהשמש במעלות (הפרש האורך האקליפטי — "האורך הראשון" של
+      // הרמב"ם פי"ז) — הוא הקובע את ראיית הלבנה החדשה: בתשע מעלות או פחות
+      // אי אפשר שתיראה, ובחמש עשרה ודאי תיראה (רמב"ם פי"ז ה"ג); ובעל המאור
+      // (ר"ה כ' ע"ב) נתן שיעור י"ב מעלות. עד הניגוד הירח ממזרח לשמש, ומשם
+      // ואילך ממערב לה. phase נגזר מ-AE.MoonPhase, וההמרה חזרה למעלות מדויקת.
+      const eDeg = (this.phase / MEAN_LUN) * 360;
+      const eDist = eDeg <= 180 ? eDeg : 360 - eDeg;
+      $('m_elong').textContent = eDist.toFixed(1) + '° ' + T(eDeg <= 180 ? 'ממזרח לשמש' : 'ממערב לשמש');
       $('m_phase').textContent = T(A.moonPhaseLabel(this.phase));
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -571,6 +579,21 @@ window.Sims = (function () {
       jump('m_j18h', 0.75);
       jump('m_j3', 3);
       jump('m_j7', 7);
+      // רגע הראייה — כשליש שעה (20 דקות) אחר שקיעת החמה הראשונה שאחרי
+      // הקיבוץ, במקום הצפייה הנבחר: הוא "עת הראייה" שחשבון הרמב"ם (פי"ד)
+      // מכוון אליה, והרגע שבו נמדד "האורך הראשון" שקובע אם תיראה הלבנה.
+      // ברוחב קוטבי (אין שקיעה בטווח החיפוש) — נפילה לי"ח שעות מן המולד.
+      $('m_jSee').onclick = () => {
+        const t0 = this._monthT0();
+        let t = null;
+        try {
+          const AE = window.Astronomy, obs = new AE.Observer(this.loc.lat, this.loc.lon, 0);
+          const s = AE.SearchRiseSet(AE.Body.Sun, obs, -1, AE.MakeTime(new Date(t0)), 2);
+          if (s) t = s.date.getTime() + 20 * 60000;
+        } catch (_) {}
+        this.t = t == null ? t0 + 0.75 * 86400000 : t;
+        stop(); this._syncDate();
+      };
       // הניגוד אינו נופל בדיוק באמצע החודש — הירח אינו נע במהירות אחידה;
       // לכן הוא נדרש כמופע אמיתי (180°) ולא כמחצית אורך החודש
       $('m_jFull').onclick = () => {
