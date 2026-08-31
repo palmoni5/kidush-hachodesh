@@ -219,6 +219,8 @@ window.TRANSLATIONS.en = {
   "אורך השנה 365י' 5ש' 997ח' 48ר'": 'the year is 365d 5h 997ch 48r',
   'כל תקופה (של שמואל)': 'Each tekufah (of Shmuel)',
   '91 ימים 7.5 שעות': '91 days 7.5 hours',
+  'כל תקופה (של רב אדא)': 'Each tekufah (of Rav Ada)',
+  "91י' 7ש' 519ח' 31ר'": '91d 7h 519ch 31r',
   'ארבע התקופות הן נקודות הקיצון של מסלול השמש: ניסן/תשרי (שוויון), תמוז וטבת (הקיצון).':
     'The four tekufos are the extreme points of the Sun’s path: Nissan/Tishrei (equinoxes), Tammuz and Teves (solstices).',
   'לחצני התקופות שבאיור קופצים אל רגעי התקופה האמיתיים, המחושבים אסטרונומית — והם שונים מתקופת שמואל ומתקופת רב אדא, שהן חשבון בקירוב. עיין רמב״ם הלכות קידוש החודש פרקים ט–י.':
