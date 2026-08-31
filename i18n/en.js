@@ -248,9 +248,11 @@ window.TRANSLATIONS.en = {
   'יוהנסבורג': 'Johannesburg', 'סידני': 'Sydney',
 
   // ── כוכבי הלכת ───────────────────────────────────────────────────────
-  'שעון קיץ (+3)': 'Daylight saving (+3)',
   'הצג מיקום': 'Show position',
-  'ברירת מחדל: ירושלים': 'Default: Jerusalem',
+  'השעה בשעון': 'Time is read in the clock of',
+  'השעה בזמן שמש ממוצע המשוער מקו האורך': 'Time is read in mean solar time, estimated from the longitude',
+  'השעה שבשדות מפורשת בשעון האזרחי של המקום הנבחר (כולל שעון קיץ). במקום מותאם אישית אין אזור זמן ידוע, והשעה מפורשת בזמן שמש ממוצע המשוער מקו האורך.':
+    'The time in the fields is read in the civil clock of the chosen place, daylight saving included. For a custom place no time zone is known, so the time is read as mean solar time, estimated from the longitude.',
   'מקרא — גובה / אזימוט': 'Legend — altitude / azimuth',
   'מתחת לאופק': 'below horizon',
 

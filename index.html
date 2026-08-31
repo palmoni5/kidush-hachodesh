@@ -779,7 +779,7 @@
               <label class="field">שעה<input type="number" id="p_hour" min="0" max="23" /></label>
               <label class="field">דקות<input type="number" id="p_min" min="0" max="59" /></label>
             </div>
-            <div class="chk"><input type="checkbox" id="p_dst" /><label for="p_dst">שעון קיץ (+3)</label></div>
+            <div class="htxt" id="p_tzNote" style="margin-top:6px"></div>
             <div class="ctrls" style="margin-top:8px">
               <button class="btn-primary" id="p_go">הצג מיקום</button>
               <button class="btn-secondary" id="p_now">↻ עכשיו</button>
@@ -787,11 +787,31 @@
           </div>
           <div class="card">
             <h2>מיקום הצופה</h2>
+            <label class="field">מקום</label>
+            <select id="p_city">
+              <option value="31.78,35.24" data-tz="Asia/Jerusalem" selected>ירושלים</option>
+              <option value="33.37,43.75" data-tz="Asia/Baghdad">נהרדעא (בבל)</option>
+              <option value="40.10,-74.22" data-tz="America/New_York">לייקווד</option>
+              <option value="40.71,-74.01" data-tz="America/New_York">ניו יורק</option>
+              <option value="34.05,-118.24" data-tz="America/Los_Angeles">לוס אנג'לס</option>
+              <option value="25.76,-80.19" data-tz="America/New_York">מיאמי</option>
+              <option value="43.65,-79.38" data-tz="America/Toronto">טורונטו</option>
+              <option value="19.43,-99.13" data-tz="America/Mexico_City">מקסיקו סיטי</option>
+              <option value="-23.55,-46.63" data-tz="America/Sao_Paulo">סאו פאולו</option>
+              <option value="-34.60,-58.38" data-tz="America/Argentina/Buenos_Aires">בואנוס איירס</option>
+              <option value="51.51,-0.13" data-tz="Europe/London">לונדון</option>
+              <option value="48.86,2.35" data-tz="Europe/Paris">פריז</option>
+              <option value="51.22,4.40" data-tz="Europe/Brussels">אנטוורפן</option>
+              <option value="55.76,37.62" data-tz="Europe/Moscow">מוסקבה</option>
+              <option value="-26.20,28.05" data-tz="Africa/Johannesburg">יוהנסבורג</option>
+              <option value="-33.87,151.21" data-tz="Australia/Sydney">סידני</option>
+              <option value="">מותאם אישית</option>
+            </select>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
               <label class="field">קו רוחב °<input type="number" id="p_lat" step="0.01" /></label>
               <label class="field">קו אורך °<input type="number" id="p_lon" step="0.01" /></label>
             </div>
-            <div class="htxt" style="margin-top:6px">ברירת מחדל: ירושלים</div>
+            <div class="htxt" style="margin-top:6px">השעה שבשדות מפורשת בשעון האזרחי של המקום הנבחר (כולל שעון קיץ). במקום מותאם אישית אין אזור זמן ידוע, והשעה מפורשת בזמן שמש ממוצע המשוער מקו האורך.</div>
           </div>
           <div class="card">
             <h2>מקרא — גובה / אזימוט</h2>

@@ -1337,14 +1337,39 @@ window.Sims = (function () {
     { k: 'saturn', n: 'שבתאי' }, { k: 'uranus', n: 'אורנוס' }, { k: 'neptune', n: 'נפטון' },
   ];
   const planets = {
-    sky: null, lat: 31.78, lon: 35.24, _bound: false,
+    sky: null, lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', cityName: 'ירושלים', _bound: false,
     step() {},
+    // היסט אזור הזמן (שעות) לפירוש השעה שבשדות: אזור ה-IANA של המקום הנבחר
+    // (כולל שעון קיץ); ב"מותאם אישית" — זמן שמש ממוצע המשוער מקו האורך,
+    // כדרך שאר הלשוניות
+    tzOffAt(date) {
+      const o = tzOffsetHours(this.tz, date);
+      return o === null ? Math.round(this.lon / 15) : o;
+    },
+    // השעה שבשדות היא השעון האזרחי של מקום הצפייה. ההמרה ההפוכה (מקומי→UTC)
+    // צריכה את ההיסט של הרגע המבוקש עצמו, שאינו ידוע עדיין — לכן ההיסט מוערך
+    // על הקריאה כ-UTC ומעודן פעם אחת; די בכך גם על גבולות שעון הקיץ.
     inputToUTC() {
       const Y = +$('p_year').value, M = +$('p_month').value, D = +$('p_day').value, h = +$('p_hour').value, mi = +$('p_min').value;
-      const off = $('p_dst').checked ? 3 : 2;
-      return new Date(Date.UTC(Y, M - 1, D, h - off, mi, 0));
+      const wall = Date.UTC(Y, M - 1, D, h, mi, 0);
+      const off = this.tzOffAt(new Date(wall));
+      const off2 = this.tzOffAt(new Date(wall - off * 3600000));
+      return new Date(wall - off2 * 3600000);
     },
-    compute() { this.lat = +$('p_lat').value; this.lon = +$('p_lon').value; this.sky = A.computeSky(this.inputToUTC(), this.lat, this.lon); this.legend(); },
+    compute() {
+      this.lat = +$('p_lat').value; this.lon = +$('p_lon').value;
+      const utc = this.inputToUTC();
+      this.sky = A.computeSky(utc, this.lat, this.lon);
+      this.legend(); this.note(utc);
+    },
+    // באיזה שעון פורשה השעה — מוצג מתחת לשדות התאריך
+    note(utc) {
+      const el = $('p_tzNote'); if (!el) return;
+      const off = fmtOff(this.tzOffAt(utc || new Date()));
+      el.textContent = this.tz
+        ? T('השעה בשעון') + ' ' + T(this.cityName) + ' (' + off + ')'
+        : T('השעה בזמן שמש ממוצע המשוער מקו האורך') + ' (' + off + ')';
+    },
     draw() {
       const { ctx, W, H } = fit($('planetsCanvas'));
       ctx.clearRect(0, 0, W, H);
@@ -1378,22 +1403,37 @@ window.Sims = (function () {
         L.appendChild(row);
       }
     },
+    // מילוי השדות בשעה הנוכחית — בשעון המקום הנבחר, לא בשעון המכשיר
     setNow() {
-      const d = new Date(), m = d.getMonth() + 1;
-      $('p_day').value = d.getDate(); $('p_month').value = m; $('p_year').value = d.getFullYear();
-      $('p_hour').value = d.getHours(); $('p_min').value = d.getMinutes(); $('p_dst').checked = (m >= 4 && m <= 10);
+      const now = new Date();
+      const d = new Date(now.getTime() + this.tzOffAt(now) * 3600000);   // השעון המקומי כקריאת-UTC
+      $('p_day').value = d.getUTCDate(); $('p_month').value = d.getUTCMonth() + 1; $('p_year').value = d.getUTCFullYear();
+      $('p_hour').value = d.getUTCHours(); $('p_min').value = d.getUTCMinutes();
     },
     bind() {
       if (this._bound) return; this._bound = true;
       $('p_lat').value = 31.78; $('p_lon').value = 35.24; this.setNow();
       $('p_go').onclick = () => this.compute();
       $('p_now').onclick = () => { this.setNow(); this.compute(); };
+      // בחירת עיר קובעת רוחב+אורך+אזור זמן; עריכה ידנית של הקואורדינטות
+      // מעבירה ל"מותאם אישית" (ואז השעה מפורשת בזמן שמש ממוצע מקו האורך)
+      $('p_city').onchange = e => {
+        const opt = e.target.selectedOptions[0], v = e.target.value;
+        if (!v) { this.tz = null; this.cityName = 'מותאם אישית'; this.compute(); return; }
+        const [la, lo] = v.split(',').map(Number);
+        $('p_lat').value = la; $('p_lon').value = lo;
+        this.tz = opt.dataset.tz || null; this.cityName = opt.textContent.trim();
+        this.compute();
+      };
+      const pCustom = () => { $('p_city').value = ''; this.tz = null; this.cityName = 'מותאם אישית'; };
+      $('p_lat').oninput = pCustom;
+      $('p_lon').oninput = pCustom;
       this.compute();
     },
   };
 
   // החלפת שפה: מקרא כוכבי הלכת וכרטיס זמני הלוח נבנים באירוע — מרעננים
-  planets.onLanguage = function () { if (this.sky) this.legend(); };
+  planets.onLanguage = function () { if (this.sky) { this.legend(); this.note(); } };
   year.onLanguage = function () { if (this._bound) loadOtzariaTimes(); };
 
   return { moon, year, planets, clearColorCache, clearFitCache, stageLayout };
