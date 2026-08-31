@@ -42,13 +42,6 @@ function cssVar(name) {
   return getComputedStyle(document.body).getPropertyValue(name).trim();
 }
 
-// זיהוי מארח: האם גשר Otzaria הוזרק על ידי התוכנה המארחת (אוצריא), או
-// שהתוסף רץ עצמאית על ה-stub שלהלן (דפדפן, או מארח שאינו מזריק גשר —
-// כגון "כלי קודש"). משמש בעקיפת באג כיוון הגלילה של ה-webview של אוצריא
-// (ראו enableTabScroll ב-app.js). נבדק לפני יצירת ה-stub — אחרת התשובה
-// תמיד חיובית.
-window.__hasOtzariaBridge = typeof window.Otzaria !== 'undefined';
-
 // ── Stub לפיתוח עצמאי בדפדפן (מופעל רק אם אוצריא אינה נוכחת) ──
 if (typeof window.Otzaria === 'undefined') {
   const listeners = {};
