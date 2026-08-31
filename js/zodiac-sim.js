@@ -114,11 +114,18 @@
   //   ASC = atan2( cos θ , −(sin θ·cos ε + tan φ·sin ε) )
   //   MC  = atan2( sin θ , cos θ·cos ε )
   // (בדיקה: ב-φ=0, ε=0 מתקבל ASC = θ+90 ו-MC = θ — כמצופה.)
-  const EPS = 23.4392911;
+  const EPS = 23.4392911;                       // נטיית J2000 — לגאומטריית הציור בלבד
+  // נטיית המלקה הממוצעת לתאריך עצמו (IAU 2006) — ל-ASC/MC, שזמן הכוכבים
+  // שבהם הוא של התאריך; הנטייה נסוגה כ-47″ למאה, וקיבוע J2000 היה מטה את
+  // המזל העולה בשניות קשת בודדות בעשורים הסמוכים (וגדל והולך עם השנים).
+  function epsOfDate(date) {
+    const T = (date.getTime() / 86400000 - 10957.5) / 36525;   // מאות יוליאניות מ-J2000
+    return 23.439279444444445 + T * (-0.013010213611111 + T * (-5.0861111111e-8 + T * 5.565e-7));
+  }
   function horizonPoints(date, lat, lon) {
     let gast;
     try { gast = AE.SiderealTime(AE.MakeTime(date)); } catch (_) { return null; }
-    const th = rev360(gast * 15 + lon) * RAD, ph = lat * RAD, ep = EPS * RAD;
+    const th = rev360(gast * 15 + lon) * RAD, ph = lat * RAD, ep = epsOfDate(date) * RAD;
     const asc = rev360(Math.atan2(Math.cos(th), -(Math.sin(th) * Math.cos(ep) + Math.tan(ph) * Math.sin(ep))) / RAD);
     const mc  = rev360(Math.atan2(Math.sin(th), Math.cos(th) * Math.cos(ep)) / RAD);
     return { asc, mc };
