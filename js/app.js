@@ -60,10 +60,11 @@
     bar.addEventListener('wheel', e => {
       if (bar.scrollWidth <= bar.clientWidth) return;
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-        // מחווה אופקית: הטיפול הנטיבי ב-deltaX על מיכל RTL הפוך בחלק מן
-        // ה-webview, ולכן המיפוי התקני נעשה כאן ידנית — deltaX חיובי הוא
-        // גלילה ויזואלית ימינה, כלומר הגדלת scrollLeft, בשני הכיוונים.
-        bar.scrollLeft += e.deltaX;
+        // מחווה אופקית (שתי אצבעות במשטח המגע): ב-webview של אוצריא סימן
+        // deltaX מגיע הפוך על מסמך RTL — במיפוי הקודם (scrollLeft += deltaX)
+        // תנועת אצבעות ימינה גררה את הפס שמאלה (משוב משתמש). לכן הסימן
+        // הפוך כאן, כך שהתוכן עוקב אחר האצבעות כבשאר חלונות המערכת.
+        bar.scrollLeft -= e.deltaX;
       } else {
         // ב-RTL הקצה ההתחלתי הוא scrollLeft = 0 והתוכן נמשך שמאלה בערכים
         // שליליים; לכן גלגול מטה, שאמור להתקדם בלשוניות, הוא הפחתה.
