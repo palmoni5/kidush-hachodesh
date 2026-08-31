@@ -225,6 +225,8 @@ window.TRANSLATIONS.en = {
     'The four tekufos are the extreme points of the Sun’s path: Nissan/Tishrei (equinoxes), Tammuz and Teves (solstices).',
   'לחצני התקופות שבאיור קופצים אל רגעי התקופה האמיתיים, המחושבים אסטרונומית — והם שונים מתקופת שמואל ומתקופת רב אדא, שהן חשבון בקירוב. עיין רמב״ם הלכות קידוש החודש פרקים ט–י.':
     'The tekufah buttons in the diagram jump to the true moments of the tekufos, worked out astronomically. These are not the same as the tekufos of Shmuel or of Rav Ada, which are approximate reckonings. See Rambam, Hilchos Kiddush HaChodesh, ch. 9–10.',
+  'חשבון השנים המעוברות בלוח שלנו מבוסס במדויק על שיטת רב אדא (פר"ח סי\' תכ"ז); לענין שעת התקופה (נפק"מ לענין ברכת החמה בתחילת תקופת ניסן כל כ"ח שנים, ולענין שאילת גשמים בחו"ל ששים יום אחרי תקופת תשרי) אנו נוהגים עפ"י שיטת שמואל.':
+    'The leap-year reckoning of our fixed calendar is based precisely on the system of Rav Ada (Pri Chadash, O.C. 427). For the hour of the tekufah, we follow the system of Shmuel — the practical difference being Birkas HaChamah at the start of Tekufas Nissan every 28 years, and asking for rain outside Eretz Yisrael sixty days after Tekufas Tishrei.',
   'מצפון לקו המשוה: תמוז=קיץ, טבת=חורף. מדרום לקו המשוה: תמוז=חורף, טבת=קיץ.':
     'North of the equator: Tammuz=summer, Teves=winter. South of the equator: Tammuz=winter, Teves=summer.',
   'הזמנים באיור (זריחה, שקיעה, חצות, השעה השמשית ומיקום השמש) מחושבים אסטרונומית במדויק (Astronomy Engine) לגובה פני הים. ייתכנו הבדלים קלים מהלוחות בשל גובה המקום ושיטות החישוב — אין לסמוך עליהם להלכה.':
