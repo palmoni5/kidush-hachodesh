@@ -474,7 +474,15 @@ window.Sims = (function () {
       // עדכון ה-HUD תחילה: hudInset מודד את גובה ה-HUD, ולכן יש לעדכן את תוכנו
       // (שאורכו משתנה לפי המופע) לפני מדידת moonTop — אחרת הפריים הראשון נמדד
       // לפי ערכי ברירת המחדל שב-HTML, ומדידה-מחדש מאוחרת מקפיצה את האיור.
-      const pct = Math.round(A.moonIllum(this.phase) * 100);
+      // אחוז ההארה — מזווית המופע התלת-ממדית המלאה (Illumination), לא מהקירוב
+      // שעל הפרש האורך האקליפטי בלבד (הפרש של עד ~0.2 נקודת אחוז — בעיקר בשל
+      // רוחב הירח מן המלקה); כך גם המבט התלת-ממדי (system3d), והתצוגות שוות.
+      // נפילה לקירוב המושגי כשהמנוע אינו זמין.
+      let pct;
+      try {
+        const AE = window.Astronomy;
+        pct = Math.round(AE.Illumination(AE.Body.Moon, AE.MakeTime(simDate)).phase_fraction * 100);
+      } catch (_) { pct = Math.round(A.moonIllum(this.phase) * 100); }
       $('m_day').textContent = Math.floor(this.day) + 1;
       $('m_pct').textContent = pct + '%';
       // מרחק הירח מהשמש במעלות (הפרש האורך האקליפטי — "האורך הראשון" של
