@@ -52,7 +52,10 @@
   }
 
   // ===== מיקום גרמי השמים — מדויק =====
-  const BODY_MAP = {
+  // גישה עצלה ל-AE.Body: כשהמנוע לא נטען אסור שהמודול כולו יקרוס בטעינה —
+  // הוא הבסיס (window.Astro) שכל שאר המודולים תלויים בו, וקריסתו כאן מפילה
+  // את האפליקציה כולה במקום הנפילה הסכמטית המסודרת שבכל אתר-קריאה.
+  const BODY_MAP = AE && AE.Body ? {
     sun:     AE.Body.Sun,
     moon:    AE.Body.Moon,
     mercury: AE.Body.Mercury,
@@ -62,7 +65,7 @@
     saturn:  AE.Body.Saturn,
     uranus:  AE.Body.Uranus,
     neptune: AE.Body.Neptune,
-  };
+  } : {};
 
   function computeSky(dateUTC, latObs, lonObs) {
     const time = AE.MakeTime(dateUTC);

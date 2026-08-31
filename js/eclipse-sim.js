@@ -14,7 +14,7 @@
   const T = s => (window.I18N ? window.I18N.t(s) : s);
   const RAD = Math.PI / 180, DEG = 180 / Math.PI;
 
-  const KM_AU  = AE.KM_PER_AU || 1.4959787069098932e8;
+  const KM_AU  = (AE && AE.KM_PER_AU) || 1.4959787069098932e8;   // גם בלי המנוע — לא לקרוס בטעינה
   const R_SUN = 695700, R_EARTH = 6371.0084, R_MOON = 1737.4;   // ק"מ
   const MEAN_DIST = 384400, PERIGEE = 356500, APOGEE = 406700;  // מרחקי הירח (ק"מ)
   const EPS = 23.4392911 * RAD;
