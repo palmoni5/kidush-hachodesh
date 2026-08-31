@@ -465,7 +465,9 @@ window.Sims = (function () {
       $('m_phase').textContent = T(A.moonPhaseLabel(this.phase));
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
-      $('m_clock').textContent = simDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      // התווית מבטיחה "שעה באופק ירושלים" — מוצמד לאזור הזמן של ירושלים גם
+      // כשהמכשיר מכוון לאזור אחר (כך ניתן להשוות מולדות מול הלוחות)
+      $('m_clock').textContent = fmtAtPlace(simDate, { tz: 'Asia/Jerusalem', lon: 35.24 });
       // התאריך העברי מחושב אסינכרונית — רק כשהתצוגה מתחלפת (שקיעה / עלות השחר)
       const heKey = window.HebrewDate && window.HebrewDate.key
         ? window.HebrewDate.key(simDate)
