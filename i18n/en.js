@@ -159,6 +159,8 @@ window.TRANSLATIONS.en = {
   'שעון מקומי — ירושלים': 'Local time — Jerusalem',
   'זמן שמש ממוצע': 'mean solar time',
   'זמן שמש ממוצע (משוער)': 'Mean solar time (estimated)',
+  'האיור מציג את שנת החמה הנוכחית — מתקופת ניסן (שוויון האביב) האחרונה ועד הבאה. היום והחודש מוצבים בתוך מחזור זה, והשנה נקבעת מאליה; שנים אחרות אינן מחושבות.':
+    'The diagram shows the current solar year — from the last Tekufas Nissan (the spring equinox) to the next. The day and month are placed within this cycle, and the year fills in by itself; other years are not computed.',
   'השמש מעל האופק': 'Sun above the horizon',
   'השמש מעל האופק ☀': 'Sun above the horizon ☀',
   'השמש מתחת לאופק 🌙': 'Sun below the horizon 🌙',

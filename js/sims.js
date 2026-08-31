@@ -432,10 +432,17 @@ window.Sims = (function () {
     const B = 2 * Math.PI * (N - 81) / 364;
     return (9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B)) / 60;
   }
-  // יום בשנת החמה מתאריך לועזי (נדגם בצהרי היום) — ממופה מחזורית אל השנה המוצגת
-  function dayYFromDate(Y, M, D) {
+  // יום בשנת החמה מתאריך (יום+חודש, נדגם בצהרי היום) — בתוך המחזור המוצג.
+  // הלשונית מציגה את שנת החמה הנוכחית (מתקופת ניסן עד תקופת ניסן), ובתוכה
+  // כל יום+חודש נופל פעם אחת — כך שהשנה הלועזית נקבעת מאליה ומוחזרת לתצוגה.
+  // (קודם התקבל גם שדה שנה, ותאריך של שנה אחרת מופה מחזורית אל המחזור הנוכחי
+  // בלי שהמשתמש ידע — שנה שהוקלדה לא באמת חושבה.)
+  function dayYFromDate(M, D) {
     const s = yearSpan();
-    return ((((Date.UTC(Y, M - 1, D, 12) - s.start) / 86400000) % s.days) + s.days) % s.days;
+    const y0 = new Date(s.start).getUTCFullYear();
+    let t = Date.UTC(y0, M - 1, D, 12);
+    if (t < s.start) t = Date.UTC(y0 + 1, M - 1, D, 12);
+    return { dayY: (t - s.start) / 86400000, year: new Date(t).getUTCFullYear() };
   }
   // תאריך לועזי מיום בשנת החמה המוצגת
   const GREG_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -1167,9 +1174,11 @@ window.Sims = (function () {
       // קביעת היום בשנה לפי תאריך לועזי (כמו בכוכבי הלכת)
       { const d = new Date(); $('y_dd').value = d.getDate(); $('y_mm').value = d.getMonth() + 1; $('y_yy').value = d.getFullYear(); }
       $('y_dateGo').onclick = () => {
-        const Y = +$('y_yy').value, M = +$('y_mm').value, D = +$('y_dd').value;
-        if (!Y || !M || !D) return;
-        this.dayY = dayYFromDate(Y, M, D);
+        const M = +$('y_mm').value, D = +$('y_dd').value;
+        if (!M || !D) return;
+        const r = dayYFromDate(M, D);
+        this.dayY = r.dayY;
+        $('y_yy').value = r.year;   // השנה נקבעת מאליה בתוך המחזור המוצג
         loadOtzariaTimes();   // במצב החדש כרטיס הלוח עוקב אחרי תאריך האיור
       };
       // מיקום הצופה: בחירת עיר קובעת רוחב+אורך; עריכה ידנית מעבירה ל"מותאם אישית"
