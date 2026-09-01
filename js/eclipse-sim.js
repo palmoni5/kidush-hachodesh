@@ -936,6 +936,16 @@
       const eu = $('e_utc'); if (eu) eu.textContent = fmtUTC(this.t);
       const pct = g ? Math.round((this.type === 'lunar' ? g.umbra : g.frac) * 100) : 0;
       const ep = $('e_pct'); if (ep) ep.textContent = pct + '%';
+      // רוחב הירח — נטייתו ממישור המלקה ברגע המוצג, צפוני או דרומי (כבלשונית
+      // מערכת התלת-מימד). הוא המפתח לעומק הליקוי: בליקויי המאה הנוכחית ליקוי
+      // לבנה מלא בא רק ברוחב הקטן מכחצי מעלה, וליקוי חמה מרכזי — מכמעלה.
+      const elat = $('e_lat');
+      if (elat) {
+        let mlat = null;
+        try { mlat = AE.EclipticGeoMoon(this.t).lat; } catch (e) {}
+        elat.textContent = mlat === null ? '—'
+          : Math.abs(mlat).toFixed(2) + '° ' + T(mlat >= 0 ? 'צפוני' : 'דרומי');
+      }
       const elc = $('e_loc'); if (elc && loc) elc.textContent = fmtLat(loc.lat) + ' · ' + fmtLon(loc.lon);
       // מרחק הירח מן הארץ: כשההדגמה כבויה מוצג המרחק האמיתי ברגע המוצג,
       // והמחוון (הנעול) עוקב אחריו — כך שהפעלת ההדגמה נפתחת מן המרחק הזה
