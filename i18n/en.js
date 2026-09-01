@@ -239,6 +239,18 @@ window.TRANSLATIONS.en = {
     'The four tekufos are the extreme points of the Sun’s path: Nissan/Tishrei (equinoxes), Tammuz and Teves (solstices).',
   'לחצני התקופות שבאיור קופצים אל רגעי התקופה האמיתיים, המחושבים אסטרונומית — והם שונים מתקופת שמואל ומתקופת רב אדא, שהן חשבון בקירוב. עיין רמב״ם הלכות קידוש החודש פרקים ט–י.':
     'The tekufah buttons in the diagram jump to the true moments of the tekufos, worked out astronomically. These are not the same as the tekufos of Shmuel or of Rav Ada, which are approximate reckonings. See Rambam, Hilchos Kiddush HaChodesh, ch. 9–10.',
+  'ובחשבון האסטרונומי אין תקופה שוה באורכה לחברתה, שאין הארץ מהלכת במסלולה בקצב אחיד: בתחילת ינואר (בתוך תקופת טבת) היא בקרבתה הגדולה אל השמש ומהלכה מהיר, ולכן תקופות תשרי וטבת קצרות ותקופות ניסן ותמוז ארוכות. אורך התקופות האמיתיות בזמננו (והוא משתנה מעט משנה לשנה ובמהלך הדורות):':
+    'In the astronomical reckoning no tekufah equals another in length, because the Earth does not move along its orbit at a uniform pace: in early January (within Tekufas Teves) it is nearest the Sun and moves fastest, so Tekufos Tishrei and Teves are short while Nissan and Tammuz are long. The true lengths in our era (they vary slightly from year to year and over the generations):',
+  'תקופת ניסן (אביב)': 'Tekufas Nissan (spring)',
+  '92 ימים ו-17.7 שעות': '92 days 17.7 hours',
+  'תקופת תמוז (קיץ)': 'Tekufas Tammuz (summer)',
+  '93 ימים ו-15.8 שעות': '93 days 15.8 hours',
+  'תקופת תשרי (סתיו)': 'Tekufas Tishrei (autumn)',
+  '89 ימים ו-20.7 שעות': '89 days 20.7 hours',
+  'תקופת טבת (חורף)': 'Tekufas Teves (winter)',
+  '88 ימים ו-23.6 שעות': '88 days 23.6 hours',
+  'וסך ארבעתן — שנת החמה האמיתית: 365 ימים ו-5.8 שעות, מעט פחות מ-365¼ הימים של תקופת שמואל.':
+    'All four together give the true solar year: 365 days 5.8 hours — slightly less than the 365¼ days of Tekufas Shmuel.',
   'חשבון השנים המעוברות בלוח שלנו מבוסס במדויק על שיטת רב אדא (פר"ח סי\' תכ"ז); לענין שעת התקופה (נפק"מ לענין ברכת החמה בתחילת תקופת ניסן כל כ"ח שנים, ולענין שאילת גשמים בחו"ל ששים יום אחרי תקופת תשרי) אנו נוהגים עפ"י שיטת שמואל.':
     'The leap-year reckoning of our fixed calendar is based precisely on the system of Rav Ada (Pri Chadash, O.C. 427). For the hour of the tekufah, we follow the system of Shmuel — the practical difference being Birkas HaChamah at the start of Tekufas Nissan every 28 years, and asking for rain outside Eretz Yisrael sixty days after Tekufas Tishrei.',
   'מצפון לקו המשוה: תמוז=קיץ, טבת=חורף. מדרום לקו המשוה: תמוז=חורף, טבת=קיץ.':
@@ -423,6 +435,7 @@ window.TRANSLATIONS.en = {
   'וולינגטון — ניו זילנד': 'Wellington — New Zealand',
   'הונולולו — הוואי': 'Honolulu — Hawaii',
   'טוקיו': 'Tokyo', 'וולינגטון': 'Wellington', 'הונולולו': 'Honolulu',
+  'שנחאי (סין)': 'Shanghai (China)', 'קוריאה': 'Korea',
   'הסכמי אוה״ע': 'Intl. convention',
   'שיטת החזו״א': 'Chazon Ish',
   'שיטת הגרי״מ': 'Tukachinsky',
@@ -491,6 +504,7 @@ window.TRANSLATIONS.en = {
   '⏱ שיא הליקוי': '⏱ Eclipse peak',
   'דקות/שנייה': 'minutes/sec',
   'מהלך הליקוי (גרירה)': 'Eclipse progress (drag)',
+  'הצג כל ליקוי מתחילתו': 'Open each eclipse at its start',
   'מרחק הירח מן הארץ': 'Moon’s distance from Earth',
   'שליטה ידנית במרחק (הדגמה)': 'Manual distance control (demo)',
   'מרחק:': 'Distance:',
@@ -501,6 +515,8 @@ window.TRANSLATIONS.en = {
   'המבט עוקב אחר מרכז הצל': 'View follows the shadow center',
   'גררו את הגלובוס לסיבוב. ההכהיה על פני הכדור — לפי אחוז כיסוי השמש הנראה מכל מקום; הכתם הכהה — אזור הליקוי המלא (או הטבעתי), והקו הכתום — מסלול מרכז הצל, המתקדם בדרך כלל ממערב למזרח.':
     'Drag the globe to turn it. The shading shows how much of the Sun is covered as seen from each place. The dark spot is where the eclipse is total — or annular, with a ring of sun left showing. The orange line is the path of the shadow’s center, which usually moves from west to east.',
+  'הטבעת הצהובה מסמנת את המקום שהליקוי גדול בו ביותר באותו רגע. בתחילת הליקוי ובסופו ציר הצל עדיין מחטיא את כדור הארץ, הליקוי בכל מקום חלקי בלבד, והטבעת — המצוירת אז מקווקוות — נעה סמוך לשפת הכדור המוארת; משפוגע הציר בארץ היא מתיישבת על הקו הכתום ומהלכת עליו.':
+    'The yellow ring marks the place where the eclipse is greatest at that moment. At the beginning and end of the eclipse the shadow’s axis still misses the Earth, the eclipse is only partial everywhere, and the ring — drawn dashed then — moves near the lit edge of the globe; once the axis strikes the Earth, the ring settles onto the orange line and travels along it.',
   'הסבר קצר': 'In brief',
   'ליקוי לבנה — כדור הארץ עומד בין השמש ובין הירח, ומטיל את צלו על הירח. לעולם אינו בא אלא במילוי הירח, בסביבות ט״ו בחודש.':
     'Lunar eclipse — Earth stands between the Sun and the Moon, and casts its shadow on the Moon. It can only happen at full moon, around the 15th of the month.',

@@ -280,7 +280,46 @@
       html += `<option value="">${T('טוען…')}</option>`;
     sel.innerHTML = html;
     sel.value = String(cur);
-    if (sel.value !== String(cur)) sel.selectedIndex = -1;   // הליקוי הנוכחי מסונן/מחוץ למאה
+    if (sel.value !== String(cur)) {
+      sel.selectedIndex = -1;                                // הליקוי הנוכחי מסונן/מחוץ למאה
+      jumpToNearestMatch(type, cur);
+    }
+  }
+
+  // כשמסומנת תיבת סינון והליקוי המוצג אינו עובר אותה (נכנסים ללשונית עם
+  // תיבה שמורה מסומנת, או מסמנים תיבה כשהליקוי הנוכחי אינו תואם) — הרשימה
+  // נשארה בלי בחירה. קופצים לליקוי הקרוב ביותר בזמן שעובר את הסינון.
+  // הרשימות נבנות בנגיסות: כל נגיסה קוראת שוב ל-refreshList, ולכן הקפיצה
+  // תתרחש מאליה גם כשהרשימה (או רשימת א״י) עוד לא הושלמה בעת הסימון.
+  // דגל נגד כניסה חוזרת — setEclipse קורא בעצמו ל-refreshList.
+  let _autoJump = false;
+  function jumpToNearestMatch(type, cur) {
+    if (_autoJump || !sim.einfo || !cur) return;
+    const filtered = ($('e_onlyTotal') && $('e_onlyTotal').checked) ||
+                     ($('e_onlyIL') && $('e_onlyIL').checked);
+    if (!filtered) return;
+    const L = LISTS[type]; if (!L) return;
+    // הרשימות נבנות כרונולוגית, ולכן ברגע שנמצא מועמד עתידי — הוא הקרוב
+    // בעתיד באמת (כל שלפניו כבר נבנה). בלעדיו קופצים לעבר רק כשהבנייה
+    // הושלמה — אחרת היינו נתפסים לליקוי ישן בעוד הקרוב טרם נבנה.
+    let bestPast = null, bestFuture = null;
+    for (const it of L.arr) {
+      if (!listPass(type, it)) continue;
+      if (it.ms > cur) { bestFuture = it; break; }
+      bestPast = it;
+    }
+    const doneAll = L.done &&
+      (type !== 'solar' || !($('e_onlyIL') && $('e_onlyIL').checked) || ILS.done);
+    let best = null;
+    if (bestFuture && bestPast)
+      best = (cur - bestPast.ms <= bestFuture.ms - cur) ? bestPast : bestFuture;
+    else if (bestFuture) best = bestFuture;
+    else if (doneAll) best = bestPast;
+    if (!best) return;
+    _autoJump = true;
+    try { sim.setEclipse(nextEcl(type, new Date(best.ms - 5 * 86400000))); } catch (e) {}
+    _autoJump = false;
+    window.__invalidate && window.__invalidate();
   }
 
   // ── צבעי ערכת האיור (עם מטמון, כמו ב-sims.js) ──────────────────────────
@@ -642,6 +681,8 @@
     const w = IMG.globe.naturalWidth, h = IMG.globe.naturalHeight;
     const oc = document.createElement('canvas'); oc.width = w; oc.height = h;
     const octx = oc.getContext('2d'); octx.drawImage(IMG.globe, 0, 0);
+    // גבולות המדינות — פס דקיק המוטבע בטקסטורה עצמה (ראו js/borders.js)
+    if (window.BORDERS) window.BORDERS.draw(octx, w, h);
     return (_tex = { data: octx.getImageData(0, 0, w, h).data, w, h });
   }
   // LUT להכהיית הליקוי לפי אחוז הכיסוי (חוסך pow לכל פיקסל)
@@ -797,11 +838,16 @@
       ctx.fillStyle = g.rUs > 0 ? 'rgba(3,3,8,0.8)' : 'rgba(25,26,42,0.62)';
       ctx.fill();
     }
-    // סמן מרכז הצל
+    // סמן מקום הליקוי הגדול ביותר. בשלב החלקי שבתחילת הליקוי ובסופו ציר הצל
+    // עדיין מחטיא את הכדור, והסמן — הנקודה על פני הארץ הקרובה ביותר לציר —
+    // נע סמוך לשפה המוארת ואינו על הקו הכתום (שמצויר רק לשלב המרכזי);
+    // אז הוא מקווקו, להבדילו מן השלב המרכזי שבו הוא רוכב על הקו.
     const cp = proj(center.lat, center.lon);
     if (cp.vis) {
       ctx.strokeStyle = '#ffd24d'; ctx.lineWidth = 1.6;
+      if (!g.central) ctx.setLineDash([3, 3]);
       ctx.beginPath(); ctx.arc(cp.x, cp.y, 6, 0, 2*Math.PI); ctx.stroke();
+      ctx.setLineDash([]);
     }
 
     // מתאר
@@ -821,6 +867,7 @@
     t: new Date(),
     playing: false, speed: 3,         // דקות (של זמן הליקוי) לשנייה
     distOn: false, distKm: MEAN_DIST, // הדגמת מרחק הירח (ליקוי חמה)
+    fromStart: false,                 // "הצג כל ליקוי מתחילתו" — במקום מרגע השיא
     viewLoc: 'peak',                  // מקום הצופה במראה הליקוי: שיא או עיר בארץ
     gLat: 0, gLon: 0, follow: true,   // מבט הגלובוס
     hintDone: false, _bound: false,
@@ -836,7 +883,7 @@
     setEclipse(einfo) {
       this.einfo = einfo;
       this.win = windowOf(this.type, einfo);
-      this.t = new Date(einfo.peak.date.getTime());
+      this.t = new Date(this.fromStart ? this.win.t0 : einfo.peak.date.getTime());
       this._path = null;
       this.follow = true;
       const fc = $('e_follow'); if (fc) fc.checked = true;
@@ -975,6 +1022,26 @@
       };
       persistChk('e_onlyTotal', 'eclOnlyTotal');
       persistChk('e_onlyIL', 'eclOnlyIL');
+      // "הצג כל ליקוי מתחילתו" — כל ליקוי שנבחר נפתח מראשית הליקוי ולא מהשיא;
+      // הסימון מזיז גם את הליקוי המוצג כעת לתחילתו, ונשמר להפעלה הבאה
+      const fsChk = $('e_fromStart');
+      fsChk.onchange = () => {
+        this.fromStart = fsChk.checked;
+        if (fsChk.checked && this.win.t1 > this.win.t0) {
+          this.t = new Date(this.win.t0);
+          window.__invalidate && window.__invalidate();
+        }
+        try { Otzaria.call('storage.set', { key: 'eclFromStart', value: fsChk.checked }); } catch (e) {}
+      };
+      try {
+        Otzaria.call('storage.get', { key: 'eclFromStart' }).then(r => {
+          if (r && r.success && r.data && !fsChk.checked) {
+            fsChk.checked = true; this.fromStart = true;
+            if (this.win.t1 > this.win.t0) this.t = new Date(this.win.t0);
+            window.__invalidate && window.__invalidate();
+          }
+        }).catch(() => {});
+      } catch (e) {}
       // גם מקום הצופה נשמר להפעלה הבאה
       const locSel = $('e_viewLoc');
       locSel.onchange = e => {

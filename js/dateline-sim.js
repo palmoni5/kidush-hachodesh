@@ -32,6 +32,13 @@
     { he: 'וולינגטון — ניו זילנד', short: 'וולינגטון', tz: 'Pacific/Auckland', lat: -41.29, lon: 174.78 },
     { he: 'הונולולו — הוואי',      short: 'הונולולו',  tz: 'Pacific/Honolulu', lat: 21.31,  lon: -157.86 },
   ];
+  // ציוני מקום מוקטנים — בלא שורה בלוח הצד ובלא מקרא: מקומות ששמם חוזר
+  // בנדון קו התאריך (סין נזכרת בויכוח החזו"א עם הגרי"מ עשרות פעמים, וכן
+  // קוריאה), ומי שאינו בקי במפת העולם לא ידע היכן הם.
+  const MINOR_PLACES = [
+    { he: 'שנחאי (סין)', lat: 31.23, lon: 121.47 },
+    { he: 'קוריאה',      lat: 36.5,  lon: 127.8 },
+  ];
   const DAYNAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
   const _fmtCache = Object.create(null);
   function tzFmt(tz) {
@@ -166,6 +173,8 @@
     const w = IMG.naturalWidth, h = IMG.naturalHeight;
     const oc = document.createElement('canvas'); oc.width = w; oc.height = h;
     const octx = oc.getContext('2d'); octx.drawImage(IMG, 0, 0);
+    // גבולות המדינות — פס דקיק המוטבע בטקסטורה עצמה (ראו js/borders.js)
+    if (window.BORDERS) window.BORDERS.draw(octx, w, h);
     return (_tex = { data: octx.getImageData(0, 0, w, h).data, w, h });
   }
 
@@ -358,6 +367,17 @@
         const w = ctx.measureText(T(p.short)).width + 8;
         ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(q.x - w / 2, q.y + 5, w, 14);
         ctx.fillStyle = '#ffffff'; ctx.fillText(T(p.short), q.x, q.y + 7);
+      }
+
+      // הציונים המוקטנים — נקודה זעירה ותווית באות קטנה
+      for (const p of MINOR_PLACES) {
+        const q = this.proj(p.lat, p.lon, cx, cy, R);
+        if (!q.vis) continue;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.arc(q.x, q.y, 2, 0, 2 * Math.PI); ctx.fill();
+        ctx.font = '9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        const w = ctx.measureText(T(p.he)).width + 6;
+        ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(q.x - w / 2, q.y + 4, w, 12);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fillText(T(p.he), q.x, q.y + 5);
       }
 
       // תוויות הקווים — במרווחים אנכיים שונים כדי שלא ייערמו
