@@ -224,8 +224,29 @@
   for (const ev of ['click', 'input', 'change'])
     document.addEventListener(ev, invalidate, { passive: true });
 
+  // ── ייצוב רוחב ה-HUD ────────────────────────────────────────────────
+  // רוחב ה-HUD נקבע מתוכנו, והטקסטים שבו מתחלפים בכל פריים בזמן ניגון
+  // (תאריך, "מיקום בשמים" וכו') — והחלונית התרחבה והתכווצה בלי הרף וריצדה
+  // לעין. מחסום חד-כיווני: min-width נצמד לרוחב הגדול ביותר שנצפה (עד גבול
+  // הבמה), כך שהחלונית מתרחבת בלבד ומתייצבת מהר. שינוי גודל חלון או החלפת
+  // שפה מאפסים את המחסום — הרוחב הראוי השתנה, והמחסום ייבנה מחדש.
+  const hudEls = document.querySelectorAll('.stage .hud');
+  function resetHudWidth() { hudEls.forEach(h => { h.style.minWidth = ''; }); }
+  if (window.ResizeObserver) {
+    const hudRO = new ResizeObserver(entries => {
+      for (const e of entries) {
+        const el = e.target, w = Math.ceil(el.getBoundingClientRect().width);
+        if (!w) continue;                                  // לשונית מוסתרת
+        const cap = el.parentElement.clientWidth - 24;     // לא לחרוג מהבמה
+        const want = Math.min(w, cap);
+        if (want > (parseFloat(el.style.minWidth) || 0)) el.style.minWidth = want + 'px';
+      }
+    });
+    hudEls.forEach(h => hudRO.observe(h));
+  }
+
   // שינוי גודל הקנבס → ניקוי מטמון המידות וציור מחדש (במקום fit() בכל פריים)
-  const onResize = () => { if (window.Sims.clearFitCache) window.Sims.clearFitCache(); invalidate(); };
+  const onResize = () => { resetHudWidth(); if (window.Sims.clearFitCache) window.Sims.clearFitCache(); invalidate(); };
   if (window.ResizeObserver) {
     const ro = new ResizeObserver(onResize);
     document.querySelectorAll('.view canvas').forEach(c => { if (c.parentElement) ro.observe(c.parentElement); });
@@ -242,6 +263,7 @@
       // תוכן שנבנה באירוע (טבלאות, תוויות תלת-מימד) מתרענן דרך hook ייעודי
       for (const k of ['moon', 'luach', 'year', 'planets', 'zodiac', 'hours', 'dateline', 'eclipse', 'system3d'])
         if (SIMS[k] && SIMS[k].onLanguage) { try { SIMS[k].onLanguage(); } catch (e) {} }
+      resetHudWidth();   // אורכי הטקסטים השתנו עם השפה — המחסום ייבנה מחדש
       if (window.Sims.clearFitCache) window.Sims.clearFitCache();
       invalidate();
     } catch (e) {}
