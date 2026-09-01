@@ -513,6 +513,17 @@
     const sp = $('s_phase'); if (sp) sp.textContent = T(phaseLabel(elong));
     const sc = $('s_pct'); if (sc) sc.textContent = Math.round(illum * 100) + '%';
 
+    // רוחב הירח — נטייתו ממישור המלקה במעלות ("רוחב הירח" שברמב"ם הלכות
+    // קידוש החודש פט"ז): חיובי = צפוני (לעבר קוטב המלקה הצפוני), שלילי =
+    // דרומי. בשעת ליקוי הוא קרוב לאפס — הירח על מישור המלקה בקיבוץ/ניגוד.
+    const sl = $('s_lat');
+    if (sl) {
+      let mlat = null;
+      try { mlat = AE.EclipticGeoMoon(time).lat; } catch (e) {}
+      sl.textContent = mlat === null ? '—'
+        : Math.abs(mlat).toFixed(2) + '° ' + T(mlat >= 0 ? 'צפוני' : 'דרומי');
+    }
+
     // HUD — ליקויים
     const ec = eclipses(date);
     const fmt = e => e ? `${e.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'short', year: 'numeric' })} (${T(EK[e.kind] || e.kind)})` : '—';
