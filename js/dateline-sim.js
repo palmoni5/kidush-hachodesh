@@ -250,6 +250,8 @@
   const sim = {
     // מרכז המבט הפותח ניטרלי — באמצע האוקיינוס השקט, כך ששלושת קווי התאריך
     // (חזו"א, אוה"ע והגרי"מ) נראים יחד ואף שיטה אינה במרכז.
+    // הגלובוס מסתובב סביב צירו בלבד — נטיית המבט (10° צפונה) קבועה, והקטבים אינם
+    // זזים ממקומם; לכן אין צורך לסמנם.
     lat0: 10, lon0: 170, playing: false, _bound: false,
     date: new Date(), speed: 0.5,          // מהירות ההנעה: שעות לשנייה
     show: { utc: true, ci: true, grit: true, idl: true, grid: true, daynight: true },
@@ -380,8 +382,6 @@
         ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fillText(T(p.he), q.x, q.y + 5);
       }
 
-      window.Sims.poleLabels(ctx, (la, lo) => this.proj(la, lo, cx, cy, R), cx, cy);
-
       // תוויות הקווים — במרווחים אנכיים שונים כדי שלא ייערמו
       if (this.show.utc)  this.label(ctx, T('גריניץ׳ 0°'), 0, cx, cy, R, COL.utc, -34);
       if (this.show.ci)   this.label(ctx, T('חזו״א'), CI_LON, cx, cy, R, COL.ci, -12);
@@ -392,7 +392,7 @@
       ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.4;
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.stroke();
 
-      $('d_center').textContent = fmtLon(this.lon0) + ' · ' + fmtLat(this.lat0);
+      $('d_center').textContent = fmtLon(this.lon0);
       // שעון ישראל + לוח המקומות — מתעדכנים רק כשהדקה משתנה (Intl יקר יחסית)
       const mKey = Math.floor(this.date.getTime() / 60000);
       if (this._mKey !== mKey) { this._mKey = mKey; this._updateClocks(); }
@@ -423,23 +423,20 @@
 
     sync() {
       $('d_lonL').textContent = fmtLon(this.lon0);
-      $('d_latL').textContent = fmtLat(this.lat0);
       if (document.activeElement !== $('d_lon')) $('d_lon').value = Math.round(this.lon0);
-      if (document.activeElement !== $('d_lat')) $('d_lat').value = Math.round(this.lat0);
       this._syncDate();
     },
 
-    goto(lon, lat) { this.lon0 = lon; this.lat0 = (lat === undefined ? this.lat0 : lat); },
+    goto(lon) { this.lon0 = lon; },
 
     bind() {
       if (this._bound) return; this._bound = true;
       this._syncDate();
       $('d_lon').oninput = e => this.lon0 = +e.target.value;
-      $('d_lat').oninput = e => this.lat0 = +e.target.value;
-      $('d_goJlem').onclick = () => this.goto(JLEM_LON, 25);
-      $('d_goCI').onclick   = () => this.goto(CI_LON, 10);
-      $('d_goGRIT').onclick = () => this.goto(GRIT_LON, 10);
-      $('d_goIDL').onclick  = () => this.goto(IDL_LON, 10);
+      $('d_goJlem').onclick = () => this.goto(JLEM_LON);
+      $('d_goCI').onclick   = () => this.goto(CI_LON);
+      $('d_goGRIT').onclick = () => this.goto(GRIT_LON);
+      $('d_goIDL').onclick  = () => this.goto(IDL_LON);
       for (const [id, k] of [['d_utc','utc'],['d_ci','ci'],['d_grit','grit'],['d_idl','idl'],['d_grid','grid'],['d_daynight','daynight']])
         $(id).onchange = e => this.show[k] = e.target.checked;
       // בקרת זמן (שעון ישראל = שעון המחשב)
@@ -452,15 +449,14 @@
         this.date = new Date(y, m - 1, d, +$('d_hh').value || 0, +$('d_mi').value || 0, 0);
         this.playing = false; $('d_play').textContent = T('▶ הפעל');
       };
-      // גרירה לסיבוב הגלובוס
+      // גרירה לסיבוב הגלובוס — סביב צירו בלבד (קו האורך)
       const cnv = $('datelineCanvas');
-      let dx = 0, dy = 0, lo0 = 0, la0 = 0, dragging = false;
+      let dx = 0, lo0 = 0, dragging = false;
       cnv.style.cursor = 'grab';
-      cnv.onpointerdown = e => { dragging = true; dx = e.clientX; dy = e.clientY; lo0 = this.lon0; la0 = this.lat0; cnv.setPointerCapture(e.pointerId); cnv.style.cursor = 'grabbing'; };
+      cnv.onpointerdown = e => { dragging = true; dx = e.clientX; lo0 = this.lon0; cnv.setPointerCapture(e.pointerId); cnv.style.cursor = 'grabbing'; };
       cnv.onpointermove = e => {
         if (!dragging) return;
         this.lon0 = (((lo0 - (e.clientX - dx) * 0.35 + 180) % 360) + 360) % 360 - 180;
-        this.lat0 = Math.max(-80, Math.min(80, la0 + (e.clientY - dy) * 0.35));
         window.__invalidate && window.__invalidate();
       };
       cnv.onpointerup = cnv.onpointercancel = () => { dragging = false; cnv.style.cursor = 'grab'; };
@@ -468,7 +464,6 @@
   };
 
   function fmtLon(l) { return Math.abs(l).toFixed(0) + '° ' + (l >= 0 ? T('מזרח') : T('מערב')); }
-  function fmtLat(l) { return Math.abs(l).toFixed(0) + '° ' + (l >= 0 ? T('צפון') : T('דרום')); }
 
   // החלפת שפה: לוח המקומות נבנה לפי מטמון-דקה — מאלצים בנייה מחדש
   sim.onLanguage = () => { sim._mKey = null; };
