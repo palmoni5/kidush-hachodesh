@@ -948,6 +948,32 @@
         elat.textContent = mlat === null ? '—'
           : Math.abs(mlat).toFixed(2) + '° ' + T(mlat >= 0 ? 'צפוני' : 'דרומי');
       }
+      // מרחק הירח מן השמש באורך — הפרש אורכם על המלקה, 0°..180°. ליקוי חמה
+      // סביב הקיבוץ (0°) וליקוי לבנה סביב הניגוד (180°); הוא הגורם הראשון
+      // משלושת הגורמים שקובעים את עומק הליקוי, עם הרוחב והמרחק מן הארץ.
+      const eel = $('e_elong');
+      if (eel) {
+        let el = null;
+        try {
+          const time = AE.MakeTime(this.t);
+          const lm = AE.Ecliptic(AE.GeoVector(AE.Body.Moon, time, true)).elon;
+          const ls = AE.Ecliptic(AE.GeoVector(AE.Body.Sun, time, true)).elon;
+          el = Math.abs(((lm - ls + 540) % 360) - 180);
+        } catch (e) {}
+        eel.textContent = el === null ? '—'
+          : el.toFixed(2) + '° (' + (this.type === 'lunar' ? T('ניגוד') + ' 180°' : T('קיבוץ') + ' 0°') + ')';
+      }
+      // מרחק הירח מן הארץ ברגע המוצג; כשהדגמת המרחק פועלת — המרחק המדומה
+      const eed = $('e_edist');
+      if (eed) {
+        const demo = this.mode === 'solar' && this.distOn;
+        let d = null;
+        if (demo) d = this.distKm;
+        else if (g && g.distReal) d = g.distReal;
+        else { try { d = len(geoKm(AE.Body.Moon, AE.MakeTime(this.t))); } catch (e) {} }
+        eed.textContent = d === null ? '—'
+          : Math.round(d).toLocaleString() + ' ' + T('ק״מ') + (demo ? ' (' + T('הדגמה') + ')' : '');
+      }
       const elc = $('e_loc'); if (elc && loc) elc.textContent = fmtLat(loc.lat) + ' · ' + fmtLon(loc.lon);
       // מרחק הירח מן הארץ: כשההדגמה כבויה מוצג המרחק האמיתי ברגע המוצג,
       // והמחוון (הנעול) עוקב אחריו — כך שהפעלת ההדגמה נפתחת מן המרחק הזה
