@@ -542,7 +542,7 @@ window.TRANSLATIONS.en = {
   'המיקומים, הזמנים ואחוזי הכיסוי מחושבים במדויק (Astronomy Engine); צל הארץ מוגדל 2% כמקובל בשל האטמוספרה. להמחשה בלבד.':
     'Positions, times and coverage percentages are computed exactly (Astronomy Engine). Earth’s shadow is drawn 2% larger, the usual allowance for the atmosphere. For illustration only.',
   'תאריך הליקוי': 'Eclipse date',
-  'שעה (זמן עולמי)': 'Time (UTC)',
+  'זמן יקום מתואם (UTC)': 'UTC',
   'אחוז הכיסוי': 'Coverage',
   'מרכז הצל': 'Shadow center',
   'הארץ בין השמש לירח — צלה נופל על הירח': 'Earth between Sun and Moon — its shadow falls on the Moon',
@@ -636,7 +636,6 @@ window.TRANSLATIONS.en = {
   'חודשים שעברו מאז': 'Months elapsed since',
   'המולד (הממוצע)': 'The molad (mean)',
   'המולד האמיתי': 'The true molad',
-  'שעון ישראל': 'Israel clock',
   'לפנה״ס': 'BCE',
   'האמיתי קדם לממוצע ב-{h} שעות ו-{m} דקות':
     'The true molad precedes the mean by {h}h {m}m',

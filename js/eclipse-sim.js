@@ -372,6 +372,14 @@
   }
 
   const fmtUTC = d => String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+  // שעון ישראל (Asia/Jerusalem, כולל שעון קיץ) — המקומות שברשימה כולם בארץ ישראל
+  let _ilFmt = null;
+  const fmtIL = d => {
+    try {
+      _ilFmt = _ilFmt || new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false });
+      return _ilFmt.format(d);
+    } catch (e) { return fmtUTC(new Date(d.getTime() + 2 * 3600000)); }
+  };
   const fmtLat = l => Math.abs(l).toFixed(1) + '° ' + (l >= 0 ? T('צפון') : T('דרום'));
   const fmtLon = l => Math.abs(l).toFixed(1) + '° ' + (l >= 0 ? T('מזרח') : T('מערב'));
 
@@ -936,6 +944,7 @@
       const ed = $('e_date');
       if (ed) ed.textContent = this.einfo.peak.date.toLocaleDateString(loc8, { day: 'numeric', month: 'short', year: 'numeric' });
       const eu = $('e_utc'); if (eu) eu.textContent = fmtUTC(this.t);
+      const ei = $('e_il'); if (ei) ei.textContent = fmtIL(this.t);
       const pct = g ? Math.round((this.type === 'lunar' ? g.umbra : g.frac) * 100) : 0;
       const ep = $('e_pct'); if (ep) ep.textContent = pct + '%';
       // רוחב הירח — נטייתו ממישור המלקה ברגע המוצג, צפוני או דרומי (כבלשונית

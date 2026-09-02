@@ -506,6 +506,7 @@ window.Sims = (function () {
       // התווית מבטיחה "שעה באופק ירושלים" — מוצמד לאזור הזמן של ירושלים גם
       // כשהמכשיר מכוון לאזור אחר (כך ניתן להשוות מולדות מול הלוחות)
       $('m_clock').textContent = fmtAtPlace(simDate, { tz: 'Asia/Jerusalem', lon: 35.24 });
+      $('m_utc').textContent = String(simDate.getUTCHours()).padStart(2, '0') + ':' + String(simDate.getUTCMinutes()).padStart(2, '0');
       // התאריך העברי מחושב אסינכרונית — רק כשהתצוגה מתחלפת (שקיעה / עלות השחר)
       const heKey = window.HebrewDate && window.HebrewDate.key
         ? window.HebrewDate.key(simDate)
