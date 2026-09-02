@@ -838,6 +838,7 @@
             <div class="row"><span>זמן יקום מתואם (UTC)</span><b id="e_utc">—</b></div>
             <div class="row"><span>שעון ישראל</span><b id="e_il">—</b></div>
             <div class="row"><span>אחוז הכיסוי</span><b id="e_pct">—</b></div>
+            <div class="sec">הגורמים המשפיעים על הליקוי</div>
             <div class="row"><span>מרחק הירח מן השמש (באורך)</span><b id="e_elong">—</b></div>
             <div class="row"><span>רוחב הירח (נטייה מהמלקה)</span><b id="e_lat">—</b></div>
             <div class="row"><span>מרחק הירח מן הארץ</span><b id="e_edist">—</b></div>
@@ -884,6 +885,41 @@
             <input type="range" id="e_scrub" min="0" max="1000" step="1" value="500" />
             <div class="chk" style="margin-top:6px"><input type="checkbox" id="e_fromStart" />
               <label for="e_fromStart">הצג כל ליקוי מתחילתו</label></div>
+          </div>
+          <div class="card" data-emode-card="lunar" style="display:none">
+            <h2>מקום הצופה</h2>
+            <label class="field">מקום</label>
+            <select id="e_lplace">
+              <option value="31.78,35.24" data-tz="Asia/Jerusalem">ירושלים</option>
+              <option value="33.37,43.75" data-tz="Asia/Baghdad">נהרדעא (בבל)</option>
+              <option value="40.10,-74.22" data-tz="America/New_York">לייקווד</option>
+              <option value="40.71,-74.01" data-tz="America/New_York">ניו יורק</option>
+              <option value="34.05,-118.24" data-tz="America/Los_Angeles">לוס אנג'לס</option>
+              <option value="25.76,-80.19" data-tz="America/New_York">מיאמי</option>
+              <option value="43.65,-79.38" data-tz="America/Toronto">טורונטו</option>
+              <option value="19.43,-99.13" data-tz="America/Mexico_City">מקסיקו סיטי</option>
+              <option value="-23.55,-46.63" data-tz="America/Sao_Paulo">סאו פאולו</option>
+              <option value="-34.60,-58.38" data-tz="America/Argentina/Buenos_Aires">בואנוס איירס</option>
+              <option value="51.51,-0.13" data-tz="Europe/London">לונדון</option>
+              <option value="48.86,2.35" data-tz="Europe/Paris">פריז</option>
+              <option value="51.22,4.40" data-tz="Europe/Brussels">אנטוורפן</option>
+              <option value="55.76,37.62" data-tz="Europe/Moscow">מוסקבה</option>
+              <option value="-26.20,28.05" data-tz="Africa/Johannesburg">יוהנסבורג</option>
+              <option value="-33.87,151.21" data-tz="Australia/Sydney">סידני</option>
+              <option value="">מותאם אישית</option>
+            </select>
+            <label class="field">קו רוחב במעלות (צפון חיובי)</label>
+            <input type="number" id="e_llat" step="0.1" min="-89" max="89" value="31.78" />
+            <label class="field">קו אורך במעלות (מזרח חיובי)</label>
+            <input type="number" id="e_llon" step="0.1" min="-180" max="180" value="35.24" />
+            <div style="margin-top:8px">
+              <label class="field">השעה במקום הנבחר: <b id="e_lTime">—</b></label>
+              <label class="field">הירח ברגע המוצג: <b id="e_lAlt">—</b></label>
+              <label class="field">זריחת הירח: <b id="e_lRise">—</b></label>
+              <label class="field">שקיעת הירח: <b id="e_lSet">—</b></label>
+              <label class="field">הליקוי מן המקום הזה: <b id="e_lVis">—</b></label>
+            </div>
+            <div class="htxt" style="margin-top:6px">ליקוי לבנה נראה בבת אחת מכל חצי הכדור שהירח מעל האופק בו, ובאותה מידה בכל מקום — שהצל הוא על הירח עצמו. מקום הצופה קובע רק אם הירח מעל האופק בשעת הליקוי, ואם זריחתו או שקיעתו נופלות בתוכו (הזמנים — בשעון המקום; במקום מותאם אישית — שעה משוערת מקו האורך).</div>
           </div>
           <div class="card" data-emode-card="solar" style="display:none">
             <h2>מקום הצופה</h2>

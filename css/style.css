@@ -478,6 +478,7 @@ table td:first-child { opacity: 0.7; }
 }
 .hud .row { display: flex; justify-content: space-between; gap: 16px; margin: 3px 0; font-size: 0.62em; }
 .hud .row b { color: var(--ill-sun); }
+.hud .sec { font-size: 0.6em; color: var(--ill-muted); margin-top: 7px; margin-bottom: 1px; }
 .hud .big { font-size: 0.9em; font-weight: 600; color: var(--ill-blue); margin-top: 4px; }
 .hud .clock { font-size: 1.1em; font-weight: 600; color: var(--ill-blue); text-align: center; direction: ltr; }
 .hud .st { text-align: center; font-size: 0.6em; margin-top: 2px; color: var(--ill-text); }

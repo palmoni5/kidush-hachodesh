@@ -1497,5 +1497,5 @@ window.Sims = (function () {
     ctx.restore();
   }
 
-  return { moon, year, planets, clearColorCache, clearFitCache, stageLayout, poleLabels };
+  return { moon, year, planets, clearColorCache, clearFitCache, stageLayout, poleLabels, fmtAtPlace };
 })();

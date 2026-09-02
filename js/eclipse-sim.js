@@ -162,6 +162,12 @@
     const eq = AE.Equator(AE.Body.Moon, t, IL_OBS, true, true);
     return AE.Horizon(t, IL_OBS, eq.ra, eq.dec, 'normal').altitude > -0.3;
   }
+  // גובה הירח (מעלות) מעל אופק מקום נתון ברגע נתון
+  function moonAltAt(ms, loc) {
+    const t = AE.MakeTime(new Date(ms)), obs = new AE.Observer(loc.lat, loc.lon, 0);
+    const eq = AE.Equator(AE.Body.Moon, t, obs, true, true);
+    return AE.Horizon(t, obs, eq.ra, eq.dec, 'normal').altitude;
+  }
   function lunarVisibleIL(e) {
     const pk = e.peak.date.getTime();
     const sd = (e.sd_partial || e.sd_penum || 60) * 60000;
@@ -445,9 +451,20 @@
     const R2 = Math.min(L.w * 0.135, L.h * 0.21);
     const cx2 = L.x + L.w * 0.79, cy2 = L.y + L.h * 0.62;
     ctx.fillStyle = cvv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textBaseline = 'bottom';
-    ctx.fillText(T('מראה הירח מן הארץ'), cx2, cy2 - R2 - 8);
+    let alt = null;
+    try { alt = moonAltAt(sim.t.getTime(), sim.lloc); } catch (e) {}
+    g.obsAlt = alt;
+    ctx.fillText(T('מראה הירח מן הארץ') + ' — ' + T(sim.lloc.name), cx2, cy2 - R2 - 8);
     moonDisc(ctx, cx2, cy2, R2);
     shadeMoon(ctx, cx2, cy2, R2, g, R2 / R_MOON, 0, 0, true);
+    if (alt !== null && alt < -0.3) {
+      // הירח מתחת לאופק במקום הצופה — המראה מעומעם, והכיתוב אומר זאת
+      ctx.fillStyle = 'rgba(22,28,44,0.72)';
+      ctx.beginPath(); ctx.arc(cx2, cy2, R2, 0, 2*Math.PI); ctx.fill();
+      ctx.fillStyle = cvv('--ill-muted'); ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(T('הירח מתחת לאופק'), cx2, cy2 - 7);
+      ctx.fillText(T('במקום הצופה'), cx2, cy2 + 7);
+    }
     ctx.strokeStyle = cvv('--ill-line'); ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.arc(cx2, cy2, R2, 0, 2*Math.PI); ctx.stroke();
     const pct = Math.round(g.umbra * 100);
@@ -879,6 +896,7 @@
     distOn: false, distKm: MEAN_DIST, // הדגמת מרחק הירח (ליקוי חמה)
     fromStart: false,                 // "הצג כל ליקוי מתחילתו" — במקום מרגע השיא
     viewLoc: 'peak',                  // מקום הצופה במראה הליקוי: שיא או עיר בארץ
+    lloc: { lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', name: 'ירושלים' },   // מקום הצופה בליקוי לבנה
     gLat: 0, gLon: 0, follow: true,   // מבט הגלובוס
     hintDone: false, _bound: false,
 
@@ -925,7 +943,7 @@
       if (!this.einfo) return;
       const L = window.Sims.stageLayout($('eclipseCanvas'), W, H);
       let g = null, loc = null;
-      if (this.mode === 'lunar') g = drawLunar(ctx, L, this);
+      if (this.mode === 'lunar') { g = drawLunar(ctx, L, this); this._lunarObs(g); }
       else if (this.mode === 'solar') g = drawSolar(ctx, L, this);
       else { const r = drawGlobe(ctx, L, this); g = r.g; loc = r.center; }
       if (!this.hintDone) {
@@ -936,13 +954,48 @@
       this._hud(g, loc);
     },
 
+    // כרטיס "מקום הצופה" בליקוי לבנה: השעה במקום, גובה הירח ברגע המוצג,
+    // זריחתו ושקיעתו שבתוך חלון הליקוי, וסיכום — אילו חלקים מן הליקוי נראים משם.
+    // הסיכום וזמני הזריחה/השקיעה תלויים רק בליקוי ובמקום, ולכן מוטמנים.
+    _lunarObs(g) {
+      const loc = this.lloc, fmtP = window.Sims.fmtAtPlace;
+      const et = $('e_lTime'); if (et) et.textContent = fmtP(this.t, loc);
+      const ea = $('e_lAlt');
+      if (ea) ea.textContent = g.obsAlt === null || g.obsAlt === undefined ? '—'
+        : g.obsAlt >= -0.3 ? Math.round(g.obsAlt) + '° ' + T('מעל האופק') : T('מתחת לאופק');
+      const key = this.win.t0 + '|' + loc.lat + ',' + loc.lon + ',' + loc.tz;
+      if (this._lobsKey !== key) {
+        this._lobsKey = key;
+        let rise = null, set = null, vis = '—';
+        try {
+          const obs = new AE.Observer(loc.lat, loc.lon, 0), days = (this.win.t1 - this.win.t0) / 86400000;
+          const r = AE.SearchRiseSet(AE.Body.Moon, obs, +1, AE.MakeTime(new Date(this.win.t0)), days);
+          const s = AE.SearchRiseSet(AE.Body.Moon, obs, -1, AE.MakeTime(new Date(this.win.t0)), days);
+          rise = r ? r.date : null; set = s ? s.date : null;
+          const up0 = moonAltAt(this.win.t0, loc) >= -0.3, up1 = moonAltAt(this.win.t1, loc) >= -0.3;
+          if (up0 && up1 && !set) vis = T('נראה כולו, מתחילתו ועד סופו');
+          else if (up0 && set) vis = T('נראה מתחילתו עד שקיעת הירח') + ' (' + fmtP(set, loc) + ')';
+          else if (!up0 && rise && up1) vis = T('נראה מזריחת הירח') + ' (' + fmtP(rise, loc) + ') ' + T('ועד סופו');
+          else if (!up0 && rise && set) vis = T('נראה בין זריחת הירח לשקיעתו') + ' (' + fmtP(rise, loc) + '–' + fmtP(set, loc) + ')';
+          else vis = T('אינו נראה — הירח מתחת לאופק כל שעת הליקוי');
+        } catch (e) {}
+        const er = $('e_lRise'); if (er) er.textContent = rise ? fmtP(rise, loc) : T('לא בשעת הליקוי');
+        const es = $('e_lSet'); if (es) es.textContent = set ? fmtP(set, loc) : T('לא בשעת הליקוי');
+        const ev = $('e_lVis'); if (ev) ev.textContent = vis;
+      }
+    },
+
     _hud(g, loc) {
       const kindHe = T(EK[this.einfo.kind] || this.einfo.kind);
       const title = (this.type === 'lunar' ? T('ליקוי לבנה') : T('ליקוי חמה')) + ' — ' + kindHe;
       const el = $('e_kind'); if (el) el.textContent = title;
       const loc8 = window.I18N ? window.I18N.dateLocale : 'he-IL';
       const ed = $('e_date');
-      if (ed) ed.textContent = this.einfo.peak.date.toLocaleDateString(loc8, { day: 'numeric', month: 'short', year: 'numeric' });
+      // התאריך האזרחי — לפי שעון ישראל, כשורת "שעון ישראל" שלמטה (ליקוי שחל
+      // בישראל אחרי חצות שייך שם כבר ליום המחרת)
+      let dOpt = { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jerusalem' };
+      try { this.einfo.peak.date.toLocaleDateString(loc8, dOpt); } catch (e) { delete dOpt.timeZone; }
+      if (ed) ed.textContent = this.einfo.peak.date.toLocaleDateString(loc8, dOpt);
       const eu = $('e_utc'); if (eu) eu.textContent = fmtUTC(this.t);
       const ei = $('e_il'); if (ei) ei.textContent = fmtIL(this.t);
       const pct = g ? Math.round((this.type === 'lunar' ? g.umbra : g.frac) * 100) : 0;
@@ -1117,6 +1170,38 @@
           }
         }).catch(() => {});
       } catch (er) {}
+      // מקום הצופה בליקוי לבנה — כבלשונית מופעי הירח: בחירה מן הרשימה קובעת
+      // רוחב+אורך+אזור זמן; עריכת הקואורדינטות מעבירה ל"מותאם אישית".
+      const lp = $('e_lplace');
+      if (lp) {
+        const saveL = () => { this._lobsKey = null; try { Otzaria.call('storage.set', { key: 'eclLunarLoc', value: JSON.stringify(this.lloc) }); } catch (er) {} };
+        lp.onchange = e => {
+          const opt = e.target.selectedOptions[0], v = e.target.value;
+          if (!v) this.lloc = { lat: this.lloc.lat, lon: this.lloc.lon, tz: null, name: 'מותאם אישית' };
+          else {
+            const [la, lo] = v.split(',').map(Number);
+            $('e_llat').value = la; $('e_llon').value = lo;
+            this.lloc = { lat: la, lon: lo, tz: opt.dataset.tz || null, name: opt.textContent.trim() };
+          }
+          saveL();
+        };
+        const lCustom = () => { lp.value = ''; this.lloc.tz = null; this.lloc.name = 'מותאם אישית'; saveL(); };
+        $('e_llat').oninput = e => { this.lloc.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); lCustom(); };
+        $('e_llon').oninput = e => { this.lloc.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); lCustom(); };
+        try {
+          Otzaria.call('storage.get', { key: 'eclLunarLoc' }).then(r => {
+            if (!(r && r.success && r.data)) return;
+            const o = JSON.parse(r.data);
+            if (typeof o.lat !== 'number' || typeof o.lon !== 'number') return;
+            this.lloc = { lat: o.lat, lon: o.lon, tz: o.tz || null, name: o.name || 'מותאם אישית' };
+            $('e_llat').value = o.lat; $('e_llon').value = o.lon;
+            const opt = [...lp.options].find(x => x.value === o.lat + ',' + o.lon);
+            lp.value = opt ? opt.value : '';
+            this._lobsKey = null;
+            window.__invalidate && window.__invalidate();
+          }).catch(() => {});
+        } catch (er) {}
+      }
       $('e_dsim').onchange = e => {
         this.distOn = e.target.checked;
         $('e_dist').disabled = !this.distOn;
