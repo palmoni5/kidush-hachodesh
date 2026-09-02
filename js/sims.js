@@ -1470,5 +1470,31 @@ window.Sims = (function () {
   planets.onLanguage = function () { if (this.sky) { this.legend(); this.note(); } };
   year.onLanguage = function () { if (this._bound) loadOtzariaTimes(); };
 
-  return { moon, year, planets, clearColorCache, clearFitCache, stageLayout };
+  // תוויות הקטבים על גלובוס מסתובב (ליקויים, קו התאריך). proj(lat, lon) → {x, y, vis}.
+  // הגלובוסים הללו מסתובבים לא רק סביב צירם, וכשמרכז המבט קרוב לקוטב קשה למי
+  // שאינו מכיר את מפת העולם להתמצא בלעדיהן. התווית מוסטת מעט מן הקוטב פנימה,
+  // כלפי מרכז הכדור, כדי שלא תיחתך בשפה.
+  function poleLabels(ctx, proj, cx, cy) {
+    const T = s => (window.I18N ? window.I18N.t(s) : s);
+    ctx.save();
+    ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const [lat, txt] of [[90, 'קוטב צפוני'], [-90, 'קוטב דרומי']]) {
+      const p = proj(lat, 0);
+      if (!p.vis) continue;
+      // הקוטב הצפוני מוטל תמיד במרכז או מעליו, והדרומי — במרכז או מתחתיו. קרוב
+      // למרכז המבט (שם נערמות תוויות אחרות, כבקו התאריך) התווית נדחקת החוצה,
+      // ובשאר המקרים — מעט פנימה, שלא תיחתך בשפת הכדור.
+      const dx = cx - p.x, dy = cy - p.y, d = Math.hypot(dx, dy);
+      let x, y;
+      if (d < 60) { x = p.x; y = p.y + (lat > 0 ? -1 : 1) * Math.max(16, 60 - d); }
+      else { x = p.x + dx / d * 14; y = p.y + dy / d * 14; }
+      ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, 2 * Math.PI); ctx.fill();
+      const s = T(txt), w = ctx.measureText(s).width + 8;
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x - w / 2, y - 8, w, 16);
+      ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.fillText(s, x, y);
+    }
+    ctx.restore();
+  }
+
+  return { moon, year, planets, clearColorCache, clearFitCache, stageLayout, poleLabels };
 })();

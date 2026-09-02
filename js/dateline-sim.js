@@ -380,6 +380,8 @@
         ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fillText(T(p.he), q.x, q.y + 5);
       }
 
+      window.Sims.poleLabels(ctx, (la, lo) => this.proj(la, lo, cx, cy, R), cx, cy);
+
       // תוויות הקווים — במרווחים אנכיים שונים כדי שלא ייערמו
       if (this.show.utc)  this.label(ctx, T('גריניץ׳ 0°'), 0, cx, cy, R, COL.utc, -34);
       if (this.show.ci)   this.label(ctx, T('חזו״א'), CI_LON, cx, cy, R, COL.ci, -12);

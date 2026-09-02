@@ -796,6 +796,8 @@
       ctx.stroke();
     }
 
+    window.Sims.poleLabels(ctx, proj, cx, cy);
+
     // מסלול מרכז הצל לאורך הליקוי (מוטמן לכל ליקוי) — הקו הכתום ממערב למזרח
     if (!sim._path || sim._path.key !== sim.win.t0) {
       const pts = [];
