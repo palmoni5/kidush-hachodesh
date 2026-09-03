@@ -386,8 +386,6 @@
       return _ilFmt.format(d);
     } catch (e) { return fmtUTC(new Date(d.getTime() + 2 * 3600000)); }
   };
-  const fmtLat = l => Math.abs(l).toFixed(1) + '° ' + (l >= 0 ? T('צפון') : T('דרום'));
-  const fmtLon = l => Math.abs(l).toFixed(1) + '° ' + (l >= 0 ? T('מזרח') : T('מערב'));
 
   // ════════════════ ציור: ליקוי לבנה ════════════════
   function drawLunar(ctx, L, sim) {
@@ -927,7 +925,6 @@
       document.querySelectorAll('#e_modeseg button').forEach(b => b.classList.toggle('active', b.dataset.emode === m));
       document.querySelectorAll('#view-eclipse [data-emode-card]').forEach(c =>
         c.style.display = c.dataset.emodeCard === m ? '' : 'none');
-      const lr = $('e_locRow'); if (lr) lr.style.display = m === 'globe' ? '' : 'none';
       if (newType !== this.type || !this.einfo) {
         this.type = newType;
         try { this.setEclipse(nextEcl(newType, new Date(this.t.getTime() - 40 * 86400000))); } catch (e) {}
@@ -1036,7 +1033,25 @@
         eed.textContent = d === null ? '—'
           : Math.round(d).toLocaleString() + ' ' + T('ק״מ') + (demo ? ' (' + T('הדגמה') + ')' : '');
       }
-      const elc = $('e_loc'); if (elc && loc) elc.textContent = fmtLat(loc.lat) + ' · ' + fmtLon(loc.lon);
+      // מקום הצופה ב-HUD: בליקוי לבנה — המקום שנבחר בכרטיס; בליקוי חמה — העיר
+      // שנבחרה או מקום שיא הליקוי (הנקודה הגאוגרפית של הליקוי הגדול ביותר);
+      // על הגלובוס — מרכז הצל ברגע המוצג. במקום שאינו עיר אין אזור זמן ידוע,
+      // והשעה משוערת מקו האורך.
+      let place = null;
+      if (this.mode === 'lunar') place = this.lloc;
+      else if (this.mode === 'solar') {
+        const c = IL_CITIES[this.viewLoc];
+        place = c ? { name: c.name, lat: c.lat, lon: c.lon, tz: 'Asia/Jerusalem' }
+          : this._peakLoc ? { name: 'מקום שיא הליקוי', lat: this._peakLoc.lat, lon: this._peakLoc.lon, tz: null } : null;
+      } else if (loc) place = { name: 'מרכז הצל', lat: loc.lat, lon: loc.lon, tz: null };
+      const S = window.Sims, elk = $('e_locClock');
+      if (place && S && S.hudPlace) {
+        S.hudPlace({ name: 'e_locName', lon: 'e_lonD', lat: 'e_latD', tz: 'e_tz' }, place, this.t);
+        if (elk) elk.textContent = S.fmtAtPlace(this.t, place) + (place.tz ? '' : ' (' + T('זמן שמש ממוצע') + ')');
+      } else {
+        for (const id of ['e_locName', 'e_lonD', 'e_latD', 'e_tz']) { const x = $(id); if (x) x.textContent = '—'; }
+        if (elk) elk.textContent = '—';
+      }
       // מרחק הירח מן הארץ: כשההדגמה כבויה מוצג המרחק האמיתי ברגע המוצג,
       // והמחוון (הנעול) עוקב אחריו — כך שהפעלת ההדגמה נפתחת מן המרחק הזה
       if (this.mode === 'solar' && !this.distOn && g && g.distReal) {

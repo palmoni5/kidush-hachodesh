@@ -59,6 +59,14 @@
      בבהיר כהים ורכים (הערכים הקשיחים הקודמים נעלמו בכהה וצרמו בבהיר) */
   --ill-umbra:      rgba(132, 152, 205, 0.22);
   --ill-penumbra:   rgba(118, 140, 195, 0.11);
+  /* קטגוריות ה-HUD (הצעת משתמש): מקום הצופה — תכלת, זמנים — ירוק,
+     הנתונים העיקריים — כתום, נתונים נוספים — סגלגל. על רקע כהה גוונים
+     בהירים; על רקע בהיר (ill-light) גוונים כהים — הבהירים כמעט נעלמו שם. */
+  --hud-place:      #7fd0ff;
+  --hud-time:       #7ee081;
+  --hud-data:       #ffcf5a;
+  --hud-more:       #cdb0ff;
+  --hud-accent:     #5fb0ff;
 
   /* --- פלטת איור בהירה (ערכים; מוחלים ע"י body.ill-light) --- */
   --ill-sky-top-l:    #d7e6ff;
@@ -76,6 +84,11 @@
   --ill-space-l:      #f6f9ff;
   --ill-umbra-l:      rgba(30, 36, 60, 0.30);
   --ill-penumbra-l:   rgba(52, 66, 108, 0.12);
+  --hud-place-l:      #0b4f9c;
+  --hud-time-l:       #1b6e2c;
+  --hud-data-l:       #8a1c3b;
+  --hud-more-l:       #4b2a8a;
+  --hud-accent-l:     #0b4f9c;
 
   /* --- חוצצים וצללים --- */
   --scrim:          rgba(0, 0, 0, 0.40);
@@ -99,6 +112,11 @@ body.ill-light {
   --ill-space:      var(--ill-space-l);
   --ill-umbra:      var(--ill-umbra-l);
   --ill-penumbra:   var(--ill-penumbra-l);
+  --hud-place:      var(--hud-place-l);
+  --hud-time:       var(--hud-time-l);
+  --hud-data:       var(--hud-data-l);
+  --hud-more:       var(--hud-more-l);
+  --hud-accent:     var(--hud-accent-l);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -477,10 +495,20 @@ table td:first-child { opacity: 0.7; }
   color: var(--ill-text);
 }
 .hud .row { display: flex; justify-content: space-between; gap: 16px; margin: 3px 0; font-size: 0.62em; }
-.hud .row b { color: var(--ill-sun); }
+.hud .row b { color: var(--hud-data); }
 .hud .sec { font-size: 0.6em; color: var(--ill-muted); margin-top: 7px; margin-bottom: 1px; }
-.hud .big { font-size: 0.9em; font-weight: 600; color: var(--ill-blue); margin-top: 4px; }
-.hud .clock { font-size: 1.1em; font-weight: 600; color: var(--ill-blue); text-align: center; direction: ltr; }
+.hud .big { font-size: 0.9em; font-weight: 600; color: var(--hud-accent); margin-top: 4px; }
+.hud .clock { font-size: 1.1em; font-weight: 600; color: var(--hud-accent); text-align: center; direction: ltr; }
+/* קבוצות נתונים: כותרת משנה וערכים בצבע הקטגוריה (התוויות נשארות בצבע הטקסט) */
+.hud .grp { --hud-c: var(--hud-data); margin-top: 7px; padding-top: 5px; border-top: 1px solid var(--ill-line); }
+.hud .grp:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.hud .grp-place { --hud-c: var(--hud-place); }
+.hud .grp-time  { --hud-c: var(--hud-time); }
+.hud .grp-data  { --hud-c: var(--hud-data); }
+.hud .grp-more  { --hud-c: var(--hud-more); }
+.hud .grp .sec { color: var(--hud-c); font-weight: 600; margin-top: 0; margin-bottom: 2px; letter-spacing: 0.01em; }
+.hud .grp .row b { color: var(--hud-c); }
+.hud .grp .big { color: var(--hud-c); }
 .hud .st { text-align: center; font-size: 0.6em; margin-top: 2px; color: var(--ill-text); }
 
 /* ── חלונית איור נלווה בפינת הבמה ───────────────────

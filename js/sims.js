@@ -177,6 +177,38 @@ window.Sims = (function () {
     const d = new Date(date.getTime() + off * 3600000);
     return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
   }
+  const fmtUTC = d => String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+  // ── שורות "מקום הצופה" ב-HUD ─────────────────────────────────────────
+  // אזור הזמן: ההיסט מ-UTC ברגע המוצג. בעיר מן הרשימה מצוין גם אם נוהג בה
+  // באותה עת שעון קיץ (ההיסט גדול מן ההיסט הרגיל של אותה שנה) או שעון רגיל —
+  // באזור שאין בו שעון קיץ כלל אין ציון. ב"מותאם אישית" אין אזור זמן ידוע,
+  // ומוצג ההיסט המשוער מקו האורך (15 מעלות לשעה) שבו נוקטים שאר החישובים.
+  function tzLabel(loc, date) {
+    if (loc && loc.tz) {
+      const off = tzOffsetHours(loc.tz, date);
+      if (off !== null) {
+        const y = date.getUTCFullYear();
+        const jan = tzOffsetHours(loc.tz, new Date(Date.UTC(y, 0, 1)));
+        const jul = tzOffsetHours(loc.tz, new Date(Date.UTC(y, 6, 1)));
+        const hasDst = jan !== null && jul !== null && jan !== jul;
+        if (!hasDst) return fmtOff(off);
+        return fmtOff(off) + ' (' + T(off > Math.min(jan, jul) ? 'שעון קיץ' : 'שעון רגיל') + ')';
+      }
+    }
+    return fmtOff(Math.round(((loc && loc.lon) || 0) / 15));
+  }
+  const fmtLatD = l => Math.abs(l).toFixed(2) + '° ' + T(l >= 0 ? 'צפון' : 'דרום');
+  const fmtLonD = l => Math.abs(l).toFixed(2) + '° ' + T(l >= 0 ? 'מזרח' : 'מערב');
+  // ממלא את ארבע שורות מקום הצופה (מקום, קו אורך, קו רוחב, אזור זמן) לפי מזהי
+  // הצמתים — משותף לכל הלשוניות שיש בהן מקום צופה (מופעי הירח, מהלך השמש,
+  // גלגל המזלות, ליקויי המאורות)
+  function hudPlace(ids, loc, date) {
+    const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+    set(ids.name, T(loc.name || 'מותאם אישית'));
+    set(ids.lon, fmtLonD(loc.lon || 0));
+    set(ids.lat, fmtLatD(loc.lat || 0));
+    set(ids.tz, tzLabel(loc, date));
+  }
   // חצות הלילה האזרחי של מקום הצפייה ליממה שהרגע ms בתוכה — תחילת חיפוש
   // זריחת/שקיעת הירח. ההיסט נלקח מאזור הזמן של המקום (וב"מותאם אישית" —
   // מקו האורך), ולא משעון המכשיר: מחשב בישראל שמציג את ניו יורק היה מתחיל
@@ -506,7 +538,7 @@ window.Sims = (function () {
       // התווית מבטיחה "שעה באופק ירושלים" — מוצמד לאזור הזמן של ירושלים גם
       // כשהמכשיר מכוון לאזור אחר (כך ניתן להשוות מולדות מול הלוחות)
       $('m_clock').textContent = fmtAtPlace(simDate, { tz: 'Asia/Jerusalem', lon: 35.24 });
-      $('m_utc').textContent = String(simDate.getUTCHours()).padStart(2, '0') + ':' + String(simDate.getUTCMinutes()).padStart(2, '0');
+      $('m_utc').textContent = fmtUTC(simDate);
       // התאריך העברי מחושב אסינכרונית — רק כשהתצוגה מתחלפת (שקיעה / עלות השחר)
       const heKey = window.HebrewDate && window.HebrewDate.key
         ? window.HebrewDate.key(simDate)
@@ -527,7 +559,7 @@ window.Sims = (function () {
       $('m_set').textContent = this._rs.set;
       // מקום הצפייה והשעה שבו לרגע המוצג — הרגע אחד, והשעון משתנה ממקום למקום.
       // ב"מותאם אישית" השעון משוער מקו האורך (זמן שמש ממוצע) — ומסומן ככזה.
-      $('m_loc').textContent = T(this.loc.name);
+      hudPlace({ name: 'm_loc', lon: 'm_lonD', lat: 'm_latD', tz: 'm_tz' }, this.loc, simDate);
       $('m_locClock').textContent = fmtAtPlace(simDate, this.loc)
         + (this.loc.tz ? '' : ' (' + T('זמן שמש ממוצע') + ')');
       // במסך צר מורידים את כל ההרכב מתחת ל-HUD (top=0 בדסקטופ → פריסה מקורית)
@@ -785,8 +817,17 @@ window.Sims = (function () {
         const set  = AE.SearchRiseSet(AE.Body.Sun, obs, -1, t0, 1.2);
         const noon = AE.SearchHourAngle(AE.Body.Sun, obs, 0, t0);
         const mid  = AE.SearchHourAngle(AE.Body.Sun, obs, 12, t0);
+        // הלילה שאחרי היום הזה — מן השקיעה עד הזריחה הבאה; והיממה משקיעה
+        // לשקיעה (אינה 24 שעות בדיוק — התאריך הבא מוצג בשניות)
+        let rise2 = null, set2 = null;
+        if (set) {
+          const after = set.AddDays(0.002);
+          rise2 = AE.SearchRiseSet(AE.Body.Sun, obs, +1, after, 1.2);
+          set2  = AE.SearchRiseSet(AE.Body.Sun, obs, -1, after, 1.2);
+        }
         out = {
           rise: rise && rise.date, set: set && set.date,
+          rise2: rise2 && rise2.date, set2: set2 && set2.date,
           noon: noon && noon.time.date, mid: mid && mid.time.date,
           midAlt: mid && mid.hor ? mid.hor.altitude : null,
         };
@@ -1107,9 +1148,12 @@ window.Sims = (function () {
       const dec = sn.dec, phi = this.lat;
       const altNow = Math.asin(Unow) * 180 / Math.PI;
       const s = this.season();
+      const inst = this.instant();
       $('y_clock').textContent = fmtH(this.hour);
-      $('y_tz').textContent = (this.tz ? T('שעון מקומי') : T('זמן שמש ממוצע (משוער)'))
-        + ' — ' + T(this.cityName) + ' (' + fmtOff(this.tzOff()) + ')';
+      $('y_tz').textContent = this.tz ? T('השעה במקום הנבחר') : T('זמן שמש ממוצע (משוער)');
+      $('y_utc').textContent = fmtUTC(inst);
+      hudPlace({ name: 'y_loc', lon: 'y_lonD', lat: 'y_latD', tz: 'y_tzL' },
+        { name: this.cityName, lat: this.lat, lon: this.lon, tz: this.tz }, inst);
       $('y_updown').textContent = altNow > 0 ? T('השמש מעל האופק ☀') : T('השמש מתחת לאופק 🌙');
       $('y_alt').textContent = altNow.toFixed(0) + '°';
       // נטיית השמש — זוית השמש מצפון/דרום לקו המשוה
@@ -1126,10 +1170,15 @@ window.Sims = (function () {
       if (rs && rs.rise && rs.set) {
         $('y_rise').textContent = fmtH(this.civilOfDate(rs.rise)) + ' / ' + fmtH(this.civilOfDate(rs.set));
         $('y_daylen').textContent = fmtH((((rs.set - rs.rise) / 3600000) % 24 + 24) % 24);
+        $('y_nightlen').textContent = rs.rise2 ? fmtDur((rs.rise2 - rs.set) / 3600000) : '—';
+        $('y_fullday').textContent = rs.set2 ? fmtDur((rs.set2 - rs.set) / 3600000, true) : '—';
       } else {
         const cosH = -Math.tan(phi * Math.PI / 180) * Math.tan(dec * Math.PI / 180);
         $('y_rise').textContent = cosH <= -1 ? T('יום תמידי') : cosH >= 1 ? T('לילה תמידי') : '—';
-        $('y_daylen').textContent = fmtH(A.dayLengthHours(dec, phi));
+        const dl = A.dayLengthHours(dec, phi);
+        $('y_daylen').textContent = fmtH(dl);
+        $('y_nightlen').textContent = fmtDur(24 - dl);
+        $('y_fullday').textContent = '—';
       }
       $('y_mid').textContent = (rs && rs.midAlt != null ? rs.midAlt
         : Math.asin(A.sunHorizon(180, dec, phi).U) * 180 / Math.PI).toFixed(0) + '°';
@@ -1253,6 +1302,13 @@ window.Sims = (function () {
     return Math.abs(deg) < 0.05 ? a : a + ' ' + (deg > 0 ? T('צפון') : T('דרום'));
   }
   // היסט אזור זמן לתצוגה: UTC+3, UTC−4:30
+  // משך בשעות → "ש:דד" (או "ש:דד:שש" עם שניות) — בלי גלישה ב-24 שעות, שלא כ-fmtH
+  function fmtDur(h, secs) {
+    const t = Math.round(Math.max(0, h) * (secs ? 3600 : 60));
+    const pad = n => String(n).padStart(2, '0');
+    return secs ? Math.floor(t / 3600) + ':' + pad(Math.floor(t / 60) % 60) + ':' + pad(t % 60)
+      : Math.floor(t / 60) + ':' + pad(t % 60);
+  }
   function fmtOff(h) {
     const s = h < 0 ? '−' : '+', a = Math.abs(h), m = Math.round((a % 1) * 60);
     return 'UTC' + s + Math.floor(a) + (m ? ':' + String(m).padStart(2, '0') : '');
@@ -1497,5 +1553,5 @@ window.Sims = (function () {
     ctx.restore();
   }
 
-  return { moon, year, planets, clearColorCache, clearFitCache, stageLayout, poleLabels, fmtAtPlace };
+  return { moon, year, planets, clearColorCache, clearFitCache, stageLayout, poleLabels, fmtAtPlace, hudPlace, fmtUTC };
 })();

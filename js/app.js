@@ -246,7 +246,16 @@
   }
 
   // שינוי גודל הקנבס → ניקוי מטמון המידות וציור מחדש (במקום fit() בכל פריים)
-  const onResize = () => { resetHudWidth(); if (window.Sims.clearFitCache) window.Sims.clearFitCache(); invalidate(); };
+  // המחסום מתאפס רק ל-HUD שרוחב הבמה שלו השתנה באמת (ולא בכל אירוע שינוי
+  // גודל, כגון מעבר לשונית) — אחרת החלונית התכווצה והתרחבה מחדש בכל מעבר
+  const onResize = () => {
+    hudEls.forEach(h => {
+      const st = h.parentElement, w = st ? st.clientWidth : 0;
+      if (!w || st._hudStageW === w) return;
+      st._hudStageW = w; h.style.minWidth = '';
+    });
+    if (window.Sims.clearFitCache) window.Sims.clearFitCache(); invalidate();
+  };
   if (window.ResizeObserver) {
     const ro = new ResizeObserver(onResize);
     document.querySelectorAll('.view canvas').forEach(c => { if (c.parentElement) ro.observe(c.parentElement); });

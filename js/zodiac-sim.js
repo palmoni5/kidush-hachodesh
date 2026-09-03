@@ -792,7 +792,7 @@
     horizon: true,
     view: 'wheel',            // 'wheel' — מבט-על; 'observer' — הרצועה ברקיע; 'external' — כל המערכת מבחוץ
     viewAz: 270,              // כיוון המבט במבט הצופה (270 = פנים אל המזרח, כיוון הזריחה)
-    lat: 31.78, lon: 35.24,
+    lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
     _bound: false,
 
     step(dt) { this.date = new Date(this.date.getTime() + this.speed * dt * (this.unit === 'day' ? 86400000 : 3600000)); },
@@ -805,7 +805,14 @@
       if (this.view === 'observer') drawObserver(ctx, W, H, this.date, this, hz);
       else if (this.view === 'external') drawExternal(ctx, W, H, this.date, this);
       else drawWheel(ctx, W, H, this.date, this.horizon ? hz : null);
-      $('z_clock').textContent = this.date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      // השעה בשעון ישראל (Asia/Jerusalem, גם כשהמכשיר מכוון לאזור אחר), זמן
+      // יקום מתואם, והשעה במקום הצופה שנבחר (ב"מותאם אישית" — משוערת מקו האורך)
+      const S = window.Sims, loc = { name: this.cityName, lat: this.lat, lon: this.lon, tz: this.tz };
+      $('z_clock').textContent = S.fmtAtPlace(this.date, { tz: 'Asia/Jerusalem', lon: 35.24 });
+      const zu = $('z_utc'); if (zu) zu.textContent = S.fmtUTC(this.date);
+      const zl = $('z_locClock');
+      if (zl) zl.textContent = S.fmtAtPlace(this.date, loc) + (this.tz ? '' : ' (' + T('זמן שמש ממוצע') + ')');
+      S.hudPlace({ name: 'z_loc', lon: 'z_lonD', lat: 'z_latD', tz: 'z_tz' }, loc, this.date);
       const zs = $('z_sun');
       if (zs) { const sl = getLongitudes(this.date).sun; zs.textContent = T(signOf(sl)) + ' ' + Math.floor(rev360(sl) % 30) + '°'; }
       $('z_asc').textContent = hz ? T(signOf(hz.asc)) + ' ' + Math.floor(hz.asc % 30) + '°' : '—';
@@ -898,8 +905,20 @@
         this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate();
       });
       $('z_horizon').onchange = e => this.horizon = e.target.checked;
-      $('z_lat').oninput = e => this.lat = Math.max(-89, Math.min(89, +e.target.value || 0));
-      $('z_lon').oninput = e => this.lon = Math.max(-180, Math.min(180, +e.target.value || 0));
+      // מקום הצופה: רשימת המקומות היא זו של לשונית מופעי הירח (משוכפלת משם);
+      // בחירה קובעת רוחב+אורך+אזור זמן, ועריכת הקואורדינטות מעבירה ל"מותאם אישית"
+      const zc = $('z_city'), mc = $('m_city');
+      if (zc && mc && mc.options.length > zc.options.length) zc.innerHTML = mc.innerHTML;
+      if (zc) zc.onchange = e => {
+        const opt = e.target.selectedOptions[0], v = e.target.value;
+        if (!v) { this.tz = null; this.cityName = 'מותאם אישית'; return; }
+        const [la, lo] = v.split(',').map(Number);
+        this.lat = la; this.lon = lo; $('z_lat').value = la; $('z_lon').value = lo;
+        this.tz = opt.dataset.tz || null; this.cityName = opt.textContent.trim();
+      };
+      const zCustom = () => { if (zc) zc.value = ''; this.tz = null; this.cityName = 'מותאם אישית'; };
+      $('z_lat').oninput = e => { this.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); zCustom(); };
+      $('z_lon').oninput = e => { this.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); zCustom(); };
       document.querySelectorAll('#view-zodiac .seg button[data-unit]').forEach(b => b.onclick = () => {
         document.querySelectorAll('#view-zodiac .seg button[data-unit]').forEach(x => x.classList.toggle('active', x === b));
         this._setUnit(b.dataset.unit);

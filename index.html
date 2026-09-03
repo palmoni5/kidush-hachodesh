@@ -30,19 +30,31 @@
       <section class="view active" id="view-moon">
         <div class="stage"><canvas id="moonCanvas"></canvas>
           <div class="hud">
-            <div class="row"><span>תאריך</span><b id="m_date">—</b></div>
-            <div class="row"><span>עברי</span><b id="m_date_he">—</b></div>
-            <div class="row"><span>שעה באופק ירושלים</span><b id="m_clock">—</b></div>
-            <div class="row"><span>זמן יקום מתואם (UTC)</span><b id="m_utc">—</b></div>
-            <div class="row"><span>יום בחודש</span><b id="m_day">1</b></div>
-            <div class="row"><span>אחוז הירח הנראה</span><b id="m_pct">0%</b></div>
-            <div class="row"><span>מרחק מהשמש</span><b id="m_elong">—</b></div>
-            <div class="row"><span>מקום הצפייה</span><b id="m_loc">ירושלים</b></div>
-            <div class="row"><span>השעה במקום הנבחר</span><b id="m_locClock">—</b></div>
-            <div class="row"><span>זריחת הירח</span><b id="m_rise">—</b></div>
-            <div class="row"><span>שקיעת הירח</span><b id="m_set">—</b></div>
-            <div class="row"><span>מיקום בשמים</span><b id="m_pos">—</b></div>
-            <div class="big" id="m_phase">מולד</div>
+            <div class="grp grp-place">
+              <div class="sec">מקום הצופה</div>
+              <div class="row"><span>מקום</span><b id="m_loc">ירושלים</b></div>
+              <div class="row"><span>קו אורך</span><b id="m_lonD">—</b></div>
+              <div class="row"><span>קו רוחב</span><b id="m_latD">—</b></div>
+              <div class="row"><span>אזור זמן</span><b id="m_tz">—</b></div>
+            </div>
+            <div class="grp grp-time">
+              <div class="sec">זמנים — תאריך ושעה</div>
+              <div class="row"><span>תאריך</span><b id="m_date">—</b></div>
+              <div class="row"><span>עברי</span><b id="m_date_he">—</b></div>
+              <div class="row"><span>השעה בירושלים</span><b id="m_clock">—</b></div>
+              <div class="row"><span>זמן יקום מתואם (UTC)</span><b id="m_utc">—</b></div>
+              <div class="row"><span>השעה במקום הנבחר</span><b id="m_locClock">—</b></div>
+            </div>
+            <div class="grp grp-data">
+              <div class="sec">נתוני הירח</div>
+              <div class="row"><span>יום בחודש</span><b id="m_day">1</b></div>
+              <div class="row"><span>אחוז הירח הנראה</span><b id="m_pct">0%</b></div>
+              <div class="row"><span>מרחק מהשמש</span><b id="m_elong">—</b></div>
+              <div class="row"><span>זריחת הירח</span><b id="m_rise">—</b></div>
+              <div class="row"><span>שקיעת הירח</span><b id="m_set">—</b></div>
+              <div class="row"><span>מיקום בשמים</span><b id="m_pos">—</b></div>
+              <div class="big" id="m_phase">מולד</div>
+            </div>
           </div>
         </div>
         <aside class="panel">
@@ -326,18 +338,37 @@
       <section class="view" id="view-year">
         <div class="stage"><canvas id="yearCanvas"></canvas>
           <div class="hud">
-            <div class="clock" id="y_clock">12:00</div>
-            <div class="st" id="y_tz">שעון מקומי — ירושלים</div>
-            <div class="st" id="y_updown">השמש מעל האופק</div>
-            <div class="row" style="margin-top:8px"><span>גובה השמש מעל האופק</span><b id="y_alt">58°</b></div>
-            <div class="row"><span>זוית השמש מצפון/דרום לקו המשוה</span><b id="y_dec">—</b></div>
-            <div class="row"><span>זוית השמש מצפון/דרום למקום הצופה</span><b id="y_zen">—</b></div>
-            <div class="row"><span>עונה / תקופה</span><b id="y_season">אביב</b></div>
-            <div class="row"><span>תאריך</span><b id="y_date">—</b></div>
-            <div class="row"><span>שעה שמשית (החצות האמיתי נחשב כ-12:00)</span><b id="y_solar">—</b></div>
-            <div class="row"><span>זריחה / שקיעה</span><b id="y_rise">—</b></div>
-            <div class="row"><span>אורך היום</span><b id="y_daylen">12:00</b></div>
-            <div class="row"><span>עומק בחצות הלילה</span><b id="y_mid">-58°</b></div>
+            <div class="grp grp-place">
+              <div class="sec">מקום הצופה</div>
+              <div class="row"><span>מקום</span><b id="y_loc">ירושלים</b></div>
+              <div class="row"><span>קו אורך</span><b id="y_lonD">—</b></div>
+              <div class="row"><span>קו רוחב</span><b id="y_latD">—</b></div>
+              <div class="row"><span>אזור זמן</span><b id="y_tzL">—</b></div>
+            </div>
+            <div class="grp grp-time">
+              <div class="sec">זמנים — תאריך ושעה</div>
+              <div class="clock" id="y_clock">12:00</div>
+              <div class="st" id="y_tz">השעה במקום הנבחר</div>
+              <div class="st" id="y_updown">השמש מעל האופק</div>
+              <div class="row" style="margin-top:6px"><span>תאריך</span><b id="y_date">—</b></div>
+              <div class="row"><span>זמן יקום מתואם (UTC)</span><b id="y_utc">—</b></div>
+              <div class="row"><span>שעה שמשית (החצות האמיתי נחשב כ-12:00)</span><b id="y_solar">—</b></div>
+            </div>
+            <div class="grp grp-data">
+              <div class="sec">מיקום השמש</div>
+              <div class="row"><span>גובה השמש מעל האופק</span><b id="y_alt">58°</b></div>
+              <div class="row"><span>זוית השמש מצפון/דרום לקו המשוה</span><b id="y_dec">—</b></div>
+              <div class="row"><span>זוית השמש מצפון/דרום למקום הצופה</span><b id="y_zen">—</b></div>
+              <div class="row"><span>עומק בחצות הלילה</span><b id="y_mid">-58°</b></div>
+            </div>
+            <div class="grp grp-more">
+              <div class="sec">נתוני הזמן</div>
+              <div class="row"><span>עונה / תקופה</span><b id="y_season">אביב</b></div>
+              <div class="row"><span>זריחה / שקיעה</span><b id="y_rise">—</b></div>
+              <div class="row"><span>אורך היממה (משקיעה לשקיעה)</span><b id="y_fullday">—</b></div>
+              <div class="row"><span>אורך היום</span><b id="y_daylen">12:00</b></div>
+              <div class="row"><span>אורך הלילה</span><b id="y_nightlen">—</b></div>
+            </div>
           </div>
           <!-- נטיית כדור הארץ — אינה עוד הסבר נלווה אלא חלק מן ההמחשה עצמה,
                ולכן היא יושבת בפינת הבמה (כדוגמת חלון השמים שבמופעי הירח)
@@ -491,13 +522,28 @@
       <section class="view" id="view-zodiac">
         <div class="stage"><canvas id="zodiacCanvas"></canvas>
           <div class="hud">
-            <div class="row"><span>תאריך</span><b id="z_date">—</b></div>
-            <div class="row"><span>עברי</span><b id="z_date_he">—</b></div>
-            <div class="row"><span>שעה</span><b id="z_clock">—</b></div>
-            <div class="row"><span>השמש במזל</span><b id="z_sun">—</b></div>
-            <div class="row"><span>מזל עולה (במזרח)</span><b id="z_asc">—</b></div>
-            <div class="row"><span>מזל באמצע הרקיע</span><b id="z_mc">—</b></div>
-            <div class="row"><span>הקשת מאמצע הרקיע למזל העולה</span><b id="z_arc">—</b></div>
+            <div class="grp grp-place">
+              <div class="sec">מקום הצופה</div>
+              <div class="row"><span>מקום</span><b id="z_loc">ירושלים</b></div>
+              <div class="row"><span>קו אורך</span><b id="z_lonD">—</b></div>
+              <div class="row"><span>קו רוחב</span><b id="z_latD">—</b></div>
+              <div class="row"><span>אזור זמן</span><b id="z_tz">—</b></div>
+            </div>
+            <div class="grp grp-time">
+              <div class="sec">זמנים — תאריך ושעה</div>
+              <div class="row"><span>תאריך</span><b id="z_date">—</b></div>
+              <div class="row"><span>עברי</span><b id="z_date_he">—</b></div>
+              <div class="row"><span>שעה בשעון ישראל</span><b id="z_clock">—</b></div>
+              <div class="row"><span>זמן יקום מתואם (UTC)</span><b id="z_utc">—</b></div>
+              <div class="row"><span>השעה במקום הנבחר</span><b id="z_locClock">—</b></div>
+            </div>
+            <div class="grp grp-data">
+              <div class="sec">מיקום השמש והמזלות</div>
+              <div class="row"><span>השמש במזל</span><b id="z_sun">—</b></div>
+              <div class="row"><span>מזל עולה (במזרח)</span><b id="z_asc">—</b></div>
+              <div class="row"><span>מזל באמצע הרקיע</span><b id="z_mc">—</b></div>
+              <div class="row"><span>הקשת מאמצע הרקיע למזל העולה</span><b id="z_arc">—</b></div>
+            </div>
           </div>
         </div>
         <aside class="panel">
@@ -587,6 +633,8 @@
             <h2>האופק ומזל עולה</h2>
             <div class="chk"><input type="checkbox" id="z_horizon" checked />
               <label for="z_horizon">הצג את קו האופק ואת המזל העולה</label></div>
+            <label class="field" style="margin-top:6px">מקום הצופה</label>
+            <select id="z_city"><option value="31.78,35.24" data-tz="Asia/Jerusalem" selected>ירושלים</option></select>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:6px">
               <label class="field">קו רוחב °<input type="number" id="z_lat" step="0.01" value="31.78" /></label>
               <label class="field">קו אורך °<input type="number" id="z_lon" step="0.01" value="35.24" /></label>
@@ -832,17 +880,32 @@
       <section class="view" id="view-eclipse">
         <div class="stage"><canvas id="eclipseCanvas"></canvas>
           <div class="hud">
-            <div class="big" id="e_kind">ליקוי לבנה</div>
-            <div class="row"><span>תאריך הליקוי</span><b id="e_date">—</b></div>
-            <div class="row"><span>עברי</span><b id="e_date_he">—</b></div>
-            <div class="row"><span>זמן יקום מתואם (UTC)</span><b id="e_utc">—</b></div>
-            <div class="row"><span>שעון ישראל</span><b id="e_il">—</b></div>
-            <div class="row"><span>אחוז הכיסוי</span><b id="e_pct">—</b></div>
-            <div class="sec">הגורמים המשפיעים על הליקוי</div>
-            <div class="row"><span>מרחק הירח מן השמש (באורך)</span><b id="e_elong">—</b></div>
-            <div class="row"><span>רוחב הירח (נטייה מהמלקה)</span><b id="e_lat">—</b></div>
-            <div class="row"><span>מרחק הירח מן הארץ</span><b id="e_edist">—</b></div>
-            <div class="row" id="e_locRow" style="display:none"><span>מרכז הצל</span><b id="e_loc">—</b></div>
+            <div class="big" id="e_kind" style="margin-top:0">ליקוי לבנה</div>
+            <div class="grp grp-place">
+              <div class="sec">מקום הצופה</div>
+              <div class="row"><span id="e_locLbl">מקום</span><b id="e_locName">ירושלים</b></div>
+              <div class="row"><span>קו אורך</span><b id="e_lonD">—</b></div>
+              <div class="row"><span>קו רוחב</span><b id="e_latD">—</b></div>
+              <div class="row"><span>אזור זמן</span><b id="e_tz">—</b></div>
+            </div>
+            <div class="grp grp-time">
+              <div class="sec">זמנים — תאריך ושעה</div>
+              <div class="row"><span>תאריך הליקוי</span><b id="e_date">—</b></div>
+              <div class="row"><span>עברי</span><b id="e_date_he">—</b></div>
+              <div class="row"><span>זמן יקום מתואם (UTC)</span><b id="e_utc">—</b></div>
+              <div class="row"><span>שעון ישראל</span><b id="e_il">—</b></div>
+              <div class="row"><span>השעה במקום הנבחר</span><b id="e_locClock">—</b></div>
+            </div>
+            <div class="grp grp-data">
+              <div class="sec">עומק הליקוי</div>
+              <div class="row"><span>אחוז הכיסוי</span><b id="e_pct">—</b></div>
+            </div>
+            <div class="grp grp-more">
+              <div class="sec">הגורמים המשפיעים על הליקוי</div>
+              <div class="row"><span>מרחק הירח מן השמש (באורך)</span><b id="e_elong">—</b></div>
+              <div class="row"><span>רוחב הירח (נטייה מהמלקה)</span><b id="e_lat">—</b></div>
+              <div class="row"><span>מרחק הירח מן הארץ</span><b id="e_edist">—</b></div>
+            </div>
           </div>
         </div>
         <aside class="panel">
