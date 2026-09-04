@@ -248,6 +248,55 @@ window.Sims = (function () {
   const COMPASS8 = ['צפון', 'צפון-מזרח', 'מזרח', 'דרום-מזרח', 'דרום', 'דרום-מערב', 'מערב', 'צפון-מערב'];
   const compassName = az => COMPASS8[Math.round((((az % 360) + 360) % 360) / 45) % 8];
 
+  // ── כיוון הצד המואר וקרני הלבנה ──────────────────────────────────────
+  // המשנה (ר"ה ב, ו) שואלת את העדים "לפני החמה או לאחר החמה, לצפונה או
+  // לדרומה, כמה היה גבוה ולאין היה נוטה" (וברמב"ם פ"ב ה"ד): אמצע הצד המואר
+  // פונה אל השמש, והקרניים (הפגימה) — מן השמש והלאה. שני החלונות מציירים כך.
+  const ECL_EPS = 23.4392911 * Math.PI / 180;
+  const ECL_N = [0, -Math.sin(ECL_EPS), Math.cos(ECL_EPS)];   // קוטב המלקה (J2000, משווני)
+  const vdot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+  const vcross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+  const vnorm = a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0]/l, a[1]/l, a[2]/l]; };
+  // כיוון הקרניים במפת השמים (מסגרת המלקה): רכיבי הכיוון "מן השמש והלאה" במישור
+  // המשיק לכדור השמים במקום הירח — e לעבר המזרח (אורך גדל), n לעבר צפון המלקה —
+  // ורוחב הירח במעלות. כשהירח על המלקה (n=0) הקרניים מכוונות למזרח/למערב מדויק;
+  // ברוחב צפוני נוטות לצפון ובדרומי לדרום, וככל שהירח קרוב לשמש הנטייה גדולה.
+  function moonHorns(date) {
+    try {
+      const AE = window.Astronomy, t = AE.MakeTime(date);
+      const gm = AE.GeoVector(AE.Body.Moon, t, false), gs = AE.GeoVector(AE.Body.Sun, t, false);
+      const M = vnorm([gm.x, gm.y, gm.z]), S = vnorm([gs.x, gs.y, gs.z]);
+      const east = vnorm(vcross(ECL_N, M)), north = vcross(M, east);
+      const d = vdot(S, M), A = vnorm([-(S[0] - d*M[0]), -(S[1] - d*M[1]), -(S[2] - d*M[2])]);
+      return { e: vdot(A, east), n: vdot(A, north), lat: AE.EclipticGeoMoon(t).lat };
+    } catch (_) { return null; }
+  }
+  // "לאין היה נוטה" — כיתוב ל-HUD: הקרניים למזרח (עד הניגוד) או למערב, וזווית
+  // נטייתן מקו המלקה לצפון או לדרום; פחות מחצי מעלה — "מדויק".
+  function hornLabel(h) {
+    const tilt = Math.atan2(Math.abs(h.n), Math.abs(h.e)) * 180 / Math.PI;
+    const dir = T(h.e >= 0 ? 'למזרח' : 'למערב');
+    return tilt < 0.5 ? dir + ' ' + T('מדויק')
+      : dir + ' · ' + tilt.toFixed(0) + '° ' + T(h.n >= 0 ? 'לצפון' : 'לדרום');
+  }
+  // זווית (במסך) של מרכז הצד המואר בחלון השמים: כיוון השמש מן הירח על כדור
+  // השמים, מומר לכיוון בהיטל הכיפה (מרכז=זניט, שפה=אופק; ראו place ב-drawMoonSky)
+  // בשקלול קנה המידה הרדיאלי (R/90 למעלה) והמשיקי (rr לרדיאן) של ההיטל.
+  function skyLitAngle(pos, R) {
+    const D = Math.PI / 180;
+    const azM = pos.moon.az * D, alM = pos.moon.alt * D, azS = pos.sun.az * D, alS = pos.sun.alt * D;
+    const M = [Math.sin(azM)*Math.cos(alM), Math.cos(azM)*Math.cos(alM), Math.sin(alM)];
+    const S = [Math.sin(azS)*Math.cos(alS), Math.cos(azS)*Math.cos(alS), Math.sin(alS)];
+    const eAlt = [-Math.sin(azM)*Math.sin(alM), -Math.cos(azM)*Math.sin(alM), Math.cos(alM)];
+    const eAz = [Math.cos(azM), -Math.sin(azM), 0];
+    const d = vdot(S, M), St = [S[0]-d*M[0], S[1]-d*M[1], S[2]-d*M[2]];
+    const cAlt = vdot(St, eAlt), cAz = vdot(St, eAz);
+    const rr = (90 - Math.max(pos.moon.alt, 0)) / 90 * R, kr = 2 * R / Math.PI;
+    const dx = kr*cAlt*Math.sin(azM) - rr*cAz*Math.cos(azM);
+    const dy = kr*cAlt*Math.cos(azM) + rr*cAz*Math.sin(azM);
+    return Math.atan2(dy, dx);
+  }
+
   // חלון תצפית השמים: עיגול כיפת השמים (כמו בלשונית כוכבי הלכת) ובו הירח
   // במיקומו הנוכחי ובצורתו הנראית, והשמש להקשר. מרכז העיגול = זניט,
   // השפה = האופק; מזרח משמאל (מבט אל-על, כבלשונית כוכבי הלכת).
@@ -288,7 +337,7 @@ window.Sims = (function () {
     const pm = place(pos.moon);
     if (pos.moon.alt > HIDE_ALT) {
       ctx.globalAlpha = pos.moon.alt > 0 ? 1 : 0.35;
-      drawPhase(ctx, pm.x, pm.y, 9, day);
+      drawPhase(ctx, pm.x, pm.y, 9, day, skyLitAngle(pos, R));   // הצד המואר אל השמש
       ctx.globalAlpha = 1;
     }
     if (pos.moon.alt <= 0) {
@@ -533,6 +582,11 @@ window.Sims = (function () {
       const eDist = eDeg <= 180 ? eDeg : 360 - eDeg;
       $('m_elong').textContent = eDist.toFixed(1) + '° ' + T(eDeg <= 180 ? 'ממזרח לשמש' : 'ממערב לשמש');
       $('m_phase').textContent = T(A.moonPhaseLabel(this.phase));
+      // רוחב הירח ונטיית הקרניים — "לצפונה או לדרומה... ולאין היה נוטה" (ר"ה ב, ו)
+      const horns = moonHorns(simDate);
+      $('m_lat').textContent = !horns ? '—'
+        : Math.abs(horns.lat).toFixed(2) + '° ' + T(horns.lat >= 0 ? 'צפוני' : 'דרומי');
+      $('m_horn').textContent = !horns ? '—' : hornLabel(horns);
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
       // התווית מבטיחה "שעה באופק ירושלים" — מוצמד לאזור הזמן של ירושלים גם
@@ -604,7 +658,18 @@ window.Sims = (function () {
       const vx = W - vR - 16, vy = H - vR - 20;
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(T('הירח מכדור הארץ'), vx, vy - vR - 12);
-      drawPhase(ctx, vx, vy, vR, this.phase);
+      // מפת השמים: צפון המלקה למעלה, מזרח לשמאל — הצד המואר פונה אל השמש,
+      // והקרניים נוטות לצפון או לדרום כרוחב הירח (רמב"ם פי"ט)
+      const litAng = horns ? Math.atan2(horns.n, horns.e) : undefined;
+      drawPhase(ctx, vx, vy, vR, this.phase, litAng);
+      ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif'; ctx.textBaseline = 'top';
+      ctx.fillText(T('מזרח'), vx - vR + 4, vy + vR + 4); ctx.fillText(T('מערב'), vx + vR - 4, vy + vR + 4);
+      ctx.textBaseline = 'alphabetic';
+      if (litAng !== undefined) {   // סימון כיוון השמש — הצד המואר פונה אליה
+        ctx.strokeStyle = cv('--ill-ray'); ctx.setLineDash([2, 3]); ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(vx + Math.cos(litAng) * (vR + 3), vy + Math.sin(litAng) * (vR + 3));
+        ctx.lineTo(vx + Math.cos(litAng) * (vR + 12), vy + Math.sin(litAng) * (vR + 12)); ctx.stroke(); ctx.setLineDash([]);
+      }
       // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
       const pos = moonSkyPos(simDate, this.loc);
       if (W >= 520) {
@@ -746,7 +811,9 @@ window.Sims = (function () {
       ctx.beginPath(); ctx.arc(x, y, cr * 0.92, Math.PI * 1.05, Math.PI * 1.75); ctx.stroke();
     }
   }
-  function drawPhase(ctx, cx, cy, R, day) {
+  // litAng — זווית (במסך, רדיאנים) של מרכז הצד המואר; בלעדיה הצד המואר לימין
+  // (מולד→ניגוד) או לשמאל. מסובב את הצל בלבד — פני הירח נשארים במקומם.
+  function drawPhase(ctx, cx, cy, R, day, litAng) {
     ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.clip();
     // תצלום אמיתי של הירח (LRO/NASA, נחלת הכלל); נפילה לציור וקטורי עד שייטען
     if (IMG.moonReal.complete && IMG.moonReal.naturalWidth) {
@@ -756,6 +823,9 @@ window.Sims = (function () {
     } else drawMoonDisc(ctx, cx, cy, R);
     const theta = 2 * Math.PI * (day % MEAN_LUN) / MEAN_LUN, a = R * Math.cos(theta);
     const waning = A.moonWaning(day), limb = waning ? 1 : -1, term = waning ? -1 : 1, N = 72;
+    if (litAng !== undefined) {
+      ctx.translate(cx, cy); ctx.rotate(litAng - (waning ? Math.PI : 0)); ctx.translate(-cx, -cy);
+    }
     ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
     for (let i = 0; i <= N; i++) { const u = Math.PI * i / N; ctx.lineTo(cx + limb * R * Math.sin(u), cy - R * Math.cos(u)); }
     for (let i = N; i >= 0; i--) { const u = Math.PI * i / N; ctx.lineTo(cx + term * a * Math.sin(u), cy - R * Math.cos(u)); }

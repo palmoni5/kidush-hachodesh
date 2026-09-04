@@ -84,6 +84,7 @@
 
   // ── מצב פנימי ──────────────────────────────────────────────────────────
   let inited = false, renderer, scene, camera, controls;
+  let eclGrid = null, eclGridKey = '', moonLatLine;   // רשת מישור המלקה וקו רוחב הירח
   let sun, earth, moon, light, ambient, earthOrbit, moonOrbit, earthMoonLine;
   let shadowCone, penumbraCone, moonCone, stars;
   let lastLight = null;   // ערכת הרקע (בהיר/כהה) שהסצנה מכוונת אליה כעת
@@ -294,6 +295,12 @@
       scene.add(p.mesh); scene.add(p.ringObj); scene.add(p.labelObj);
     }
 
+    // קו רוחב הירח — מן הירח אל מישור המלקה שעובר בארץ (ניצב למישור): אורכו
+    // הוא רוחב הירח (עד ~5°), והוא הניכר במבט מצד המלקה
+    moonLatLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      new THREE.LineBasicMaterial({ color: 0xdddddd, transparent: true, opacity: 0.85 }));
+    scene.add(moonLatLine);
+
     labels.sun = makeLabel('שמש', '#ffd24a');
     labels.earth = makeLabel('ארץ', '#88bbff');
     labels.moon = makeLabel('ירח', '#dddddd');
@@ -306,10 +313,24 @@
   // ברקע בהיר חרוטי הצל הכהים צרמו, הכוכבים הלבנים והקווים הבהירים נעלמו —
   // ובכהה החרוטים (שצבעם היה כהה כמעט כרקע) לא נראו כלל. כאן כל ערכה מקבלת
   // גוונים משלה: בכהה הצללים בהירים מעט מהרקע, בבהיר — כהים ורכים.
+  // רשת מישור המלקה (y=0 — מישור מסלול הארץ): קווים, ולא משטח, כדי שתיראה
+  // כקו גם במבט מצד המלקה. נבנית מחדש כשמשתנים הרדיוס (מבט/כוכבי לכת) או הערכה.
+  function ensureEclGrid(radius) {
+    const l = isLight(), key = radius.toFixed(1) + '|' + l;
+    if (eclGrid && eclGridKey === key) return;
+    if (eclGrid) { scene.remove(eclGrid); eclGrid.geometry.dispose(); eclGrid.material.dispose(); }
+    eclGridKey = key;
+    eclGrid = new THREE.PolarGridHelper(radius, 12, 4, 96, l ? 0x4a5a8a : 0x8fa4d8, l ? 0x4a5a8a : 0x8fa4d8);
+    eclGrid.material.transparent = true; eclGrid.material.opacity = l ? 0.28 : 0.22;
+    eclGrid.material.depthWrite = false;
+    scene.add(eclGrid);
+  }
+
   function applyIllTheme() {
     const l = isLight();
     if (l === lastLight) return;
     lastLight = l;
+    moonLatLine.material.color.setHex(l ? 0x3a4560 : 0xdddddd);
     stars.visible = !l;
     shadowCone.material.color.setHex(l ? 0x2c3350 : 0x8a9cc8);
     shadowCone.material.opacity = l ? 0.22 : 0.30;
@@ -387,7 +408,7 @@
   }
 
   // ── עדכון הסצנה לרגע-זמן ולמבט נוכחי ──────────────────────────────────
-  function update(date, mode, showPlanets, showCones) {
+  function update(date, mode, showPlanets, showCones, showEcl) {
     const time = AE.MakeTime(date);
     const geoMoon = v3(AE.GeoVector(AE.Body.Moon, time, false));
     const geoSun  = v3(AE.GeoVector(AE.Body.Sun,  time, false));
@@ -433,6 +454,13 @@
 
     earthMoonLine.geometry.setFromPoints([pEarth, pMoon]);
     earthMoonLine.computeLineDistances();
+
+    // מישור המלקה: רשת סביב הגוף המרכזי (עד למסלול הארץ/השמש, או עד נפטון עם
+    // כוכבי הלכת), וקו רוחב הירח — מן הירח אל המישור, ניצב לו
+    ensureEclGrid(showPlanets ? orbitR(30.07) * 1.05 : orbitR(1) * 1.15);
+    eclGrid.visible = !!showEcl;
+    moonLatLine.visible = !!showEcl;
+    moonLatLine.geometry.setFromPoints([pMoon, new THREE.Vector3(pMoon.x, pEarth.y, pMoon.z)]);
 
     // חרוטי הצל — בשני המבטים כאחד (הצל קיים תמיד; המבט אינו משנה דבר).
     // ציר צל הארץ הוא הקו שמן השמש דרך הארץ, כלומר הכיוון המנוגד לשמש.
@@ -537,6 +565,7 @@
     mode: 'helio',
     showPlanets: false,
     showCones: true,
+    showEcl: true,
     playing: false,
     speed: 1,
     _bound: false,
@@ -548,7 +577,7 @@
       if (!inited) init();
       applyIllTheme();
       resize();
-      update(this.date, this.mode, this.showPlanets, this.showCones);
+      update(this.date, this.mode, this.showPlanets, this.showCones, this.showEcl);
       renderer.render(scene, camera);
 
       const sd = $('s_date');
@@ -589,9 +618,28 @@
       controls.update();
     },
 
+    // העמדת המצלמה במישור המלקה עצמו ('edge' — המישור נראה כקו, והשמש, הארץ
+    // וכוכבי הלכת עליו, והירח סוטה ממנו כרוחבו) או מעליו ('top' — מצד קוטב
+    // המלקה הצפוני), במרחק הנוכחי מן המוקד. היסט זעיר מונע ניוון של OrbitControls.
+    _lookFrom(kind) {
+      if (!inited) return;
+      const off = camera.position.clone().sub(controls.target), d = off.length() || 55;
+      if (kind === 'edge') {
+        off.y = 0; if (off.lengthSq() < 1e-6) off.set(1, 0, 0);
+        off.setLength(d); off.y = d * 0.002;
+      } else off.set(0, d, d * 0.002);
+      camera.position.copy(controls.target).add(off);
+      controls.update();
+      try { window.__invalidate(); } catch (e) {}
+    },
+
     bind() {
       if (this._bound) return; this._bound = true;
       this._syncDate();
+      const ce = $('s_camEdge'); if (ce) ce.onclick = () => this._lookFrom('edge');
+      const ct = $('s_camTop'); if (ct) ct.onclick = () => this._lookFrom('top');
+      const ec = $('s_ecl');
+      if (ec) { ec.checked = this.showEcl; ec.onchange = () => { this.showEcl = ec.checked; }; }
       $('s_play').onclick = e => { this.playing = !this.playing; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
       $('s_today').onclick = () => { this.date = new Date(); this.playing = false; $('s_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('s_speed').oninput = e => { this.speed = +e.target.value; $('s_spdL').textContent = (+e.target.value).toFixed(1); };

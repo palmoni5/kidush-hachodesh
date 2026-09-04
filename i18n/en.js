@@ -141,6 +141,14 @@ window.TRANSLATIONS.en = {
   'חודש הלבנה (סינודי) = 29.53 יום': 'Lunar (synodic) month = 29.53 days',
   '(= כ"ט יום י"ב שעות ותשצ"ג חלקים = הזמן שבין מולד למולד).':
     '(= 29 days, 12 hours and 793 chalakim = the time between one molad and the next).',
+  'נטיית הקרניים': 'Tilt of the horns',
+  'למזרח': 'east', 'למערב': 'west', 'מדויק': 'exactly', 'לצפון': 'to the north', 'לדרום': 'to the south',
+  'בשני חלונות הירח — "הירח מכדור הארץ" ו"הירח בשמים" — אמצע הצד המואר פונה אל השמש, והקרניים (הפגימה) פונות מן השמש והלאה, כשאלת בית הדין לעדים במשנה (ראש השנה ב, ו): "לפני החמה או לאחר החמה, לצפונה או לדרומה, כמה היה גבוה ולאין היה נוטה" (וברמב"ם הלכות קידוש החודש פ"ב ה"ד).':
+    'In both Moon windows — "The Moon as seen from Earth" and "Moon in the sky" — the middle of the lit side faces the Sun, and the horns (the dark notch) point away from it, as in the court’s questions to the witnesses in the Mishnah (Rosh Hashanah 2:6): "was it before the sun or behind it, to its north or to its south, how high was it, and which way was it tilted" (and Rambam, Laws of Kiddush HaChodesh 2:4).',
+  '"הירח מכדור הארץ" מצויר כמפת השמים: צפון המלקה למעלה ומזרח לשמאל, והקו המקווקו הקטן שבשוליו מסמן את כיוון השמש. כשהירח על מישור המלקה (רוחבו אפס) הקרניים מכוונות למזרח מדויק — ומן הניגוד ואילך למערב; כשרוחבו צפוני הן נוטות לצפון, וכשדרומי — לדרום, והנטייה ניכרת ביותר בסהר הצעיר הסמוך לשמש (וראו רמב"ם פי"ט). "רוחב הירח" ו"נטיית הקרניים" שלמעלה הם ערכים אלו.':
+    '"The Moon as seen from Earth" is drawn like a sky map: ecliptic north up, east to the left, and the small dotted tick at its edge marks the direction of the Sun. When the Moon is on the ecliptic (latitude zero) the horns point exactly east — and west after opposition; when its latitude is north they tilt north, and when south, south — most noticeably in the young crescent close to the Sun (see Rambam ch. 19). "Moon’s latitude" and "Tilt of the horns" above are these values.',
+  'בחלון "הירח בשמים" נוספת על נטייה זו נטיית הרקיע עצמו לפי המקום, העונה והשעה — והירח מצויר כפי שייראה לצופה מעל האופק שבמקום הנבחר, מואר לעבר השמש גם כשהיא כבר מתחת לאופק.':
+    'In the "Moon in the sky" window the tilt of the sky itself — by place, season and hour — is added to this, and the Moon is drawn as an observer above the horizon at the chosen place would see it, lit toward the Sun even when the Sun is already below the horizon.',
   'הצד המואר תמיד פונה אל השמש; מהארץ נראה רק חלקו, וכך נוצרים המופעים.':
     'The lit side always faces the Sun; from Earth we see only part of it — and that is what makes the phases.',
   'זמני זריחת הירח ושקיעתו מוצגים לתאריך המוצג באיור, לפי אופק המקום הנבחר ובשעונו — להמחשה בלבד.':
@@ -483,6 +491,14 @@ window.TRANSLATIONS.en = {
   '⏮ חמה קודם': '⏮ Previous solar',
   'ליקוי חמה הבא ⏭': 'Next solar eclipse ⏭',
   'הצג חרוטי צל': 'Show shadow cones',
+  'ובליקוי הלבנה: ירח רחוק פוגש את צל הארץ במקום שהוא צר יותר, ומרחקו מציר הצל גדול יותר — הליקוי רדוד וקצר יותר, ליקוי מלא עשוי להיעשות חלקי, וליקוי חלקי קטן להיעלם כליל; ירח קרוב — הליקוי עמוק וארוך יותר. חלון הזמן של ההנפשה מתרחב ומתכווץ עם משך הליקוי.':
+    'And in a lunar eclipse: a distant Moon meets Earth’s shadow where it is narrower, and lies farther from the shadow axis — the eclipse is shallower and shorter, a total eclipse may become partial, and a small partial one may vanish altogether; a near Moon — the eclipse is deeper and longer. The animation’s time window widens and shrinks with the eclipse’s duration.',
+  'מבט מצד המלקה': 'Edge-on view of the ecliptic', 'מבט מעל המלקה': 'View from above the ecliptic',
+  'הצג מישור המלקה': 'Show the ecliptic plane', 'מישור המלקה': 'ecliptic plane',
+  '"מבט מצד המלקה" מעמיד את העין במישור המלקה עצמו — מישור מסלול הארץ סביב השמש, המסומן ברשת העגולה. במבט זה הרשת נראית כקו אחד, והשמש, הארץ וכוכבי הלכת עומדים כולם עליו או סמוך לו, שכולם סובבים קרוב למישור אחד; והירח לבדו סוטה ממנו למעלה או למטה — הוא "רוחב הירח" הצפוני או הדרומי (ראו בכרטיס שלמטה), והקו הדק היורד מן הירח אל המישור מסמן אותו, ומסלול הירח כולו נראה נטוי למישור. הסטייה קטנה בקנה המידה של האיור — במבט הגאוצנטרי התקרבו אל הארץ בגלגלת כדי לראותה. "מבט מעל המלקה" משיב את המבט מלמעלה, מצד קוטב המלקה הצפוני.':
+    '"Edge-on view of the ecliptic" places the eye in the ecliptic plane itself — the plane of Earth’s orbit around the Sun, marked by the round grid. Seen edge-on the grid becomes a single line, and the Sun, Earth and planets all sit on it or close to it, since they all orbit near one plane; the Moon alone strays above or below it — its northern or southern "latitude" (see the card below), marked by the thin line dropping from the Moon to the plane, and the Moon’s whole orbit is seen tilted to the plane. The deviation is small at the scale of the diagram — in the geocentric view zoom in on the Earth to see it. "View from above the ecliptic" returns the view from above, from the side of the ecliptic’s north pole.',
+  'מישור המלקה מסומן באיורים בקו מקווקו אופקי — במרכז צל הארץ ובמראה הירח מן הארץ בליקוי הלבנה, ובמרכז הארץ שבמבט צל הירח בליקוי החמה: מרחק הירח או נתיבו מן הקו הוא רוחבו — צפוני מעל הקו ודרומי מתחתיו.':
+    'The ecliptic plane is marked in the diagrams by a horizontal dashed line — through the centre of Earth’s shadow and in the view of the Moon from Earth in the lunar eclipse, and through the centre of the Earth in the view of the Moon’s shadow in the solar eclipse: the Moon’s distance or path from that line is its latitude — north above the line, south below it.',
   'מצב ליקוי': 'Eclipse state',
   'ליקוי לבנה מלא': 'Total lunar eclipse',
   'ליקוי לבנה חלקי': 'Partial lunar eclipse',

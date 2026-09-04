@@ -50,9 +50,15 @@
   // הצל נופל נגד כיוון השמש; רדיוסי האומברה/פנומברה במרחק הירח — ליניאריים
   // בחרוט, מוגדלים 2% (האטמוספרה מאריכה את הצל). ההיסט הדו-ממדי של הירח מן
   // הציר נפרש על בסיס (מזרח, צפון-מלקה) לציור המעבר והמראה.
-  function lunarGeom(date) {
+  // simKm — מרחק ירח מדומה (הדגמה): וקטור הירח נמתח או מקוצר לאורך כיוונו,
+  // כבליקוי החמה. ירח רחוק פוגש צל צר יותר ובהיסט גדול יותר — הליקוי רדוד
+  // וקצר, ואף נעלם; ירח קרוב — עמוק וארוך יותר.
+  function lunarGeom(date, simKm) {
     const time = AE.MakeTime(date);
-    const s = geoKm(AE.Body.Sun, time), m = geoKm(AE.Body.Moon, time);
+    const s = geoKm(AE.Body.Sun, time);
+    let m = geoKm(AE.Body.Moon, time);
+    const distReal = len(m);
+    if (simKm) m = mul(m, simKm / distReal);
     const a = norm(mul(s, -1));                          // ציר הצל
     const proj = dot(m, a);                              // עומק הירח לאורך הציר
     const perpV = sub(m, mul(a, proj));
@@ -65,7 +71,7 @@
       umbra: proj > 0 ? overlapFrac(R_MOON, Math.max(rU, 0), len(perpV)) : 0,
       penum: proj > 0 ? overlapFrac(R_MOON, rP, len(perpV)) : 0,
       x: dot(perpV, east), y: dot(perpV, north),         // היסט הירח מהציר (ק"מ)
-      rU, rP,
+      rU, rP, distReal,
     };
   }
 
@@ -137,11 +143,21 @@
 
   // חלון הזמן של הליקוי: לבנה — ממשכי הפנומברה שבמנוע; חמה — סריקה סביב השיא
   // עד שהכיסוי (בנקודה הטובה בעולם) מתאפס.
-  function windowOf(type, einfo) {
+  // simKm — מרחק ירח מדומה: בליקוי לבנה משך הליקוי משתנה עמו, ולכן החלון
+  // נסרק מחדש לפי הגאומטריה (ובלי הדגמה — מחצית משך הפנומברה שנתן המנוע).
+  function windowOf(type, einfo, simKm) {
     const pk = einfo.peak.date.getTime();
     if (type === 'lunar') {
-      const w = (einfo.sd_penum || 110) * 60000 * 1.05;
-      return { t0: pk - w, t1: pk + w };
+      if (!simKm) {
+        const w = (einfo.sd_penum || 110) * 60000 * 1.05;
+        return { t0: pk - w, t1: pk + w };
+      }
+      let first = null, last = null;
+      for (let mm = -300; mm <= 300; mm += 5) {
+        if (lunarGeom(new Date(pk + mm * 60000), simKm).penum > 0) { if (first === null) first = mm; last = mm; }
+      }
+      if (first === null) { first = -110; last = 110; }
+      return { t0: pk + (first - 8) * 60000, t1: pk + (last + 8) * 60000 };
     }
     let first = null, last = null;
     for (let mm = -260; mm <= 260; mm += 5) {
@@ -389,11 +405,14 @@
 
   // ════════════════ ציור: ליקוי לבנה ════════════════
   function drawLunar(ctx, L, sim) {
-    const g = lunarGeom(sim.t);
+    const simKm = sim.distOn ? sim.distKm : 0;
+    const g = lunarGeom(sim.t, simKm);
 
     // ── רצועת המערך למעלה: שמש → ארץ → ירח, חרוט הצל, והקו ביניהם ──
     const ay = L.y + L.h * 0.15;
-    const sx = L.x + L.w * 0.08, ex = L.x + L.w * 0.52, mxBase = L.x + L.w * 0.86;
+    const sx = L.x + L.w * 0.08, ex = L.x + L.w * 0.52;
+    // מרחק ארץ–ירח על המסך משתנה עם המרחק האמיתי/המדומה (יחס ישיר)
+    const mxBase = ex + L.w * 0.34 * ((simKm || g.distReal) / MEAN_DIST);
     const kap = 13 / R_EARTH;                       // ק"מ→פיקסל לרדיוסים ולהיסטים (הארץ 13px)
     const my = ay - g.y * kap;                      // היסט הירח מציר הצל — אמיתי, באותו קנה
     // קרני שמש + הקו שבין השמש לירח (ההצעה: "יסומן קו בין הירח והשמש")
@@ -427,10 +446,13 @@
     ctx.strokeStyle = cvv('--ill-grid'); ctx.lineWidth = 1; ctx.stroke();
     ctx.fillStyle = cvv('--ill-umbra');
     ctx.beginPath(); ctx.arc(cx1, cy1, Math.max(2, g.rU * k2), 0, 2*Math.PI); ctx.fill();
+    // מישור המלקה — דרך מרכז הצל (נגד השמש, שעל המלקה); נתיב הירח מעליו או
+    // מתחתיו הוא רוחבו הצפוני או הדרומי, שבו תלוי עומק הליקוי
+    eclipticLine(ctx, cx1, cy1, Rp * 1.22, false);
     // נתיב הירח לאורך חלון הליקוי
     ctx.strokeStyle = cvv('--ill-line'); ctx.setLineDash([3, 4]); ctx.beginPath();
     for (let i = 0; i <= 40; i++) {
-      const gp = lunarGeom(new Date(sim.win.t0 + (i / 40) * (sim.win.t1 - sim.win.t0)));
+      const gp = lunarGeom(new Date(sim.win.t0 + (i / 40) * (sim.win.t1 - sim.win.t0)), simKm);
       const x = cx1 - gp.x * k2, y = cy1 - gp.y * k2;
       i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     }
@@ -465,6 +487,9 @@
     }
     ctx.strokeStyle = cvv('--ill-line'); ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.arc(cx2, cy2, R2, 0, 2*Math.PI); ctx.stroke();
+    // מישור המלקה במראה מן הארץ — עובר במרכז הצל; הירח מעליו או מתחתיו כרוחבו
+    const yEcl = cy2 + g.y * (R2 / R_MOON);
+    if (Math.abs(yEcl - cy2) < R2 * 1.35) eclipticLine(ctx, cx2, yEcl, R2 * 1.3, yEcl > cy2 - R2 * 0.6);
     const pct = Math.round(g.umbra * 100);
     ctx.fillStyle = cvv('--ill-text'); ctx.font = 'bold 13px sans-serif'; ctx.textBaseline = 'top';
     ctx.fillText(pct + '% ' + T('מכוסה'), cx2, cy2 + R2 + 8);
@@ -490,6 +515,18 @@
       ctx.fillText(cap, Math.max(cw/2 + 2, Math.min(L.x + L.w - cw/2 - 2, cx2)), yH + 26);
     }
     return g;
+  }
+
+  // קו מישור המלקה — מקווקו, אופקי (ציר המזרח של הבסיס ⊥ לציר הצל הוא חיתוך
+  // המלקה במישור המצויר), עם כיתוב בקצהו הימני. מה שמעליו — רוחב צפוני, מתחתיו — דרומי.
+  function eclipticLine(ctx, cx, cy, half, labelAbove) {
+    ctx.save();
+    ctx.strokeStyle = cvv('--ill-ray'); ctx.lineWidth = 1.2; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(cx - half, cy); ctx.lineTo(cx + half, cy); ctx.stroke();
+    ctx.fillStyle = cvv('--ill-muted'); ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
+    ctx.textBaseline = labelAbove ? 'bottom' : 'top';
+    ctx.fillText(T('מישור המלקה'), cx + half, cy + (labelAbove ? -2 : 2));
+    ctx.restore();
   }
 
   // הצללת הירח בצל הארץ: פנומברה עדינה, אומברה כהה, והאדמה לקראת ליקוי מלא.
@@ -668,6 +705,8 @@
     ctx.fillStyle = 'rgba(70,110,180,0.20)';
     ctx.beginPath(); ctx.arc(cxE, cyE, RE, 0, 2*Math.PI); ctx.fill();
     ctx.strokeStyle = cvv('--ill-line'); ctx.lineWidth = 1; ctx.stroke();
+    // מישור המלקה — דרך מרכז הארץ; נתיב הצל מעליו או מתחתיו כרוחב הירח
+    eclipticLine(ctx, cxE, cyE, RE * 1.3, true);
     ctx.setLineDash([3, 4]); ctx.strokeStyle = cvv('--ill-line'); ctx.beginPath();
     for (let i = 0; i <= 40; i++) {
       const gg = solarGeom(new Date(sim.win.t0 + (i / 40) * (sim.win.t1 - sim.win.t0)), simKm);
@@ -908,7 +947,7 @@
     // טעינת ליקוי (info של המנוע) — חישוב חלון, איפוס לרגע השיא
     setEclipse(einfo) {
       this.einfo = einfo;
-      this.win = windowOf(this.type, einfo);
+      this.win = windowOf(this.type, einfo, this.distOn ? this.distKm : 0);
       this.t = new Date(this.fromStart ? this.win.t0 : einfo.peak.date.getTime());
       this._path = null;
       this.follow = true;
@@ -919,12 +958,21 @@
 
     _typeForMode(m) { return m === 'lunar' ? 'lunar' : 'solar'; },
 
+    // חלון הליקוי מחושב מחדש כשמרחק ההדגמה משתנה — בליקוי לבנה משכו תלוי במרחק.
+    // הרגע המוצג נשאר, ונקטע אל החלון החדש אם יצא ממנו.
+    _rewin() {
+      if (!this.einfo || this.type !== 'lunar') return;
+      this.win = windowOf(this.type, this.einfo, this.distOn ? this.distKm : 0);
+      const ms = Math.max(this.win.t0, Math.min(this.win.t1, this.t.getTime()));
+      if (ms !== this.t.getTime()) this.t = new Date(ms);
+    },
+
     setMode(m) {
       const newType = this._typeForMode(m);
       this.mode = m;
       document.querySelectorAll('#e_modeseg button').forEach(b => b.classList.toggle('active', b.dataset.emode === m));
       document.querySelectorAll('#view-eclipse [data-emode-card]').forEach(c =>
-        c.style.display = c.dataset.emodeCard === m ? '' : 'none');
+        c.style.display = c.dataset.emodeCard.split(' ').includes(m) ? '' : 'none');
       if (newType !== this.type || !this.einfo) {
         this.type = newType;
         try { this.setEclipse(nextEcl(newType, new Date(this.t.getTime() - 40 * 86400000))); } catch (e) {}
@@ -1025,7 +1073,7 @@
       // מרחק הירח מן הארץ ברגע המוצג; כשהדגמת המרחק פועלת — המרחק המדומה
       const eed = $('e_edist');
       if (eed) {
-        const demo = this.mode === 'solar' && this.distOn;
+        const demo = this.mode !== 'globe' && this.distOn;
         let d = null;
         if (demo) d = this.distKm;
         else if (g && g.distReal) d = g.distReal;
@@ -1054,7 +1102,7 @@
       }
       // מרחק הירח מן הארץ: כשההדגמה כבויה מוצג המרחק האמיתי ברגע המוצג,
       // והמחוון (הנעול) עוקב אחריו — כך שהפעלת ההדגמה נפתחת מן המרחק הזה
-      if (this.mode === 'solar' && !this.distOn && g && g.distReal) {
+      if (this.mode !== 'globe' && !this.distOn && g && g.distReal) {
         const d = Math.round(g.distReal);
         const dl = $('e_distL'); if (dl) dl.textContent = d.toLocaleString();
         const ds = $('e_dist'); if (ds) ds.value = Math.max(PERIGEE, Math.min(APOGEE, d));
@@ -1223,8 +1271,12 @@
         // ההדגמה נפתחת מן המרחק האמיתי שהמחוון עוקב אחריו; בכיבוי החיווי
         // חוזר להתעדכן מן החישוב בציור הבא (_hud)
         if (this.distOn) this.distKm = +$('e_dist').value;
+        this._rewin();
       };
-      $('e_dist').oninput = e => { this.distKm = +e.target.value; $('e_distL').textContent = this.distKm.toLocaleString(); };
+      $('e_dist').oninput = e => {
+        this.distKm = +e.target.value; $('e_distL').textContent = this.distKm.toLocaleString();
+        this._rewin();
+      };
       const fc = $('e_follow'); if (fc) fc.onchange = e => { this.follow = e.target.checked; };
       // גרירת הגלובוס (במצב הגלובוס בלבד)
       const cnv = $('eclipseCanvas');
