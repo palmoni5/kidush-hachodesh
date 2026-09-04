@@ -242,7 +242,7 @@ window.Sims = (function () {
       const hM = AE.Horizon(t, obs, eqM.ra, eqM.dec, 'normal');
       const eqS = AE.Equator(AE.Body.Sun, t, obs, true, true);
       const hS = AE.Horizon(t, obs, eqS.ra, eqS.dec, 'normal');
-      return { moon: { az: hM.azimuth, alt: hM.altitude }, sun: { az: hS.azimuth, alt: hS.altitude } };
+      return { moon: { az: hM.azimuth, alt: hM.altitude, dec: eqM.dec }, sun: { az: hS.azimuth, alt: hS.altitude, dec: eqS.dec } };
     } catch (e) { return null; }
   }
   const COMPASS8 = ['צפון', 'צפון-מזרח', 'מזרח', 'דרום-מזרח', 'דרום', 'דרום-מערב', 'מערב', 'צפון-מערב'];
@@ -584,6 +584,17 @@ window.Sims = (function () {
       $('m_phase').textContent = T(A.moonPhaseLabel(this.phase));
       // רוחב הירח ונטיית הקרניים — "לצפונה או לדרומה... ולאין היה נוטה" (ר"ה ב, ו)
       const horns = moonHorns(simDate);
+      const pos = moonSkyPos(simDate, this.loc);
+      // נטיית הירח — מרחקו מקו המשווה השמימי צפונה או דרומה (הנטייה שבחשבון
+      // הרמב"ם פי"ט: נטיית מקומו במזלות ועמה רוחבו), ולידה כמה הוא צפוני או
+      // דרומי לשמש — היא "לצפונה או לדרומה" ששואלים את העדים
+      const md = $('m_decl');
+      if (!pos) md.textContent = '—';
+      else {
+        const dm = pos.moon.dec, rel = dm - pos.sun.dec;
+        md.textContent = Math.abs(dm).toFixed(1) + '° ' + T(dm >= 0 ? 'צפונית' : 'דרומית')
+          + ' · ' + Math.abs(rel).toFixed(1) + '° ' + T(rel >= 0 ? 'צפונה לשמש' : 'דרומה לשמש');
+      }
       $('m_lat').textContent = !horns ? '—'
         : Math.abs(horns.lat).toFixed(2) + '° ' + T(horns.lat >= 0 ? 'צפוני' : 'דרומי');
       $('m_horn').textContent = !horns ? '—' : hornLabel(horns);
@@ -671,7 +682,6 @@ window.Sims = (function () {
         ctx.lineTo(vx + Math.cos(litAng) * (vR + 12), vy + Math.sin(litAng) * (vR + 12)); ctx.stroke(); ctx.setLineDash([]);
       }
       // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
-      const pos = moonSkyPos(simDate, this.loc);
       if (W >= 520) {
         const dR = Math.max(50, Math.min(W * 0.12, (H - top) * 0.16, 92));
         const rtl = getComputedStyle(document.body).direction !== 'ltr';

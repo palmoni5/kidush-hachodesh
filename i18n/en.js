@@ -142,6 +142,10 @@ window.TRANSLATIONS.en = {
   '(= כ"ט יום י"ב שעות ותשצ"ג חלקים = הזמן שבין מולד למולד).':
     '(= 29 days, 12 hours and 793 chalakim = the time between one molad and the next).',
   'נטיית הקרניים': 'Tilt of the horns',
+  'נטיית הירח (מקו המשווה)': 'Moon’s declination (from the equator)',
+  'צפונית': 'north', 'דרומית': 'south', 'צפונה לשמש': 'north of the Sun', 'דרומה לשמש': 'south of the Sun',
+  '"נטיית הירח" היא מרחקו מקו המשווה השמימי צפונה או דרומה במעלות — הנטייה שמחשב הרמב"ם בפי"ט מנטיית מקומו במזלות (כמו "נטיית השמש" שבלשונית מהלך השמש) ומרוחבו יחד — ולידה כמה הירח צפוני או דרומי לשמש באותה שעה: הוא "לצפונה או לדרומה" ששואלים את העדים. הירח צפוני לשמש כשרוחבו צפוני, או כשמקומו במזלות צפוני משלה — כסהר של אביב, שמזלו קרוב לתאומים; ודרומי לה — להפך.':
+    '"Moon’s declination" is its distance north or south of the celestial equator in degrees — the tilt Rambam computes in ch. 19 from the declination of its place in the zodiac (like the "Sun’s declination" in the Sun’s Path tab) together with its latitude — and beside it, how far the Moon is north or south of the Sun at that hour: the "to its north or to its south" asked of the witnesses. The Moon is north of the Sun when its latitude is north, or when its place in the zodiac is north of the Sun’s — like a spring crescent, whose sign is near Gemini; and south of it in the opposite cases.',
   'למזרח': 'east', 'למערב': 'west', 'מדויק': 'exactly', 'לצפון': 'to the north', 'לדרום': 'to the south',
   'בשני חלונות הירח — "הירח מכדור הארץ" ו"הירח בשמים" — אמצע הצד המואר פונה אל השמש, והקרניים (הפגימה) פונות מן השמש והלאה, כשאלת בית הדין לעדים במשנה (ראש השנה ב, ו): "לפני החמה או לאחר החמה, לצפונה או לדרומה, כמה היה גבוה ולאין היה נוטה" (וברמב"ם הלכות קידוש החודש פ"ב ה"ד).':
     'In both Moon windows — "The Moon as seen from Earth" and "Moon in the sky" — the middle of the lit side faces the Sun, and the horns (the dark notch) point away from it, as in the court’s questions to the witnesses in the Mishnah (Rosh Hashanah 2:6): "was it before the sun or behind it, to its north or to its south, how high was it, and which way was it tilted" (and Rambam, Laws of Kiddush HaChodesh 2:4).',
