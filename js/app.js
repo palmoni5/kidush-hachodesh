@@ -245,6 +245,28 @@
     hudEls.forEach(h => hudRO.observe(h));
   }
 
+  // ── קבוצות הנתונים ב-HUD מתקפלות במסך צר (אקורדיון) ─────────────────
+  // הקיפול עצמו ב-CSS (media query < 760px); כאן רק המצב: קבוצה אחת פתוחה
+  // בכל לוח — כברירת מחדל קבוצת הנתונים העיקרית (grp-data) — ונקישה על
+  // כותרת פותחת אותה וסוגרת את חברותיה. גובה ה-HUD משתנה, ולכן מטמון
+  // הפריסה מתאפס והאיור מצויר מחדש באזור הפנוי החדש.
+  hudEls.forEach(h => {
+    const grps = h.querySelectorAll('.grp');
+    if (!grps.length) return;
+    (h.querySelector('.grp-data') || grps[0]).classList.add('open');
+    grps.forEach(g => {
+      const sec = g.querySelector('.sec');
+      if (!sec) return;
+      sec.addEventListener('click', () => {
+        const wasOpen = g.classList.contains('open');
+        grps.forEach(x => x.classList.remove('open'));
+        if (!wasOpen) g.classList.add('open');
+        if (window.Sims.clearFitCache) window.Sims.clearFitCache();
+        invalidate();
+      });
+    });
+  });
+
   // שינוי גודל הקנבס → ניקוי מטמון המידות וציור מחדש (במקום fit() בכל פריים)
   // המחסום מתאפס רק ל-HUD שרוחב הבמה שלו השתנה באמת (ולא בכל אירוע שינוי
   // גודל, כגון מעבר לשונית) — אחרת החלונית התכווצה והתרחבה מחדש בכל מעבר

@@ -637,9 +637,11 @@ window.Sims = (function () {
       // מה-HUD: במסך רחב ברצועה שמשמאלו (ב-RTL), ובמסך צר מתחתיו. בלי זה
       // לוח הנתונים, שהתארך, היה מכסה את מסלול הירח ואת הירח עצמו.
       const L = stageLayout($('moonCanvas'), W, H);
-      const top = L.y, LW = L.w, LX = L.x;
-      const earthX = LX + LW * 0.60, earthY = top + (H - top) * 0.56, sunX = LX + LW * 0.13, sunY = earthY;
-      const orbitR = Math.min(LW, H - top) * 0.19;
+      // L.h חסום מלמטה (80): כש-HUD גבוה מן הבמה, H − top שלילי היה נותן
+      // רדיוס מסלול שלילי — ושגיאת arc בפריים הראשון בטעינה בחלון צר.
+      const top = L.y, LW = L.w, LX = L.x, LH = L.h;
+      const earthX = LX + LW * 0.60, earthY = top + LH * 0.56, sunX = LX + LW * 0.13, sunY = earthY;
+      const orbitR = Math.min(LW, LH) * 0.19;
       const ang = Math.PI - 2 * Math.PI * (this.phase / MEAN_LUN);
       const mx = earthX + Math.cos(ang) * orbitR, my = earthY + Math.sin(ang) * orbitR;
       // קרני שמש (עד אזור הארץ/הירח בלבד) + מסלול
@@ -679,7 +681,7 @@ window.Sims = (function () {
       const colR = L.colW ? Math.min(Math.min(W, H) * 0.15, L.colW / 2 - 16, (H - L.hudB - 62) / 2) : 0;
       if (colR >= 40) { vR = colR; vx = L.colX + L.colW / 2; vy = H - vR - 20; }
       else {
-        vR = Math.max(28, Math.min(Math.min(LW, H) * 0.15, (LX + LW - (earthX + orbitR) - 36) / 2));
+        vR = Math.max(28, Math.min(Math.min(LW, H) * 0.15, (LX + LW - rayEnd - 28) / 2));
         vx = LX + LW - vR - 16; vy = H - vR - 20;
       }
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
@@ -698,7 +700,7 @@ window.Sims = (function () {
       }
       // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
       if (W >= 520) {
-        const dR = Math.max(50, Math.min(LW * 0.12, (H - top) * 0.16, 92));
+        const dR = Math.max(50, Math.min(LW * 0.12, LH * 0.16, 92));
         const rtl = getComputedStyle(document.body).direction !== 'ltr';
         const dx = rtl ? LX + 24 + dR + 14 : LX + LW - 24 - dR - 14;
         drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.phase, this.loc.name);

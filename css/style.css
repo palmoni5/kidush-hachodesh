@@ -664,6 +664,14 @@ footer {
     inset-block-start: 8px; inset-inline-start: 8px; }
   .hud .row { gap: 14px; }
   .hud .row span, .hud .row b { white-space: nowrap; }
+  /* קבוצות הנתונים מתקפלות (אקורדיון): במסך צר לוח מלא גבוה כגובה הבמה
+     ומותיר לאיור רצועה צרה. נקישה על כותרת קבוצה פותחת אותה וסוגרת את
+     האחרות; כברירת מחדל פתוחה קבוצת הנתונים העיקרית (ראו app.js). */
+  .hud .grp { margin-top: 4px; padding-top: 3px; }
+  .hud .grp .sec { cursor: pointer; display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; user-select: none; }
+  .hud .grp .sec::after { content: '▾'; opacity: 0.7; }
+  .hud .grp.open .sec::after { content: '▴'; }
+  .hud .grp:not(.open) > :not(.sec) { display: none; }
 }
 
 /* טלפון לרוחב (רחב אך נמוך) — שמירה על פריסה צמודה כדי שהאיור לא יתגמד */
