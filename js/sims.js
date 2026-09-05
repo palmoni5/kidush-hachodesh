@@ -288,7 +288,10 @@ window.Sims = (function () {
   // זווית (במסך) של מרכז הצד המואר בחלון השמים: כיוון השמש מן הירח על כדור
   // השמים, מומר לכיוון בהיטל הכיפה (מרכז=זניט, שפה=אופק; ראו place ב-drawMoonSky)
   // בשקלול קנה המידה הרדיאלי (R/90 למעלה) והמשיקי (rr לרדיאן) של ההיטל.
-  function skyLitAngle(pos, R) {
+  // רכיבי כיוון השמש מן הירח במישור המשיק לכדור השמים במקום הירח, במסגרת
+  // האופק: cAlt — לעבר הזניט (למעלה), cAz — לעבר האזימוט הגדל (ימינה לצופה
+  // הפונה אל הירח). azM — אזימוט הירח ברדיאנים.
+  function skyLitComps(pos) {
     const D = Math.PI / 180;
     const azM = pos.moon.az * D, alM = pos.moon.alt * D, azS = pos.sun.az * D, alS = pos.sun.alt * D;
     const M = [Math.sin(azM)*Math.cos(alM), Math.cos(azM)*Math.cos(alM), Math.sin(alM)];
@@ -296,7 +299,29 @@ window.Sims = (function () {
     const eAlt = [-Math.sin(azM)*Math.sin(alM), -Math.cos(azM)*Math.sin(alM), Math.cos(alM)];
     const eAz = [Math.cos(azM), -Math.sin(azM), 0];
     const d = vdot(S, M), St = [S[0]-d*M[0], S[1]-d*M[1], S[2]-d*M[2]];
-    const cAlt = vdot(St, eAlt), cAz = vdot(St, eAz);
+    return { cAlt: vdot(St, eAlt), cAz: vdot(St, eAz), azM };
+  }
+  // "לאין היה נוטה" כפי שרואה העין — הקרניים (מן השמש והלאה) ביחס לזניט ולאופק:
+  // למעלה/למטה וכמה מעלות לצפון/לדרום/למזרח/למערב (או להפך כשהן קרובות לאופקי).
+  // זו הנטייה שמצייר חלון "הירח בשמים", ושונה מן הנטייה מקו המלקה — שהמלקה
+  // עצמה נוטה לאופק לפי המקום, העונה והשעה. חל רק כשהירח מעל האופק.
+  function skyHornLabel(pos) {
+    if (!pos || pos.moon.alt <= 0) return T('מתחת לאופק');
+    const c = skyLitComps(pos), u = -c.cAlt, a = -c.cAz;
+    // כיוון הרכיב האופקי במצפן: eAz פונה לאזימוט הירח + 90°
+    const sgn = a >= 0 ? 1 : -1, eastC = sgn * Math.cos(c.azM), northC = -sgn * Math.sin(c.azM);
+    const side = T(Math.abs(northC) >= Math.abs(eastC) ? (northC >= 0 ? 'לצפון' : 'לדרום') : (eastC >= 0 ? 'למזרח' : 'למערב'));
+    const vert = T(u >= 0 ? 'למעלה' : 'למטה');
+    const D = 180 / Math.PI;
+    if (Math.abs(u) >= Math.abs(a)) {
+      const tilt = Math.atan2(Math.abs(a), Math.abs(u)) * D;
+      return tilt < 0.5 ? vert + ' ' + T('מדויק') : vert + ' · ' + tilt.toFixed(0) + '° ' + side;
+    }
+    const tilt = Math.atan2(Math.abs(u), Math.abs(a)) * D;
+    return tilt < 0.5 ? side + ' ' + T('מדויק') : side + ' · ' + tilt.toFixed(0) + '° ' + vert;
+  }
+  function skyLitAngle(pos, R) {
+    const { cAlt, cAz, azM } = skyLitComps(pos);
     const rr = (90 - Math.max(pos.moon.alt, 0)) / 90 * R, kr = 2 * R / Math.PI;
     const dx = kr*cAlt*Math.sin(azM) - rr*cAz*Math.cos(azM);
     const dy = kr*cAlt*Math.cos(azM) + rr*cAz*Math.sin(azM);
@@ -604,6 +629,7 @@ window.Sims = (function () {
       $('m_lat').textContent = !horns ? '—'
         : Math.abs(horns.lat).toFixed(2) + '° ' + T(horns.lat >= 0 ? 'צפוני' : 'דרומי');
       $('m_horn').textContent = !horns ? '—' : hornLabel(horns);
+      $('m_hornSky').textContent = skyHornLabel(pos);
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
       // התווית מבטיחה "שעה באופק ירושלים" — מוצמד לאזור הזמן של ירושלים גם
