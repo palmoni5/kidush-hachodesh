@@ -122,14 +122,31 @@
     const T = (date.getTime() / 86400000 - 10957.5) / 36525;   // מאות יוליאניות מ-J2000
     return 23.439279444444445 + T * (-0.013010213611111 + T * (-5.0861111111e-8 + T * 5.565e-7));
   }
+  // נוסף: נטיית גלגל המזלות לאופק ברגע זה. הזווית שבין שני המישורים היא
+  // הזווית שבין ציריהם — הזניט וקוטב המלקה (RA=270°, δ=90°−ε): נטייה = 90°
+  // פחות גובה הקוטב מעל האופק (בערכו המוחלט). היא משתנה במשך היממה בין
+  // 90°−φ−ε ל-90°−φ+ε (בירושלים 34.8°–81.7°), שכן משווה השמים נטוי לאופק
+  // 90°−φ קבועות והמלקה נטויה עליו ε — פעם לאותו צד ופעם לצד שכנגד.
+  // הנקודה הגבוהה ברצועה (incl = גם גובהה מעל האופק) עומדת 90° לפני המזל
+  // העולה (peakLon), וכיוונה באופק (peakAz) הוא הכיוון שאליו הגלגל נוטה.
   function horizonPoints(date, lat, lon) {
     let gast;
     try { gast = AE.SiderealTime(AE.MakeTime(date)); } catch (_) { return null; }
     const th = rev360(gast * 15 + lon) * RAD, ph = lat * RAD, ep = epsOfDate(date) * RAD;
     const asc = rev360(Math.atan2(Math.cos(th), -(Math.sin(th) * Math.cos(ep) + Math.tan(ph) * Math.sin(ep))) / RAD);
     const mc  = rev360(Math.atan2(Math.sin(th), Math.cos(th) * Math.cos(ep)) / RAD);
-    return { asc, mc };
+    // קוטב המלקה בקואורדינטות האופק: זווית השעה H = θ − 270°, נטייה 90° − ε
+    const Hp = th - 270 * RAD, cd = Math.sin(ep), sd = Math.cos(ep);
+    const E = -cd * Math.sin(Hp);
+    const N = Math.cos(ph) * sd - Math.sin(ph) * cd * Math.cos(Hp);
+    const U = Math.sin(ph) * sd + Math.cos(ph) * cd * Math.cos(Hp);
+    const incl = Math.acos(Math.min(1, Math.abs(U))) / RAD;
+    // הנקודה הגבוהה שברצועה — מנגד לקוטב באופק כשהקוטב מעל האופק, ולצדו כשמתחתיו
+    const sg = U >= 0 ? -1 : 1;
+    const peakAz = rev360(Math.atan2(sg * E, sg * N) / RAD);
+    return { asc, mc, incl, peakAz, peakLon: rev360(asc - 90) };
   }
+  const compass8 = az => COMPASS8[Math.round(rev360(az) / 45) % 8];
 
   // זוית השעה של השמש במקום הצופה (0° = חצות היום, גדלה במשך היממה).
   // היא המידה של הסיבוב היומי: מרידיאן הצופה מרוחק ממרידיאן חצות היום
@@ -821,6 +838,12 @@
       // קו אמצע הרקיע); הצגתה מבארת מדוע הקו נע ואינו ניצב לקו האופק.
       const za = $('z_arc');
       if (za) za.textContent = hz ? rev360(hz.asc - hz.mc).toFixed(0) + '°' : '—';
+      // נטיית הגלגל לאופק של הצופה — משתנה במשך היממה (ראו horizonPoints);
+      // הנקודה הגבוהה שברצועה, גובהה שווה לנטייה, וכיוונה הוא צד הנטייה.
+      const zi = $('z_incl');
+      if (zi) zi.textContent = hz ? hz.incl.toFixed(1) + '° · ' + T('נוטה אל') + ' ' + T(compass8(hz.peakAz)) : '—';
+      const zh = $('z_high');
+      if (zh) zh.textContent = hz ? T(signOf(hz.peakLon)) + ' ' + Math.floor(hz.peakLon % 30) + '° · ' + T('גובה') + ' ' + hz.incl.toFixed(0) + '°' : '—';
       const hud = $('z_date');
       if (hud) hud.textContent = this.date.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day:'numeric', month:'long', year:'numeric' });
       const hudHe = $('z_date_he');

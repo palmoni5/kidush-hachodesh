@@ -29,8 +29,8 @@ window.Sims = (function () {
   const _fitCache = new Map();
   // מטמון פריסה: במסכים צרים ה-HUD נערם מעל הקנבס, ולכן שומרים מקום אנכי בראשו
   // כדי שהאיור (המרכזי) יצויר מתחתיו ולא יוסתר. מתאפס על שינוי גודל בלבד.
-  const _layout = { yearTop: null, moonTop: null };
-  function clearFitCache() { _fitCache.clear(); _layout.yearTop = null; _layout.moonTop = null; _hudCache.clear(); }
+  const _layout = { yearTop: null };
+  function clearFitCache() { _fitCache.clear(); _layout.yearTop = null; _hudCache.clear(); }
   // גובה ה-HUD ביחס לראש הבמה (במסכים צרים בלבד); אחרת מחזיר את ברירת המחדל.
   // הסף נקבע לפי רוחב החלון (כמו ה-@media ב-CSS) ולא לפי רוחב הקנבס: רוחב הקנבס
   // (חלון פחות פאנל 312px) יושב לעיתים ממש סביב 760 ומתהפך על reflow זעיר —
@@ -54,23 +54,29 @@ window.Sims = (function () {
     let L = _hudCache.get(key);
     if (L) return L;
     const stage = canvas.parentElement, hud = stage && stage.querySelector('.hud');
-    if (!hud) { L = { x: 0, y: 0, w: W, h: H }; }
+    if (!hud) { L = { x: 0, y: 0, w: W, h: H, side: 'none', hudB: 0 }; }
     else {
       const sr = stage.getBoundingClientRect(), hr = hud.getBoundingClientRect();
       // חלונית איור בפינת הבמה (אם יש) יושבת באותו צד עצמו, ולכן הרצועה
       // השמורה נמדדת לפי הרחב שבשניהם
       const ins = stage.querySelector('.stage-inset'), ir = ins && ins.getBoundingClientRect();
+      // hudB — תחתית ה-HUD ביחס לבמה; side — הצד שבו הרצועה השמורה. ברצועת צד
+      // מצורפים גם גבולות הרצועה (colX, colW): מתחת ל-HUD נותר בה מקום פנוי
+      // לחלונית נלווית (כחלון "הירח מכדור הארץ" שבמופעי הירח).
+      const hudB = hr.bottom - sr.top;
       if (mode === 'below' || (window.innerWidth || W) < 760) {
-        const top = Math.max(0, hr.bottom - sr.top + 8);
-        L = { x: 0, y: top, w: W, h: Math.max(80, H - top) };
+        const top = Math.max(0, hudB + 8);
+        L = { x: 0, y: top, w: W, h: Math.max(80, H - top), side: 'top', hudB };
       } else if ((hr.left + hr.right) / 2 < (sr.left + sr.right) / 2) {
         // ה-HUD בצד שמאל (פריסת LTR) — האזור הפנוי מימינו
         const reserve = Math.max(0, hr.right - sr.left + 10, ir ? ir.right - sr.left + 10 : 0);
-        L = { x: Math.min(reserve, W - 120), y: 0, w: Math.max(120, W - reserve), h: H };
+        const x = Math.min(reserve, W - 120);
+        L = { x, y: 0, w: Math.max(120, W - reserve), h: H, side: 'left', hudB, colX: 0, colW: x };
       } else {
         // ה-HUD בצד ימין (פריסת RTL) — האזור הפנוי משמאלו
         const reserve = Math.max(0, sr.right - hr.left + 10, ir ? sr.right - ir.left + 10 : 0);
-        L = { x: 0, y: 0, w: Math.max(120, W - reserve), h: H };
+        const w = Math.max(120, W - reserve);
+        L = { x: 0, y: 0, w, h: H, side: 'right', hudB, colX: w, colW: W - w };
       }
     }
     _hudCache.set(key, L);
@@ -559,8 +565,8 @@ window.Sims = (function () {
       const simDate = new Date(this.t);
       const { ctx, W, H } = fit($('moonCanvas'));
       ctx.clearRect(0, 0, W, H);
-      // עדכון ה-HUD תחילה: hudInset מודד את גובה ה-HUD, ולכן יש לעדכן את תוכנו
-      // (שאורכו משתנה לפי המופע) לפני מדידת moonTop — אחרת הפריים הראשון נמדד
+      // עדכון ה-HUD תחילה: stageLayout מודד את גובה ה-HUD, ולכן יש לעדכן את תוכנו
+      // (שאורכו משתנה לפי המופע) לפני המדידה — אחרת הפריים הראשון נמדד
       // לפי ערכי ברירת המחדל שב-HTML, ומדידה-מחדש מאוחרת מקפיצה את האיור.
       // אחוז ההארה — מזווית המופע התלת-ממדית המלאה (Illumination), לא מהקירוב
       // שעל הפרש האורך האקליפטי בלבד (הפרש של עד ~0.2 נקודת אחוז — בעיקר בשל
@@ -627,11 +633,13 @@ window.Sims = (function () {
       hudPlace({ name: 'm_loc', lon: 'm_lonD', lat: 'm_latD', tz: 'm_tz' }, this.loc, simDate);
       $('m_locClock').textContent = fmtAtPlace(simDate, this.loc)
         + (this.loc.tz ? '' : ' (' + T('זמן שמש ממוצע') + ')');
-      // במסך צר מורידים את כל ההרכב מתחת ל-HUD (top=0 בדסקטופ → פריסה מקורית)
-      if (_layout.moonTop === null) _layout.moonTop = hudInset($('moonCanvas'), W, 0);
-      const top = _layout.moonTop;
-      const earthX = W * 0.60, earthY = top + (H - top) * 0.56, sunX = W * 0.13, sunY = earthY;
-      const orbitR = Math.min(W, H - top) * 0.19;
+      // ההרכב כולו — שמש, ארץ, מסלול הירח ושני החלונות — מצויר באזור הפנוי
+      // מה-HUD: במסך רחב ברצועה שמשמאלו (ב-RTL), ובמסך צר מתחתיו. בלי זה
+      // לוח הנתונים, שהתארך, היה מכסה את מסלול הירח ואת הירח עצמו.
+      const L = stageLayout($('moonCanvas'), W, H);
+      const top = L.y, LW = L.w, LX = L.x;
+      const earthX = LX + LW * 0.60, earthY = top + (H - top) * 0.56, sunX = LX + LW * 0.13, sunY = earthY;
+      const orbitR = Math.min(LW, H - top) * 0.19;
       const ang = Math.PI - 2 * Math.PI * (this.phase / MEAN_LUN);
       const mx = earthX + Math.cos(ang) * orbitR, my = earthY + Math.sin(ang) * orbitR;
       // קרני שמש (עד אזור הארץ/הירח בלבד) + מסלול
@@ -663,10 +671,17 @@ window.Sims = (function () {
       ctx.textBaseline = 'bottom';
       ctx.fillText(T('הירח'), mx, Math.max(top + 13, my - 19));
       ctx.textBaseline = 'alphabetic';
-      // תצוגת הירח כפי שנראה מהארץ — פינה ימנית-תחתונה. הרדיוס מוגבל למקום
-      // הפנוי מימין למסלול, כדי שלא יתנגש בירח המקיף ובתוויתו במסכים צרים.
-      const vR = Math.max(28, Math.min(Math.min(W, H) * 0.15, (W - (earthX + orbitR) - 36) / 2));
-      const vx = W - vR - 16, vy = H - vR - 20;
+      // תצוגת הירח כפי שנראה מהארץ — ברצועת ה-HUD, מתחתיו, כשנותר שם מקום
+      // (הרצועה שמורה ממילא ואינה גוזלת מן ההרכב); ואם לאו — בפינה התחתונה
+      // של האזור הפנוי, שמנגד לשמש, ברדיוס המוגבל למקום שמעבר למסלול, כדי
+      // שלא יתנגש בירח המקיף ובתוויתו במסכים צרים.
+      let vR, vx, vy;
+      const colR = L.colW ? Math.min(Math.min(W, H) * 0.15, L.colW / 2 - 16, (H - L.hudB - 62) / 2) : 0;
+      if (colR >= 40) { vR = colR; vx = L.colX + L.colW / 2; vy = H - vR - 20; }
+      else {
+        vR = Math.max(28, Math.min(Math.min(LW, H) * 0.15, (LX + LW - (earthX + orbitR) - 36) / 2));
+        vx = LX + LW - vR - 16; vy = H - vR - 20;
+      }
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(T('הירח מכדור הארץ'), vx, vy - vR - 12);
       // מפת השמים: צפון המלקה למעלה, מזרח לשמאל — הצד המואר פונה אל השמש,
@@ -683,9 +698,9 @@ window.Sims = (function () {
       }
       // חלון תצפית השמים — בפינה העליונה שמנגד ל-HUD (ימין ב-RTL ⇒ החלון משמאל)
       if (W >= 520) {
-        const dR = Math.max(50, Math.min(W * 0.12, (H - top) * 0.16, 92));
+        const dR = Math.max(50, Math.min(LW * 0.12, (H - top) * 0.16, 92));
         const rtl = getComputedStyle(document.body).direction !== 'ltr';
-        const dx = rtl ? 24 + dR + 14 : W - 24 - dR - 14;
+        const dx = rtl ? LX + 24 + dR + 14 : LX + LW - 24 - dR - 14;
         drawMoonSky(ctx, dx, top + 38 + dR, dR, pos, this.phase, this.loc.name);
       }
       // לבנה מעל האופק בשעות היום — מעל האופק, אך אור החמה מסתירה מן העין
@@ -939,10 +954,22 @@ window.Sims = (function () {
     // בפינה שמתחת ל-HUD, ברצועה ששמורה לו ממילא ואין הכיפה מצוירת בה. במסך
     // צר אין בבמה פינה פנויה (ה-HUD נערם בראש והכיפה תופסת את השאר), ושם הוא
     // חוזר אל הכרטיס שבלוח הצד. המעבר מאפס את מטמון המידות והפריסה.
+    // גם במסך רחב אך נמוך (חלון קצר) החלונית חוזרת אל הכרטיס: היא צמודה
+    // לתחתית הבמה, וכשאין תחת ה-HUD די גובה לה היא עולה על שורותיו התחתונות.
+    // הבדיקה נעשית רק כשמטמון המידות ריק (טעינה ושינוי גודל) — היא מודדת DOM.
+    _tiltH: 250,   // גובה החלונית בבמה — נמדד כשהיא שם; אומדן עד המדידה הראשונה
     placeTilt() {
       const box = $('y_tiltInset'), slot = $('y_tiltSlot'), c = $('yearCanvas');
       if (!box || !slot || !c) return;
-      const target = (window.innerWidth || 0) >= 760 ? c.parentElement : slot;
+      if (_fitCache.has(c)) return;
+      const stage = c.parentElement;
+      let target = slot;
+      if ((window.innerWidth || 0) >= 760) {
+        const hud = stage.querySelector('.hud');
+        if (box.parentElement === stage) this._tiltH = box.offsetHeight || this._tiltH;
+        const hudB = hud ? hud.offsetTop + hud.offsetHeight : 0;
+        if (stage.clientHeight - hudB >= this._tiltH + 24) target = stage;
+      }
       if (box.parentElement === target) return;
       target.appendChild(box);
       clearFitCache();
