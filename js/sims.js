@@ -313,11 +313,14 @@ window.Sims = (function () {
     const side = T(Math.abs(northC) >= Math.abs(eastC) ? (northC >= 0 ? 'לצפון' : 'לדרום') : (eastC >= 0 ? 'למזרח' : 'למערב'));
     // רוח העולם שכנגדה פונה הפגימה בלשון הרמב"ם (פי"ט הי"ב–הי"ד): הפגימה
     // הפונה למעלה נמשכת דרך הזניט אל האופק שמנגד לירח (למטה — אל האופק שתחתיו)
-    const vert = T(u >= 0 ? 'למעלה' : 'למטה') + ' (' + T('כנגד') + ' ' + T(compassName(pos.moon.az + (u >= 0 ? 180 : 0))) + ')';
+    // הרוח מצוינת רק כשהפגימה פונה בעיקרה למעלה/למטה — כמצבי הרמב"ם (סהר בשקיעה);
+    // כשהיא פונה בעיקרה הצידה והרכיב האנכי קטן, הרוח שמנגד רק מטעה
+    const vert = T(u >= 0 ? 'למעלה' : 'למטה');
+    const vertRam = vert + ' (' + T('כנגד') + ' ' + T(compassName(pos.moon.az + (u >= 0 ? 180 : 0))) + ')';
     const D = 180 / Math.PI;
     if (Math.abs(u) >= Math.abs(a)) {
       const tilt = Math.atan2(Math.abs(a), Math.abs(u)) * D;
-      return tilt < 0.5 ? vert + ' ' + T('מדויק') : vert + ' · ' + tilt.toFixed(0) + '° ' + side;
+      return tilt < 0.5 ? vertRam + ' ' + T('מדויק') : vertRam + ' · ' + tilt.toFixed(0) + '° ' + side;
     }
     const tilt = Math.atan2(Math.abs(u), Math.abs(a)) * D;
     return tilt < 0.5 ? side + ' ' + T('מדויק') : side + ' · ' + tilt.toFixed(0) + '° ' + vert;
