@@ -167,6 +167,77 @@
     return { t0: pk + (first - 6) * 60000, t1: pk + (last + 6) * 60000 };
   }
 
+  // ── משכי הליקוי ──────────────────────────────────────────────────────
+  // ליקוי לבנה: משך השלב האומברלי (מן המגע הראשון בצל עד האחרון) ומשך המלא;
+  // ליקוי חמה: משך הליקוי במקום הצופה ומשך השלב המלא/הטבעתי שם, ומשך כלל
+  // הליקוי על פני הארץ — מן הרגע שהצל נוגע בכדור באיזה מקום עד שעוזבו.
+  // בלי הדגמת מרחק — מספרי המנוע (הליקוי המקומי נחפש לצופה); עם הדגמה —
+  // סריקה של הגאומטריה המדומה בצעדי שתי דקות וחידוד הקצוות לשנייה.
+  const fmtDur = ms => {
+    const m = Math.round(ms / 60000), h = Math.floor(m / 60), mm = m % 60;
+    return (h ? h + ' ' + T('שע׳') + ' ' : '') + mm + ' ' + T('דק׳');
+  };
+  // קצה שלב: f אמת בתוך השלב — tIn בתוך, tOut מחוץ; חיתוך לשנייה
+  function edgeOf(f, tIn, tOut) {
+    for (let i = 0; i < 30 && Math.abs(tOut - tIn) > 1000; i++) {
+      const mid = (tIn + tOut) / 2;
+      if (f(mid)) tIn = mid; else tOut = mid;
+    }
+    return (tIn + tOut) / 2;
+  }
+  // משך השלב שבו f אמת, בתוך [t0,t1] (מ"ש), בסריקה בצעד step — null אם אינו בא
+  function spanOf(f, t0, t1, step) {
+    let first = null, last = null, prev = t0;
+    for (let t = t0; t <= t1; t += step) {
+      if (f(t)) { if (first === null) first = t === t0 ? t : edgeOf(f, t, prev); last = t; }
+      else if (last !== null && last === prev) last = edgeOf(f, prev, t);
+      prev = t;
+    }
+    return first === null ? null : last - first;
+  }
+  function eclipseDurations(type, einfo, simKm, place) {
+    const pk = einfo.peak.date.getTime(), H = 3600000, STEP = 120000;
+    const out = { main: null, mainKind: null, total: null, totalKind: null, all: null };
+    if (type === 'lunar') {
+      if (!simKm) {
+        if (einfo.sd_partial > 0) { out.main = einfo.sd_partial * 120000; out.mainKind = 'umbral'; }
+        else { out.main = einfo.sd_penum * 120000; out.mainKind = 'penumbral'; }
+        if (einfo.sd_total > 0) { out.total = einfo.sd_total * 120000; out.totalKind = 'total'; }
+      } else {
+        const gm = t => lunarGeom(new Date(t), simKm);
+        const um = spanOf(t => gm(t).umbra > 0, pk - 4 * H, pk + 4 * H, STEP);
+        if (um) { out.main = um; out.mainKind = 'umbral'; }
+        else { out.main = spanOf(t => gm(t).penum > 0, pk - 4 * H, pk + 4 * H, STEP); out.mainKind = 'penumbral'; }
+        const tot = spanOf(t => gm(t).umbra >= 1, pk - 4 * H, pk + 4 * H, STEP);
+        if (tot) { out.total = tot; out.totalKind = 'total'; }
+      }
+      return out;
+    }
+    // ליקוי חמה — כלל הליקוי: הנקודה הטובה בעולם מכוסה
+    out.all = spanOf(t => solarGeom(new Date(t), simKm).frac > 0, pk - 5 * H, pk + 5 * H, STEP);
+    if (!place) return out;
+    if (!simKm) {
+      try {
+        const obs = new AE.Observer(place.lat, place.lon, 0);
+        const ev = AE.SearchLocalSolarEclipse(new Date(pk - 12 * H), obs);
+        if (ev && Math.abs(ev.peak.time.date.getTime() - pk) < 6 * H) {
+          out.main = ev.partial_end.time.date.getTime() - ev.partial_begin.time.date.getTime(); out.mainKind = 'partial';
+          if (ev.total_begin && ev.total_end) {
+            out.total = ev.total_end.time.date.getTime() - ev.total_begin.time.date.getTime();
+            out.totalKind = ev.kind === 'annular' ? 'annular' : 'total';
+          }
+        }
+      } catch (e) {}
+      return out;
+    }
+    const cv = t => cityView(solarGeom(new Date(t), simKm), new Date(t), place);
+    out.main = spanOf(t => cv(t).frac > 0, pk - 5 * H, pk + 5 * H, STEP); out.mainKind = 'partial';
+    const tot = spanOf(t => cv(t).kind === 'total', pk - 5 * H, pk + 5 * H, STEP);
+    if (tot) { out.total = tot; out.totalKind = 'total'; }
+    else { const an = spanOf(t => cv(t).kind === 'annular', pk - 5 * H, pk + 5 * H, STEP); if (an) { out.total = an; out.totalKind = 'annular'; } }
+    return out;
+  }
+
   // ── נראוּת מארץ ישראל ──────────────────────────────────────────────────
   // ליקוי לבנה נראה מכל מקום שהירח מעל האופק בו; די לבדוק את גובה הירח
   // בירושלים בשיא ובקצות השלב החלקי. ליקוי חמה תלוי-מקום באמת, ולכן נבנית
@@ -1099,6 +1170,33 @@
       } else {
         for (const id of ['e_locName', 'e_lonD', 'e_latD', 'e_tz']) { const x = $(id); if (x) x.textContent = '—'; }
         if (elk) elk.textContent = '—';
+      }
+      // משכי הליקוי — תלויים רק בליקוי, במרחק ההדגמה ובמקום הצופה, ולכן מוטמנים
+      {
+        const simKm = this.mode !== 'globe' && this.distOn ? this.distKm : 0;
+        const dplace = this.mode === 'solar' && place ? place : null;
+        const key = [this.type, this.einfo.peak.date.getTime(), simKm, dplace ? dplace.lat + ',' + dplace.lon : ''].join('|');
+        if (!this._dur || this._dur.key !== key) {
+          let val = null;
+          try { val = eclipseDurations(this.type, this.einfo, simKm, dplace); } catch (e) {}
+          this._dur = { key, val };
+        }
+        const d = this._dur.val, show = (id, on) => { const r = $(id); if (r) r.style.display = on ? '' : 'none'; };
+        const lunar = this.type === 'lunar';
+        const hasMain = !!(d && d.main && (lunar || this.mode === 'solar'));
+        // ליקוי חמה שאינו מגיע כלל למקום הצופה — השורה נשארת, ואומרת זאת
+        const noneHere = !hasMain && this.mode === 'solar' && !!dplace && !!d;
+        show('e_durRow', hasMain || noneHere); show('e_durTotRow', hasMain && !!d.total); show('e_durAllRow', !lunar && !!(d && d.all));
+        if (noneHere) { $('e_durLbl').textContent = T('משך הליקוי במקום הצופה'); $('e_dur').textContent = T('אינו נראה במקום זה'); }
+        if (hasMain) {
+          $('e_durLbl').textContent = T(lunar ? (d.mainKind === 'penumbral' ? 'משך הליקוי (צל-קדמי)' : 'משך הליקוי') : 'משך הליקוי במקום הצופה');
+          $('e_dur').textContent = fmtDur(d.main);
+          if (d.total) {
+            $('e_durTotLbl').textContent = T(d.totalKind === 'annular' ? 'משך הליקוי הטבעתי' : 'משך הליקוי המלא');
+            $('e_durTot').textContent = fmtDur(d.total);
+          }
+        }
+        if (!lunar && d && d.all) $('e_durAll').textContent = fmtDur(d.all);
       }
       // מרחק הירח מן הארץ: כשההדגמה כבויה מוצג המרחק האמיתי ברגע המוצג,
       // והמחוון (הנעול) עוקב אחריו — כך שהפעלת ההדגמה נפתחת מן המרחק הזה

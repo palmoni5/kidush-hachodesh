@@ -589,6 +589,13 @@ window.TRANSLATIONS.en = {
   'תאריך הליקוי': 'Eclipse date',
   'זמן יקום מתואם (UTC)': 'UTC',
   'אחוז הכיסוי': 'Coverage',
+  'משך הליקוי': 'Eclipse duration', 'משך הליקוי (צל-קדמי)': 'Eclipse duration (penumbral)',
+  'משך הליקוי במקום הצופה': 'Eclipse duration at the observer’s place',
+  'משך הליקוי המלא': 'Duration of totality', 'משך הליקוי הטבעתי': 'Duration of annularity',
+  'משך כלל הליקוי (על פני הארץ)': 'Duration of the whole eclipse (over the Earth)', 'שע׳': 'h',
+  'אינו נראה במקום זה': 'not visible at this place',
+  '"משכי הליקוי" שבלוח: בליקוי לבנה "משך הליקוי" הוא הזמן מכניסת שפת הירח לצל הארץ (האומברה) ועד יציאתו ממנו, ובליקוי מלא נוספת שורת "משך הליקוי המלא" — הזמן שהירח כולו שרוי בצל; שניהם שווים לכל יושבי הארץ שהירח נראה מהם. בליקוי חמה המשכים תלויים במקום: "משך הליקוי במקום הצופה" הוא הזמן מן המגע הראשון של הירח בשמש ועד המגע האחרון כפי שנראה מן המקום שבלוח (עיר בארץ או מקום שיא הליקוי), ובליקוי מלא או טבעתי נוספת שורת משך השלב המלא או הטבעתי שם — דקות ספורות לכל היותר. "משך כלל הליקוי (על פני הארץ)" הוא הזמן מן הרגע שצל הירח נוגע בכדור הארץ באיזה מקום שהוא ועד שהוא עוזב אותו במקום אחר — כשעות אחדות, שהצל רץ לאורך פני הכדור כולו. כשהדגמת מרחק הירח פועלת המשכים מחושבים מן הגאומטריה המדומה.':
+    '"Eclipse durations" in the panel: in a lunar eclipse, "Eclipse duration" is the time from the Moon’s limb entering Earth’s shadow (the umbra) until it leaves it, and in a total eclipse a "Duration of totality" row is added — the time the whole Moon is inside the shadow; both are the same for everyone on Earth who sees the Moon. In a solar eclipse the durations depend on the place: "Eclipse duration at the observer’s place" is the time from the Moon’s first contact with the Sun to the last contact as seen from the place in the panel (a city in Israel or the point of greatest eclipse), and in a total or annular eclipse a row for the total or annular phase there is added — a few minutes at most. "Duration of the whole eclipse (over the Earth)" is the time from the moment the Moon’s shadow touches the Earth somewhere until it leaves it somewhere else — a few hours, as the shadow runs across the whole globe. When the Moon-distance demo is on, the durations are computed from the simulated geometry.',
   'מרכז הצל': 'Shadow center',
   'הארץ בין השמש לירח — צלה נופל על הירח': 'Earth between Sun and Moon — its shadow falls on the Moon',
   'הירח בין הארץ לשמש — צלו נופל על הארץ': 'Moon between Earth and Sun — its shadow falls on Earth',
