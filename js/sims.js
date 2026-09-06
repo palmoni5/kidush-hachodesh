@@ -311,7 +311,9 @@ window.Sims = (function () {
     // כיוון הרכיב האופקי במצפן: eAz פונה לאזימוט הירח + 90°
     const sgn = a >= 0 ? 1 : -1, eastC = sgn * Math.cos(c.azM), northC = -sgn * Math.sin(c.azM);
     const side = T(Math.abs(northC) >= Math.abs(eastC) ? (northC >= 0 ? 'לצפון' : 'לדרום') : (eastC >= 0 ? 'למזרח' : 'למערב'));
-    const vert = T(u >= 0 ? 'למעלה' : 'למטה');
+    // רוח העולם שכנגדה פונה הפגימה בלשון הרמב"ם (פי"ט הי"ב–הי"ד): הפגימה
+    // הפונה למעלה נמשכת דרך הזניט אל האופק שמנגד לירח (למטה — אל האופק שתחתיו)
+    const vert = T(u >= 0 ? 'למעלה' : 'למטה') + ' (' + T('כנגד') + ' ' + T(compassName(pos.moon.az + (u >= 0 ? 180 : 0))) + ')';
     const D = 180 / Math.PI;
     if (Math.abs(u) >= Math.abs(a)) {
       const tilt = Math.atan2(Math.abs(a), Math.abs(u)) * D;
@@ -626,10 +628,15 @@ window.Sims = (function () {
         md.textContent = Math.abs(dm).toFixed(1) + '° ' + T(dm >= 0 ? 'צפונית' : 'דרומית')
           + ' · ' + Math.abs(rel).toFixed(1) + '° ' + T(rel >= 0 ? 'צפונה לשמש' : 'דרומה לשמש');
       }
-      $('m_lat').textContent = !horns ? '—'
+      $('m_mlat').textContent = !horns ? '—'
         : Math.abs(horns.lat).toFixed(2) + '° ' + T(horns.lat >= 0 ? 'צפוני' : 'דרומי');
       $('m_horn').textContent = !horns ? '—' : hornLabel(horns);
       $('m_hornSky').textContent = skyHornLabel(pos);
+      // "קרניים" — בסהר בלבד; משהירח גיבן — "פגימה"; ובירח מלא אין פגימה והשורות נשמטות
+      const crescent = pct < 50;
+      for (const id of ['m_hornRow', 'm_hornSkyRow']) $(id).style.display = pct >= 100 ? 'none' : '';
+      $('m_hornLbl').textContent = T(crescent ? 'נטיית הקרניים מקו המלקה' : 'נטיית הפגימה מקו המלקה');
+      $('m_hornSkyLbl').textContent = T(crescent ? 'נטיית הקרניים לעין (מהאופק)' : 'נטיית הפגימה לעין (מהאופק)');
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
       // התווית מבטיחה "שעה באופק ירושלים" — מוצמד לאזור הזמן של ירושלים גם
