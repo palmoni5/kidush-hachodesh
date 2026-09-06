@@ -313,17 +313,33 @@ window.Sims = (function () {
     const side = T(Math.abs(northC) >= Math.abs(eastC) ? (northC >= 0 ? 'לצפון' : 'לדרום') : (eastC >= 0 ? 'למזרח' : 'למערב'));
     // רוח העולם שכנגדה פונה הפגימה בלשון הרמב"ם (פי"ט הי"ב–הי"ד): הפגימה
     // הפונה למעלה נמשכת דרך הזניט אל האופק שמנגד לירח (למטה — אל האופק שתחתיו)
-    // הרוח מצוינת רק כשהפגימה פונה בעיקרה למעלה/למטה — כמצבי הרמב"ם (סהר בשקיעה);
-    // כשהיא פונה בעיקרה הצידה והרכיב האנכי קטן, הרוח שמנגד רק מטעה
     const vert = T(u >= 0 ? 'למעלה' : 'למטה');
-    const vertRam = vert + ' (' + T('כנגד') + ' ' + T(compassName(pos.moon.az + (u >= 0 ? 180 : 0))) + ')';
     const D = 180 / Math.PI;
     if (Math.abs(u) >= Math.abs(a)) {
       const tilt = Math.atan2(Math.abs(a), Math.abs(u)) * D;
-      return tilt < 0.5 ? vertRam + ' ' + T('מדויק') : vertRam + ' · ' + tilt.toFixed(0) + '° ' + side;
+      return tilt < 0.5 ? vert + ' ' + T('מדויק') : vert + ' · ' + tilt.toFixed(0) + '° ' + side;
     }
     const tilt = Math.atan2(Math.abs(u), Math.abs(a)) * D;
     return tilt < 0.5 ? side + ' ' + T('מדויק') : side + ' · ' + tilt.toFixed(0) + '° ' + vert;
+  }
+  // רוח הפגימה כלשון הרמב"ם (פי"ט הי"ב–הי"ד): מושכים את כיוון הפגימה מן הירח
+  // על פני כיפת השמים (עיגול גדול) עד שהוא פוגע באופק, ורוח האופק שם היא
+  // "הרוח שכנגדה פונה הפגימה". פגימה הפונה ישר למעלה עוברת בזניט ומגיעה לאופק
+  // שמנגד לירח — סהר השוקע במערב "פגימתו כנגד מזרח", השוקע בין מערב לצפון —
+  // "נוטה מכנגד מזרח כנגד דרום"; פגימה הנשענת הצידה מגיעה לאופק במקום מוסט.
+  // זו רוח האופק, ולא הצד שאליו נשענת הפגימה מן הקו האנכי (שורת הנטייה לעין).
+  function ramHornLabel(pos) {
+    if (!pos || pos.moon.alt <= 0) return T('מתחת לאופק');
+    const c = skyLitComps(pos), u = -c.cAlt, a = -c.cAz, D = Math.PI / 180;
+    const azM = c.azM, alM = pos.moon.alt * D;
+    const M = [Math.sin(azM)*Math.cos(alM), Math.cos(azM)*Math.cos(alM), Math.sin(alM)];
+    const eAlt = [-Math.sin(azM)*Math.sin(alM), -Math.cos(azM)*Math.sin(alM), Math.cos(alM)];
+    const eAz = [Math.cos(azM), -Math.sin(azM), 0];
+    const Hd = vnorm([u*eAlt[0] + a*eAz[0], u*eAlt[1] + a*eAz[1], u*eAlt[2] + a*eAz[2]]);
+    // P(θ) = M·cosθ + Hd·sinθ על העיגול הגדול; האופק — z=0, θ ב-(0,π)
+    let th = Math.atan2(-M[2], Hd[2]); if (th <= 0) th += Math.PI;
+    const P = [M[0]*Math.cos(th) + Hd[0]*Math.sin(th), M[1]*Math.cos(th) + Hd[1]*Math.sin(th)];
+    return T('כנגד') + ' ' + T(compassName(Math.atan2(P[0], P[1]) / D));
   }
   function skyLitAngle(pos, R) {
     const { cAlt, cAz, azM } = skyLitComps(pos);
@@ -635,9 +651,10 @@ window.Sims = (function () {
         : Math.abs(horns.lat).toFixed(2) + '° ' + T(horns.lat >= 0 ? 'צפוני' : 'דרומי');
       $('m_horn').textContent = !horns ? '—' : hornLabel(horns);
       $('m_hornSky').textContent = skyHornLabel(pos);
+      $('m_hornRam').textContent = ramHornLabel(pos);
       // "קרניים" — בסהר בלבד; משהירח גיבן — "פגימה"; ובירח מלא אין פגימה והשורות נשמטות
       const crescent = pct < 50;
-      for (const id of ['m_hornRow', 'm_hornSkyRow']) $(id).style.display = pct >= 100 ? 'none' : '';
+      for (const id of ['m_hornRow', 'm_hornSkyRow', 'm_hornRamRow']) $(id).style.display = pct >= 100 ? 'none' : '';
       $('m_hornLbl').textContent = T(crescent ? 'נטיית הקרניים מקו המלקה' : 'נטיית הפגימה מקו המלקה');
       $('m_hornSkyLbl').textContent = T(crescent ? 'נטיית הקרניים לעין (מהאופק)' : 'נטיית הפגימה לעין (מהאופק)');
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
