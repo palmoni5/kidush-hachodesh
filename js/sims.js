@@ -277,14 +277,6 @@ window.Sims = (function () {
       return { e: vdot(A, east), n: vdot(A, north), lat: AE.EclipticGeoMoon(t).lat };
     } catch (_) { return null; }
   }
-  // "לאין היה נוטה" — כיתוב ל-HUD: הקרניים למזרח (עד הניגוד) או למערב, וזווית
-  // נטייתן מקו המלקה לצפון או לדרום; פחות מחצי מעלה — "מדויק".
-  function hornLabel(h) {
-    const tilt = Math.atan2(Math.abs(h.n), Math.abs(h.e)) * 180 / Math.PI;
-    const dir = T(h.e >= 0 ? 'למזרח' : 'למערב');
-    return tilt < 0.5 ? dir + ' ' + T('מדויק')
-      : dir + ' · ' + tilt.toFixed(0) + '° ' + T(h.n >= 0 ? 'לצפון' : 'לדרום');
-  }
   // זווית (במסך) של מרכז הצד המואר בחלון השמים: כיוון השמש מן הירח על כדור
   // השמים, מומר לכיוון בהיטל הכיפה (מרכז=זניט, שפה=אופק; ראו place ב-drawMoonSky)
   // בשקלול קנה המידה הרדיאלי (R/90 למעלה) והמשיקי (rr לרדיאן) של ההיטל.
@@ -649,13 +641,11 @@ window.Sims = (function () {
       }
       $('m_mlat').textContent = !horns ? '—'
         : Math.abs(horns.lat).toFixed(2) + '° ' + T(horns.lat >= 0 ? 'צפוני' : 'דרומי');
-      $('m_horn').textContent = !horns ? '—' : hornLabel(horns);
       $('m_hornSky').textContent = skyHornLabel(pos);
       $('m_hornRam').textContent = ramHornLabel(pos);
       // "קרניים" — בסהר בלבד; משהירח גיבן — "פגימה"; ובירח מלא אין פגימה והשורות נשמטות
       const crescent = pct < 50;
-      for (const id of ['m_hornRow', 'm_hornSkyRow', 'm_hornRamRow']) $(id).style.display = pct >= 100 ? 'none' : '';
-      $('m_hornLbl').textContent = T(crescent ? 'נטיית הקרניים מקו המלקה' : 'נטיית הפגימה מקו המלקה');
+      for (const id of ['m_hornSkyRow', 'm_hornRamRow']) $(id).style.display = pct >= 100 ? 'none' : '';
       $('m_hornSkyLbl').textContent = T(crescent ? 'נטיית הקרניים לעין (מהאופק)' : 'נטיית הפגימה לעין (מהאופק)');
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
