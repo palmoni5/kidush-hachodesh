@@ -303,13 +303,15 @@ window.Sims = (function () {
     // כיוון הרכיב האופקי במצפן: eAz פונה לאזימוט הירח + 90°
     const sgn = a >= 0 ? 1 : -1, eastC = sgn * Math.cos(c.azM), northC = -sgn * Math.sin(c.azM);
     const side = T(Math.abs(northC) >= Math.abs(eastC) ? (northC >= 0 ? 'לצפון' : 'לדרום') : (eastC >= 0 ? 'למזרח' : 'למערב'));
-    // כשהקרניים פונות בעיקרן למעלה/למטה — עמן בסוגריים רוח האופק שאליה מגיע
-    // כיוונן (כלשון העדות: "למעלה כנגד מזרח, נוטות לדרום"); ראו ramHornLabel
+    // כשהקרניים פונות בעיקרן למעלה/למטה — עמן בסוגריים רוח האופק שאליה מוליך
+    // ה"למעלה": האופק שמנגד לירח (למטה — האופק שתחתיו), כלשון העדות "למעלה
+    // כנגד מזרח, נוטות לדרום". עומד בפני עצמו, בלי תלות בפירוש הרמב"ם
+    // (ramHornLabel עוקב אחר קו הפגימה עצמו על העיגול הגדול)
     const vert = T(u >= 0 ? 'למעלה' : 'למטה');
     const D = 180 / Math.PI;
     if (Math.abs(u) >= Math.abs(a)) {
       const tilt = Math.atan2(Math.abs(a), Math.abs(u)) * D;
-      const vertRam = vert + ' (' + hornCompass(pos) + ')';
+      const vertRam = vert + ' (' + T('כנגד') + ' ' + T(compassName(pos.moon.az + (u >= 0 ? 180 : 0))) + ')';
       return tilt < 0.5 ? vertRam + ' ' + T('מדויק') : vertRam + ' · ' + tilt.toFixed(0) + '° ' + side;
     }
     const tilt = Math.atan2(Math.abs(u), Math.abs(a)) * D;
