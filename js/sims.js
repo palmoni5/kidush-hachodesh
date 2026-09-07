@@ -303,13 +303,14 @@ window.Sims = (function () {
     // כיוון הרכיב האופקי במצפן: eAz פונה לאזימוט הירח + 90°
     const sgn = a >= 0 ? 1 : -1, eastC = sgn * Math.cos(c.azM), northC = -sgn * Math.sin(c.azM);
     const side = T(Math.abs(northC) >= Math.abs(eastC) ? (northC >= 0 ? 'לצפון' : 'לדרום') : (eastC >= 0 ? 'למזרח' : 'למערב'));
-    // רוח העולם שכנגדה פונה הפגימה בלשון הרמב"ם (פי"ט הי"ב–הי"ד): הפגימה
-    // הפונה למעלה נמשכת דרך הזניט אל האופק שמנגד לירח (למטה — אל האופק שתחתיו)
+    // כשהקרניים פונות בעיקרן למעלה/למטה — עמן בסוגריים רוח האופק שאליה מגיע
+    // כיוונן (כלשון העדות: "למעלה כנגד מזרח, נוטות לדרום"); ראו ramHornLabel
     const vert = T(u >= 0 ? 'למעלה' : 'למטה');
     const D = 180 / Math.PI;
     if (Math.abs(u) >= Math.abs(a)) {
       const tilt = Math.atan2(Math.abs(a), Math.abs(u)) * D;
-      return tilt < 0.5 ? vert + ' ' + T('מדויק') : vert + ' · ' + tilt.toFixed(0) + '° ' + side;
+      const vertRam = vert + ' (' + hornCompass(pos) + ')';
+      return tilt < 0.5 ? vertRam + ' ' + T('מדויק') : vertRam + ' · ' + tilt.toFixed(0) + '° ' + side;
     }
     const tilt = Math.atan2(Math.abs(u), Math.abs(a)) * D;
     return tilt < 0.5 ? side + ' ' + T('מדויק') : side + ' · ' + tilt.toFixed(0) + '° ' + vert;
@@ -322,6 +323,9 @@ window.Sims = (function () {
   // זו רוח האופק, ולא הצד שאליו נשענת הפגימה מן הקו האנכי (שורת הנטייה לעין).
   function ramHornLabel(pos) {
     if (!pos || pos.moon.alt <= 0) return T('מתחת לאופק');
+    return hornCompass(pos);
+  }
+  function hornCompass(pos) {
     const c = skyLitComps(pos), u = -c.cAlt, a = -c.cAz, D = Math.PI / 180;
     const azM = c.azM, alM = pos.moon.alt * D;
     const M = [Math.sin(azM)*Math.cos(alM), Math.cos(azM)*Math.cos(alM), Math.sin(alM)];
@@ -645,7 +649,10 @@ window.Sims = (function () {
       $('m_hornRam').textContent = ramHornLabel(pos);
       // "קרניים" — בסהר בלבד; משהירח גיבן — "פגימה"; ובירח מלא אין פגימה והשורות נשמטות
       const crescent = pct < 50;
-      for (const id of ['m_hornSkyRow', 'm_hornRamRow']) $(id).style.display = pct >= 100 ? 'none' : '';
+      // ביום, כשהחמה זורחת והלבנה אינה נראית לעין, אין בנטייה צורך (כל עניינה
+      // לחקירת העדים) — השורות נשמטות
+      const dayHidden = pos && pos.sun.alt > 0 && pos.moon.alt > 0;
+      for (const id of ['m_hornSkyRow', 'm_hornRamRow']) $(id).style.display = pct >= 100 || dayHidden ? 'none' : '';
       $('m_hornSkyLbl').textContent = T(crescent ? 'נטיית הקרניים לעין (מהאופק)' : 'נטיית הפגימה לעין (מהאופק)');
       // תאריך, תאריך עברי ושעה של הרגע המוצג — כבשאר הלשוניות
       $('m_date').textContent = simDate.toLocaleDateString(window.I18N ? window.I18N.dateLocale : 'he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
