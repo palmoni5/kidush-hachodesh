@@ -187,6 +187,19 @@ window.TRANSLATIONS.en = {
   'גיבן מתמעט': 'Waning gibbous',
 
   // ── מהלך השמש ────────────────────────────────────────────────────────
+  // בורר החלוניות
+  'מהלך השמש': 'Sun’s Path',
+  'נטיית כדור הארץ': 'Earth’s tilt',
+  'הרקיע מעל הצופה': 'the sky above the observer',
+  'מהלך השמש — כיפת הרקיע מעל הצופה': 'Sun’s Path — the sky dome above the observer',
+  'הארץ במסלולה סביב השמש': 'Earth in its orbit around the Sun',
+  'נטיית כדור הארץ — הארץ במסלולה סביב השמש': 'Earth’s tilt — Earth in its orbit around the Sun',
+  'כיפת הרקיע מעל הצופה: מסלול השמש ביממה, נדידתו בין קו ההיפוך הצפוני לדרומי במשך השנה, וארבע התקופות. את הטעם לנדידה — ציר הארץ הנטוי — רואים בחלונית "נטיית כדור הארץ".':
+    'The sky dome above the observer: the Sun’s daily path, its drift between the northern and southern tropics over the year, and the four tekufot. The reason for the drift — Earth’s tilted axis — is shown in the “Earth’s tilt” view.',
+  'הארץ במסלולה סביב השמש, במבט מן הצד: ציר סיבובה נטוי 23.44° וכיוונו קבוע בחלל, ולכן בתמוז השמש עומדת מעל קו ההיפוך הצפוני ובטבת מעל הדרומי. הקו האדום הוא קו האורך של הצופה והנקודה שעליו מקומו — ושניהם מקיפים את הציר פעם ביממה. הפקדים ולוח הנתונים משותפים לשתי החלוניות.':
+    'Earth in its orbit around the Sun, seen from the side: its axis is tilted 23.44° and fixed in space, so in Tammuz the Sun stands over the northern tropic and in Tevet over the southern one. The red line is the observer’s meridian and the dot on it their location — both circle the axis once a day. The controls and the data panel are shared by both views.',
+  'הקו האדום — קו האורך של הצופה, והנקודה שעליו מקומו · הנקודה הצהובה — המקום שהשמש ניצבת מעליו':
+    'Red line — the observer’s meridian, with the dot marking their location · yellow dot — the point the Sun stands directly over',
   'שעון מקומי': 'Local time',
   'שעון מקומי — ירושלים': 'Local time — Jerusalem',
   'זמן שמש ממוצע': 'mean solar time',

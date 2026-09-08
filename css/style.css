@@ -535,6 +535,13 @@ table td:first-child { opacity: 0.7; }
 #y_tiltSlot .stage-inset h3 { display: none; }
 #y_tiltSlot .stage-inset .ti-canvas { height: 200px; margin-top: 4px; }
 #y_tiltSlot .stage-inset .htxt { margin-top: 6px; text-align: start; font-size: 0.72em; color: inherit; }
+/* חלוניות מהלך השמש: yv-tilt = איור המסלול במלוא הבמה. החלונית הקטנה מוסתרת
+   שם, וכרטיסי לוח הצד המסומנים data-yfor מוצגים לפי החלונית (!important —
+   כרטיס לוח אוצריא נשלט גם ב-style inline). */
+#view-year [data-yfor="tilt"] { display: none; }
+#view-year.yv-tilt [data-yfor="tilt"] { display: block; }
+#view-year.yv-tilt [data-yfor="sky"] { display: none !important; }
+#view-year.yv-tilt #y_tiltInset { display: none; }
 
 /* ── מסך אודות ─────────────────────────────────────── */
 .scrim {

@@ -382,7 +382,8 @@
           <!-- נטיית כדור הארץ — אינה עוד הסבר נלווה אלא חלק מן ההמחשה עצמה,
                ולכן היא יושבת בפינת הבמה (כדוגמת חלון השמים שבמופעי הירח)
                ובפינה שמנגד לכיפה. במסך צר אין בבמה פינה פנויה, והחלונית
-               חוזרת אל הכרטיס שבלוח הצד (#y_tiltSlot) — ראו placeTilt. -->
+               חוזרת אל הכרטיס שבלוח הצד (#y_tiltSlot) — ראו placeTilt. בחלונית
+               "נטיית כדור הארץ" האיור מצויר במלוא הבמה והחלונית הזו מוסתרת. -->
           <div class="stage-inset" id="y_tiltInset">
             <h3>נטיית כדור הארץ ביחס לשמש</h3>
             <div class="ill-inset ti-canvas"><canvas id="seasonsCanvas"></canvas></div>
@@ -390,6 +391,23 @@
           </div>
         </div>
         <aside class="panel">
+          <!-- שתי חלוניות על אותה במה, אותם פקדים ואותו לוח נתונים: כיפת הרקיע
+               מעל הצופה, והארץ במסלולה סביב השמש (איור הנטייה במלוא הבמה).
+               הכרטיסים המסומנים data-yfor מוצגים לפי החלונית — ראו CSS yv-tilt. -->
+          <div class="card">
+            <h2>תצוגה</h2>
+            <div class="segmented" id="y_viewseg">
+              <button data-yview="sky" class="active" title="מהלך השמש — כיפת הרקיע מעל הצופה">
+                <span class="seg-title">מהלך השמש</span><span class="seg-sub">הרקיע מעל הצופה</span>
+              </button>
+              <button data-yview="tilt" title="נטיית כדור הארץ — הארץ במסלולה סביב השמש">
+                <span class="seg-title">נטיית כדור הארץ</span><span class="seg-sub">הארץ במסלולה סביב השמש</span>
+              </button>
+            </div>
+            <div class="htxt" style="margin-top:6px" data-yfor="sky">כיפת הרקיע מעל הצופה: מסלול השמש ביממה, נדידתו בין קו ההיפוך הצפוני לדרומי במשך השנה, וארבע התקופות. את הטעם לנדידה — ציר הארץ הנטוי — רואים בחלונית "נטיית כדור הארץ".</div>
+            <div class="htxt" style="margin-top:6px" data-yfor="tilt">הארץ במסלולה סביב השמש, במבט מן הצד: ציר סיבובה נטוי 23.44° וכיוונו קבוע בחלל, ולכן בתמוז השמש עומדת מעל קו ההיפוך הצפוני ובטבת מעל הדרומי. הקו האדום הוא קו האורך של הצופה והנקודה שעליו מקומו — ושניהם מקיפים את הציר פעם ביממה. הפקדים ולוח הנתונים משותפים לשתי החלוניות.</div>
+            <div id="y_tiltSlot"></div>
+          </div>
           <div class="card">
             <h2>בקרת זמן</h2>
             <div class="ctrls">
@@ -430,9 +448,8 @@
             </div>
             <div class="htxt" style="margin-top:6px">האיור מציג את שנת החמה הנוכחית — מתקופת ניסן (שוויון האביב) האחרונה ועד הבאה. היום והחודש מוצבים בתוך מחזור זה, והשנה נקבעת מאליה; שנים אחרות אינן מחושבות.</div>
           </div>
-          <div class="card">
+          <div class="card" data-yfor="tilt">
             <h2>מדוע מסלול השמש נודד בין קיץ לחורף?</h2>
-            <div id="y_tiltSlot"></div>
             <div class="expl">
             <div class="expl-body">
             <div class="htxt" style="margin-top:6px">ציר הסיבוב של כדור הארץ נטוי כ־23.44° ממאונך למישור מסלולו סביב השמש, וכיוונו קבוע בחלל — הוא מצביע תמיד אל אותה נקודה בשמים. לכן בתקופת תמוז חצי הכדור הצפוני רכון אל השמש והיא נראית גבוה (מעל קו ההיפוך הצפוני), בתקופת טבת הוא רכון ממנה והלאה והיא נמוכה (מעל קו ההיפוך הדרומי), ובניסן ותשרי הציר ניצב לכיוון השמש — והיא מעל קו המשווה. לחצו על כפתורי התקופות או גררו את "יום מתקופת ניסן" — והארץ תנוע במסלולה.</div>
@@ -477,7 +494,7 @@
             <button type="button" class="expl-toggle" aria-expanded="false"><span class="expl-more">ראה עוד ▾</span><span class="expl-less">הסתר ▴</span></button>
             </div>
           </div>
-          <div class="card" id="y_otzCard" style="display:none">
+          <div class="card" id="y_otzCard" style="display:none" data-yfor="sky">
             <h2>זמני היום — לוח אוצריא</h2>
             <label class="field" id="yo_cityRow" style="display:none">עיר (מרשימת הלוח)
               <select id="yo_city"></select>
