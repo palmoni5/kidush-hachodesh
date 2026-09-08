@@ -538,10 +538,15 @@ table td:first-child { opacity: 0.7; }
 /* חלוניות מהלך השמש: yv-tilt = איור המסלול במלוא הבמה. החלונית הקטנה מוסתרת
    שם, וכרטיסי לוח הצד המסומנים data-yfor מוצגים לפי החלונית (!important —
    כרטיס לוח אוצריא נשלט גם ב-style inline). */
-#view-year [data-yfor="tilt"] { display: none; }
-#view-year.yv-tilt [data-yfor="tilt"] { display: block; }
-#view-year.yv-tilt [data-yfor="sky"] { display: none !important; }
-#view-year.yv-tilt #y_tiltInset { display: none; }
+#view-year [data-yfor="tilt"], #view-year [data-yfor="wheel"] { display: none; }
+#view-year.yv-tilt [data-yfor="tilt"], #view-year.yv-wheel [data-yfor="wheel"] { display: block; }
+#view-year.yv-tilt [data-yfor="sky"], #view-year.yv-wheel [data-yfor="sky"] { display: none !important; }
+#view-year.yv-tilt #y_tiltInset, #view-year.yv-wheel #y_tiltInset { display: none; }
+/* בורר של שלוש חלוניות — הכפתורים צרים, והכיתובים נשברים לשורות במקום להיקטם */
+.segmented.seg-3 button { padding: 8px 4px; }
+.segmented.seg-3 button .seg-title, .segmented.seg-3 button .seg-sub {
+  white-space: normal; text-align: center; line-height: 1.25;
+}
 
 /* ── מסך אודות ─────────────────────────────────────── */
 .scrim {
