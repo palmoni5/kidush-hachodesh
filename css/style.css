@@ -386,7 +386,7 @@ table td:first-child { opacity: 0.7; }
 .expl { margin-top: 7px; }
 .expl-body { position: relative; }
 /* המרווח העליון של הפסקה הראשונה נבלע בקיפול — מבוטל (גובר על style פנימי) */
-.expl-body > .htxt:first-child { margin-top: 0 !important; }
+.expl-body > .htxt:first-child, #view-year.yv-tilt .expl-body > [data-yfor="tilt"], #view-year.yv-wheel .expl-body > [data-yfor="wheel"] { margin-top: 0 !important; }
 .expl:not(.open) .expl-body { max-height: 2.5em; overflow: hidden; }
 .expl:not(.open) .expl-body::after {
   content: ''; position: absolute; inset-inline: 0; bottom: 0; height: 1.25em;
@@ -511,37 +511,12 @@ table td:first-child { opacity: 0.7; }
 .hud .grp .big, .hud .grp .clock { color: var(--hud-c); }
 .hud .st { text-align: center; font-size: 0.6em; margin-top: 2px; color: var(--ill-text); }
 
-/* ── חלונית איור נלווה בפינת הבמה ───────────────────
-   איור שהוא חלק מן ההמחשה עצמה (ולא הסבר נלווה) יושב בפינת הבמה כחלונית
-   בפלטת האיור, בצד ה-HUD ומתחתיו — הרצועה ההיא שמורה לו ממילא (stageLayout),
-   ולכן הכיפה אינה מצוירת תחתיו. במסך צר החלונית מועברת אל הכרטיס שבלוח הצד
-   (#y_tiltSlot) ומתפשטת שם ככרטיס רגיל. */
-.stage-inset {
-  position: absolute; inset-block-end: 12px; inset-inline-start: 12px;
-  width: 258px; padding: 8px 10px 9px;
-  background: var(--ill-panel); border: 1px solid var(--ill-line);
-  border-radius: var(--radius-md); color: var(--ill-text);
-}
-.stage-inset h3 {
-  font-size: 0.66em; font-weight: 600; text-align: center;
-  color: var(--ill-blue); margin-bottom: 5px;
-}
-.stage-inset .ti-canvas { position: relative; height: 186px; }
-.stage-inset .htxt { margin-top: 5px; text-align: center; font-size: 0.6em; color: var(--ill-text); }
-#y_tiltSlot .stage-inset {
-  position: static; width: auto; padding: 0;
-  background: none; border: 0; color: inherit;
-}
-#y_tiltSlot .stage-inset h3 { display: none; }
-#y_tiltSlot .stage-inset .ti-canvas { height: 200px; margin-top: 4px; }
-#y_tiltSlot .stage-inset .htxt { margin-top: 6px; text-align: start; font-size: 0.72em; color: inherit; }
-/* חלוניות מהלך השמש: yv-tilt = איור המסלול במלוא הבמה. החלונית הקטנה מוסתרת
-   שם, וכרטיסי לוח הצד המסומנים data-yfor מוצגים לפי החלונית (!important —
+/* חלוניות מהלך השמש: yv-tilt = איור המסלול במלוא הבמה, yv-wheel = הגלגל הנטוי.
+   כרטיסי לוח הצד המסומנים data-yfor מוצגים לפי החלונית (!important —
    כרטיס לוח אוצריא נשלט גם ב-style inline). */
 #view-year [data-yfor="tilt"], #view-year [data-yfor="wheel"] { display: none; }
 #view-year.yv-tilt [data-yfor="tilt"], #view-year.yv-wheel [data-yfor="wheel"] { display: block; }
 #view-year.yv-tilt [data-yfor="sky"], #view-year.yv-wheel [data-yfor="sky"] { display: none !important; }
-#view-year.yv-tilt #y_tiltInset, #view-year.yv-wheel #y_tiltInset { display: none; }
 /* בורר של שלוש חלוניות — הכפתורים צרים, והכיתובים נשברים לשורות במקום להיקטם */
 .segmented.seg-3 button { padding: 8px 4px; }
 .segmented.seg-3 button .seg-title, .segmented.seg-3 button .seg-sub {

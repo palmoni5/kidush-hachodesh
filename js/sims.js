@@ -100,23 +100,6 @@ window.Sims = (function () {
     }
     return c;
   }
-  // התאמת מידות לקנבס משני היושב בכרטיס שבפאנל (ולא בבמה) — המזעריות
-  // הגדולות של fit() (280×240) היו גולשות מגבולות הכרטיס הצר.
-  function fitInset(canvas) {
-    let c = _fitCache.get(canvas);
-    if (!c) {
-      const r = canvas.parentElement.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const W = Math.max(180, r.width), H = Math.max(140, r.height);
-      const ctx = canvas.getContext('2d');
-      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      c = { ctx, W, H };
-      _fitCache.set(canvas, c);
-    }
-    return c;
-  }
   function sprite(ctx, im, cx, cy, w, h) {
     if (im.complete && im.naturalWidth) ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h);
     else { ctx.fillStyle = cv('--ill-muted'); ctx.beginPath(); ctx.arc(cx, cy, w / 2, 0, 2 * Math.PI); ctx.fill(); }
@@ -1005,31 +988,6 @@ window.Sims = (function () {
       }
       ctx.setLineDash([]);
     },
-    // ── מקומה של חלונית הנטייה ─────────────────────────────────────────
-    // האיור הזה אינו הסבר נלווה אלא חלק מן ההמחשה, ולכן מקומו בבמה עצמה —
-    // בפינה שמתחת ל-HUD, ברצועה ששמורה לו ממילא ואין הכיפה מצוירת בה. במסך
-    // צר אין בבמה פינה פנויה (ה-HUD נערם בראש והכיפה תופסת את השאר), ושם הוא
-    // חוזר אל הכרטיס שבלוח הצד. המעבר מאפס את מטמון המידות והפריסה.
-    // גם במסך רחב אך נמוך (חלון קצר) החלונית חוזרת אל הכרטיס: היא צמודה
-    // לתחתית הבמה, וכשאין תחת ה-HUD די גובה לה היא עולה על שורותיו התחתונות.
-    // הבדיקה נעשית רק כשמטמון המידות ריק (טעינה ושינוי גודל) — היא מודדת DOM.
-    _tiltH: 250,   // גובה החלונית בבמה — נמדד כשהיא שם; אומדן עד המדידה הראשונה
-    placeTilt() {
-      const box = $('y_tiltInset'), slot = $('y_tiltSlot'), c = $('yearCanvas');
-      if (!box || !slot || !c) return;
-      if (_fitCache.has(c)) return;
-      const stage = c.parentElement;
-      let target = slot;
-      if ((window.innerWidth || 0) >= 760) {
-        const hud = stage.querySelector('.hud');
-        if (box.parentElement === stage) this._tiltH = box.offsetHeight || this._tiltH;
-        const hudB = hud ? hud.offsetTop + hud.offsetHeight : 0;
-        if (stage.clientHeight - hudB >= this._tiltH + 24) target = stage;
-      }
-      if (box.parentElement === target) return;
-      target.appendChild(box);
-      clearFitCache();
-    },
     // אורך המלקה האמיתי של השמש לרגע המוצג (מעלות, 0° = ראש טלה) — לחלונית
     // הגלגל; בלי המנוע — סכמטי מן היום מתקופת ניסן
     sunLon() {
@@ -1039,7 +997,6 @@ window.Sims = (function () {
     draw() {
       if (this.view === 'tilt') return this.drawTilt();
       if (this.view === 'wheel') return this.drawWheel();
-      this.placeTilt();
       const { ctx, W, H } = fit($('yearCanvas'));
       ctx.clearRect(0, 0, W, H);
       // cy מוסט מעט מטה ו-R מוקטן כדי לפנות מקום לשורת ההסבר בראש (פסגת המסלול במרכז-עליון).
@@ -1103,7 +1060,6 @@ window.Sims = (function () {
       }
       if (!this.hintDone) drawHint(ctx, W, 'גררו לסיבוב · ▶ הפעל להנעה');
       this.hud(v.U, sn);
-      this.drawSeasons(dec, sn.H);
     },
     // ── חלונית "הגלגל הנטוי" — הארץ בתוך כדור השמים, כתמונת חז״ל והרמב״ם ──
     // מבט מבחוץ: הארץ עומדת במרכז, וכדור השמים סובב סביבה על ציר הקטבים
@@ -1282,8 +1238,8 @@ window.Sims = (function () {
       this.hud(v.U, sn);
     },
     // ── חלונית "נטיית כדור הארץ" — איור המסלול במלוא הבמה ──────────────
-    // אותו איור שבפינה, מוגדל: הכדור מרונדר ביבשותיו וסיבובו היומי ניכר.
-    // ה-HUD ולוח הצד משותפים לשתי החלוניות; החלונית הקטנה מוסתרת (CSS).
+    // הכדור מרונדר ביבשותיו וסיבובו היומי ניכר. ה-HUD ולוח הצד משותפים
+    // לשלוש החלוניות.
     drawTilt() {
       const c = $('yearCanvas'), { ctx, W, H } = fit(c);
       ctx.clearRect(0, 0, W, H);
@@ -1294,7 +1250,7 @@ window.Sims = (function () {
         area = { x: 0, y: _layout.yearTop, w: W, h: Math.max(160, H - _layout.yearTop - 6) };
       }
       const sn = this.sun(), v = A.sunHorizon(sn.H, sn.dec, this.lat);
-      this.drawSeasons(sn.dec, sn.H, Object.assign({ ctx, big: true }, area));
+      this.drawSeasons(sn.dec, sn.H, Object.assign({ ctx }, area));
       this.hud(v.U, sn);
     },
     // ── מדוע מסלול השמש נודד? — איור עזר בפאנל ─────────────────────────
@@ -1309,23 +1265,18 @@ window.Sims = (function () {
     // ותשרי עצמן, וגבול היום־לילה לא התאים לכיוון השמש. כאן קו המשווה, גבול
     // היום־לילה והנקודה שהשמש מעליה כולם היטלים של מעגלים בחלל — ולכן הם
     // מתאימים לכיוון השמש בכל נקודה שבמסלול.
-    // area — אזור הציור: בלי ארגומנט מצייר בחלונית הקטנה (seasonsCanvas);
-    // עם {ctx,x,y,w,h,big:true} — במלוא הבמה (חלונית "נטיית כדור הארץ"),
-    // ושם הכדור מרונדר ביבשותיו (renderGlobe) ולא כסמליל, כדי שייראה סיבובו.
+    // area — אזור הציור {ctx,x,y,w,h} בבמה (חלונית "נטיית כדור הארץ"); הכדור
+    // מרונדר ביבשותיו (renderGlobe) ולא כסמליל, כדי שייראה סיבובו.
+    // (עד 1.2.7 צויר האיור גם כחלונית קטנה בפינת כיפת הרקיע; הוסרה משנתייחדה
+    // לו חלונית משלו.)
     drawSeasons(dec, hourAng, area) {
-      let ctx, W, H, X = 0, Y = 0, big = false;
-      if (area) { ({ ctx, x: X, y: Y, w: W, h: H } = area); big = !!area.big; }
-      else {
-        const c = $('seasonsCanvas'); if (!c) return;
-        ({ ctx, W, H } = fitInset(c));
-        ctx.clearRect(0, 0, W, H);
-      }
-      const cx = X + W / 2, cy = Y + H / 2 + (big ? 2 : 4);
-      // במלוא הבמה: המסלול גדל עד שהכדור (0.21a), שמות התקופות (מעבר לכדור)
-      // והשורות שבראש ובתחתית נכנסים — לגובה: 2·(0.44a+0.21a+16+2.4fs)+2·24 ≤ H
-      const a = big ? Math.max(90, Math.min((W - 40) / 2.5, (H - 150) / 1.3)) : Math.min(W * 0.38, 130), b = a * 0.44;
-      const fs = big ? Math.max(11, Math.min(15, a / 22)) : 10;   // גופן השמות
-      const er = big ? a * 0.21 : 11, sunR = big ? a * 0.2 : 26;   // הכדור והשמש — סכמטיים (הכדור מוגדל שייראו יבשותיו)
+      const { ctx, x: X, y: Y, w: W, h: H } = area;
+      const cx = X + W / 2, cy = Y + H / 2 + 2;
+      // המסלול גדל עד שהכדור (0.21a), שמות התקופות (מעבר לכדור) והשורות
+      // שבראש ובתחתית נכנסים — לגובה: 2·(0.44a+0.21a+16+2.4fs)+2·24 ≤ H
+      const a = Math.max(90, Math.min((W - 40) / 2.5, (H - 150) / 1.3)), b = a * 0.44;
+      const fs = Math.max(11, Math.min(15, a / 22));   // גופן השמות
+      const er = a * 0.21, sunR = a * 0.2;   // הכדור והשמש — סכמטיים (הכדור מוגדל שייראו יבשותיו)
       // בסיס ההיטל. גובה נקודת המבט מעל מישור המסלול נגזר מיחס האליפסה עצמו
       // (b/a = sin α), ולכן המסלול והכדור מצוירים באותו היטל בדיוק.
       const sinA = b / a, cosA = Math.sqrt(1 - sinA * sinA);
@@ -1364,7 +1315,7 @@ window.Sims = (function () {
       ctx.fillStyle = cv('--ill-muted');
       for (const [d] of TEKUFOT) {
         const q = scr(orbit(d));
-        ctx.beginPath(); ctx.arc(q.x, q.y, big ? 3 : 2, 0, 2 * Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, 2 * Math.PI); ctx.fill();
       }
       // ── הארץ ביומה ──
       const dayY = ((this.dayY % spn.days) + spn.days) % spn.days;
@@ -1382,44 +1333,16 @@ window.Sims = (function () {
         u = [en[0] * ch + wn[0] * sh, en[1] * ch + wn[1] * sh, en[2] * ch + wn[2] * sh]; }
       // נקודה על פני הכדור (וקטור יחידה) → מסך
       const sph = P => ({ x: p.x + er * dot3(P, EX), y: p.y - er * dot3(P, EUP) });
-      const ang = P => { const q = sph(P); return Math.atan2(q.y - p.y, q.x - p.x); };
       // קרן השמש — עד שפת הכדור בלבד. קודם נמשכה עד מרכז הכדור, וממילא חצתה
       // תמיד את קו המשווה ולא ניתן היה לראות בה מעל איזה קו רוחב השמש עומדת.
       { const dx = p.x - cx, dy = p.y - cy, m = Math.hypot(dx, dy) || 1;
-        ctx.strokeStyle = cv('--ill-ray'); ctx.lineWidth = big ? 1.5 : 1;
+        ctx.strokeStyle = cv('--ill-ray'); ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.x - dx / m * er, p.y - dy / m * er); ctx.stroke(); }
-      if (big) {
         // הכדור ביבשותיו: היטל [EX,EUP,EV] של האיור, ציר הקטבים N3, וקו האורך
-        // הנמדד מ-u (i) מזרחה (j = N3×u) — כך נקודת הצופה נופלת על מקומו במפה
-        // (lonOff = קו האורך שלו). הצללת היום־לילה נעשית במצייר עצמו.
-        renderGlobe(ctx, p.x, p.y, er, [EX, EUP, EV], [u, cross3(N3, u), N3], sv,
-          this.lon * Math.PI / 180, { lats: [-23.44, 23.44], emphLat: this.lat * Math.PI / 180 });
-      } else {
-      sprite(ctx, IMG.earth, p.x, p.y, 2 * er, 2 * er);
-      // ── צד הלילה ──
-      // האזור שאין השמש זורחת בו ושהצופה רואה אותו: מחצית גבול היום־לילה
-      // (מעגל הניצב לכיוון השמש) הפונה אל הצופה, ואחריה מחצית שפת הכדור
-      // שמנגד לשמש. שתי המחציות נפגשות בדיוק בקצות הגבול, ולכן הצורה נסגרת.
-      { const u1 = norm3(cross3(sv, EV));               // בגבול, ובמישור המסך
-        const u2 = cross3(sv, u1);                      // בגבול, לכיוון העומק
-        const sgn = dot3(u2, EV) >= 0 ? 1 : -1;         // המחצית הפונה אל הצופה
-        ctx.save(); ctx.beginPath(); ctx.arc(p.x, p.y, er, 0, 2 * Math.PI); ctx.clip();
-        ctx.fillStyle = cv('--ill-night'); ctx.beginPath();
-        const NS = 36;
-        for (let i = 0; i <= NS; i++) {
-          const t = sgn * Math.PI * i / NS;
-          const P = [u1[0]*Math.cos(t) + u2[0]*Math.sin(t), u1[1]*Math.cos(t) + u2[1]*Math.sin(t),
-                     u1[2]*Math.cos(t) + u2[2]*Math.sin(t)];
-          const q = sph(P); if (i) ctx.lineTo(q.x, q.y); else ctx.moveTo(q.x, q.y);
-        }
-        // שפת הכדור מקצה הגבול בחזרה, דרך הכיוון שמנגד לשמש
-        const a1 = ang(u1), a2 = ang([-u1[0], -u1[1], -u1[2]]);
-        const asun = ang([-sv[0], -sv[1], -sv[2]]);   // כיוון "מנגד לשמש" במסך
-        const nrm = x => ((x % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
-        const ccw = !(nrm(asun - a2) < nrm(a1 - a2));
-        ctx.arc(p.x, p.y, er, a2, a1, ccw);
-        ctx.closePath(); ctx.fill(); ctx.restore(); }
-      }
+      // הנמדד מ-u (i) מזרחה (j = N3×u) — כך נקודת הצופה נופלת על מקומו במפה
+      // (lonOff = קו האורך שלו). הצללת היום־לילה נעשית במצייר עצמו.
+      renderGlobe(ctx, p.x, p.y, er, [EX, EUP, EV], [u, cross3(N3, u), N3], sv,
+        this.lon * Math.PI / 180, { lats: [-23.44, 23.44], emphLat: this.lat * Math.PI / 180 });
       // ── קו המשווה — היטל המעגל הניצב לציר ──
       // דו-גוני (בהיר מלא ומעליו קווקוו כהה) כדי שייראה על צד היום ועל צד
       // הלילה ובשתי פלטות האיור; החצי הרחוק עמום.
@@ -1436,8 +1359,8 @@ window.Sims = (function () {
             if (pts[i].near !== near || pts[i+1].near !== near) continue;
             ctx.moveTo(pts[i].q.x, pts[i].q.y); ctx.lineTo(pts[i+1].q.x, pts[i+1].q.y);
           } ctx.stroke(); };
-        ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.lineWidth = big ? 3.2 : 2.6; run(true);
-        ctx.strokeStyle = 'rgba(18,24,44,0.95)'; ctx.lineWidth = big ? 1.6 : 1.3;
+        ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.lineWidth = 3.2; run(true);
+        ctx.strokeStyle = 'rgba(18,24,44,0.95)'; ctx.lineWidth = 1.6;
         ctx.setLineDash([2.5, 2.5]); run(true); ctx.setLineDash([]);
         ctx.strokeStyle = 'rgba(160,170,190,0.45)'; ctx.lineWidth = 1;
         ctx.setLineDash([2, 3]); run(false); ctx.setLineDash([]); }
@@ -1457,7 +1380,7 @@ window.Sims = (function () {
           if (prev) {
             const vis = prev.near && near;
             ctx.strokeStyle = vis ? 'rgba(255,110,90,0.95)' : 'rgba(255,110,90,0.28)';
-            ctx.lineWidth = (vis ? 1.4 : 1) * (big ? 1.5 : 1);
+            ctx.lineWidth = (vis ? 1.4 : 1) * 1.5;
             ctx.beginPath(); ctx.moveTo(prev.q.x, prev.q.y); ctx.lineTo(q.x, q.y); ctx.stroke();
           }
           prev = { q, near };
@@ -1465,15 +1388,15 @@ window.Sims = (function () {
         const la = this.lat * Math.PI / 180, cl = Math.cos(la), sl = Math.sin(la);
         const Po = [u[0] * cl + N3[0] * sl, u[1] * cl + N3[1] * sl, u[2] * cl + N3[2] * sl];
         const qo = sph(Po);                             // מקום הצופה — מלא כשהוא לצדנו, טבעת כשהוא מנגד
-        ctx.beginPath(); ctx.arc(qo.x, qo.y, big ? 4 : 2.4, 0, 2 * Math.PI);
+        ctx.beginPath(); ctx.arc(qo.x, qo.y, 4, 0, 2 * Math.PI);
         if (dot3(Po, EV) >= 0) { ctx.fillStyle = '#ff5a4d'; ctx.fill(); }
         else { ctx.strokeStyle = 'rgba(255,90,77,0.85)'; ctx.lineWidth = 1.1; ctx.stroke(); } }
 
       // ── ציר הסיבוב ──
       const pn = sph(N3), ps = sph([-N3[0], -N3[1], -N3[2]]);
-      // הציר נמשך מעבר לכדור; במלוא הבמה — שיעור קבוע בפיקסלים ולא יחסי,
-      // שלא יימשך למרחק (הכדור שם גדול), והשמות מיד אחריו
-      const axK = big ? 1 + 16 / er : 1.7, lbK = big ? 1 + (16 + fs) / er : 2.3;
+      // הציר נמשך מעבר לכדור — שיעור קבוע בפיקסלים ולא יחסי, שלא יימשך
+      // למרחק (הכדור גדול), והשמות מיד אחריו
+      const axK = 1 + 16 / er, lbK = 1 + (16 + fs) / er;
       ctx.strokeStyle = cv('--ill-text'); ctx.lineWidth = 1.6;
       ctx.beginPath();
       ctx.moveTo(p.x + (pn.x - p.x) * axK, p.y + (pn.y - p.y) * axK);
@@ -1484,7 +1407,7 @@ window.Sims = (function () {
       // המשווה ממש, ובתמוז ובטבת על קווי ההיפוך. כשהיא בצדו הרחוק של הכדור
       // (הארץ בין הצופה ובין השמש) היא מסומנת כטבעת ריקה.
       { const q = sph(sv), vis = dot3(sv, EV) >= 0;
-        ctx.beginPath(); ctx.arc(q.x, q.y, big ? 4.5 : 2.6, 0, 2 * Math.PI);
+        ctx.beginPath(); ctx.arc(q.x, q.y, 4.5, 0, 2 * Math.PI);
         if (vis) { ctx.fillStyle = '#ffd257'; ctx.fill(); ctx.strokeStyle = 'rgba(60,40,0,0.8)'; }
         else { ctx.strokeStyle = 'rgba(255,210,87,0.85)'; }
         ctx.lineWidth = 1.1; ctx.stroke(); }
@@ -1492,54 +1415,29 @@ window.Sims = (function () {
       // אינם נקודות קבועות באיור, שהרי הכדור מסתובב סביב הציר פעם ביממה.
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillStyle = cv('--ill-text');
-      if (big) {
-        // במלוא הבמה יש מקום לשמות המלאים, ואין צורך במקרא
         ctx.font = 'bold ' + fs + 'px sans-serif';
-        ctx.fillText(T('צפון'), p.x + (pn.x - p.x) * lbK, p.y + (pn.y - p.y) * lbK);
-        ctx.fillText(T('דרום'), p.x + (ps.x - p.x) * lbK, p.y + (ps.y - p.y) * lbK);
-      } else {
-        ctx.font = 'bold 9px sans-serif';
-        // אות ראשונה של שם הרוח (צ/ד; באנגלית N/S) — 'צ' לבדה משמשת כמפתח
-        // תרגום אחר (צדק, בשצ"ם חנכ"ל), ולכן נגזרת כאן מן המילה המלאה
-        ctx.fillText(T('צפון').charAt(0), p.x + (pn.x - p.x) * 2.3, p.y + (pn.y - p.y) * 2.3);
-        ctx.fillText(T('דרום').charAt(0), p.x + (ps.x - p.x) * 2.3, p.y + (ps.y - p.y) * 2.3);
-        // מקרא בשולי האיור — הכדור קטן מלהכיל שמות מלאים
-        ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-        ctx.fillStyle = cv('--ill-muted');
-        const txt = T('צפון').charAt(0) + '=' + T('צפון') + ' · ' + T('דרום').charAt(0) + '=' + T('דרום') +
-          ' · ' + T('המעגל הניצב לציר — קו המשווה');
-        // הקנבס צר, ואורך המקרא משתנה עם השפה — הגופן מוקטן עד שהוא נכנס
-        let lf = 8;
-        ctx.font = lf + 'px sans-serif';
-        while (lf > 6 && ctx.measureText(txt).width > W - 12) { lf -= 0.5; ctx.font = lf + 'px sans-serif'; }
-        ctx.fillText(txt, W - 6, H - 4);
-      }
+      ctx.fillText(T('צפון'), p.x + (pn.x - p.x) * lbK, p.y + (pn.y - p.y) * lbK);
+      ctx.fillText(T('דרום'), p.x + (ps.x - p.x) * lbK, p.y + (ps.y - p.y) * lbK);
       // שמות התקופות — בקצות המסלול האופקיים (תמוז וטבת) הצמודים לשולי
       // הקנבס השם נכתב מעל הנקודה, שלא ייחתך בשוליים ולא ייבלע בכדור
       ctx.font = fs + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillStyle = cv('--ill-muted');
-      // במלוא הבמה — מעבר לקצה הציר (16px) ולשם הרוח שאחריו, שלא יתלכדו
-      const gap = big ? er + 16 + 2.4 * fs : er + 2.2 * fs;
+      // מעבר לקצה הציר (16px) ולשם הרוח שאחריו, שלא יתלכדו
+      const gap = er + 16 + 2.4 * fs;
       for (const [d, n] of TEKUFOT) {
         const q = scr(orbit(d)), side = Math.abs(q.x - cx) > a * 0.7;
         const lx = side ? Math.min(Math.max(q.x, X + 22), X + W - 22) : q.x;
         const ly = side ? q.y - gap : q.y + (q.y - cy) / b * gap;   // מחוץ לכדור ולאותיות שבקצות הציר
         ctx.fillText(T(n), lx, ly);
       }
-      // השורה החיה: קו הרוחב שהשמש ניצבת מעליו כעת — מתחת לחלונית הקטנה,
-      // ובראש הבמה במלוא הבמה; ושם גם מקרא הסימונים בתחתית
+      // השורה החיה בראש הבמה: קו הרוחב שהשמש ניצבת מעליו כעת; ומקרא הסימונים בתחתית
       const now = T('השמש עומדת כעת מעל קו רוחב') + ' ' + fmtNS(dec) +
         (Math.abs(dec) < 0.05 ? ' — ' + T('קו המשווה') : '');
-      if (big) {
-        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        ctx.fillStyle = cv('--ill-text'); ctx.font = 'bold 13px sans-serif';
-        ctx.fillText(now, cx, Y + 10);
-        ctx.textBaseline = 'bottom'; ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif';
-        ctx.fillText(T('הקו האדום — קו האורך של הצופה, והנקודה שעליו מקומו · הנקודה הצהובה — המקום שהשמש ניצבת מעליו'), cx, Y + H - 8);
-      } else {
-        const el = $('ss_now');
-        if (el) el.textContent = now;
-      }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillStyle = cv('--ill-text'); ctx.font = 'bold 13px sans-serif';
+      ctx.fillText(now, cx, Y + 10);
+      ctx.textBaseline = 'bottom'; ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif';
+      ctx.fillText(T('הקו האדום — קו האורך של הצופה, והנקודה שעליו מקומו · הנקודה הצהובה — המקום שהשמש ניצבת מעליו'), cx, Y + H - 8);
     },
     season() {
       // מדרום לקו המשוה העונות מהופכות: תקופת תמוז שם חורף ותקופת טבת קיץ.
@@ -1692,9 +1590,8 @@ window.Sims = (function () {
       };
       $('yo_city').onchange = e => { otz.city = e.target.value; otz.followApp = false; loadOtzariaTimes(); };
       loadOtzariaTimes();
-      // בורר החלונית: הרקיע / נטיית כדור הארץ. הכרטיסים שבלוח הצד המסומנים
-      // data-yfor מוצגים לפי החלונית (CSS על המחלקה yv-tilt), והחלונית הקטנה
-      // שבפינת הבמה מוסתרת כשהאיור במלוא הבמה — ולכן מטמון הפריסה מתאפס
+      // בורר החלונית: הרקיע / נטיית כדור הארץ / הגלגל הנטוי. הכרטיסים שבלוח
+      // הצד המסומנים data-yfor מוצגים לפי החלונית (CSS על yv-tilt / yv-wheel)
       document.querySelectorAll('#view-year [data-yview]').forEach(b => b.onclick = () => {
         document.querySelectorAll('#view-year [data-yview]').forEach(x => x.classList.toggle('active', x === b));
         this.view = b.dataset.yview;
