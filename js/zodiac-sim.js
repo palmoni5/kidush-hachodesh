@@ -660,6 +660,7 @@
     const sunLon = rev360(lons.sun);                   // אורך השמש כפי שהיא נראית מן הארץ
     const earthLon = rev360(sunLon + 180);             // ומכאן מקום הארץ סביב השמש
     const sunSign = Math.floor(sunLon / 30);
+    const mLon = rev360(lons.moon ?? 0);               // אורך הירח כפי שהוא נראה מן הארץ
 
     // ── רקע, רינג המזלות, והחלל שבתוכו ──
     ctx.fillStyle = cv('--ill-bg') || '#060616';
@@ -742,8 +743,17 @@
       ctx.fillText(T('ארץ'), eP.x + d * Math.cos(a), eP.y + d * Math.sin(a)); }
 
     // ── הירח סביב הארץ — כיוונו אמיתי, ומרחקו מוגדל כדי שייראה ──
-    { const mLon = rev360(lons.moon ?? 0), mr = er * 2.6;
+    { const mr = er * 2.6;
       const a = A(mLon), mx = eP.x + mr * Math.cos(a), my = eP.y + mr * Math.sin(a);
+      // קו הראייה אל המזל שהירח נראה בו. הרצועה מצוירת סמוכה והארץ אינה
+      // במרכזה, ולכן אין קו אחד שיעבור דרך הירח המצויר (שמרחקו מוגדל) ויגיע
+      // אל מזלו האמיתי; הוכרע שהקו יסתיים במזל הנכון (px(mLon)) — והוא עובר
+      // דרך הירח עצמו רק סמוך למולד ולמילוי, וברבעים נוטה ממנו.
+      { const hit = px(mLon, innerR - 3);
+        ctx.strokeStyle = isLight() ? 'rgba(70,110,170,0.7)' : 'rgba(200,225,255,0.7)';
+        ctx.lineWidth = 1.3; ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(eP.x, eP.y); ctx.lineTo(hit.x, hit.y); ctx.stroke();
+        ctx.setLineDash([]); }
       ctx.strokeStyle = isLight() ? 'rgba(60,60,60,0.22)' : 'rgba(200,200,200,0.20)';
       ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
       ctx.beginPath(); ctx.arc(eP.x, eP.y, mr, 0, 2 * PI); ctx.stroke(); ctx.setLineDash([]);
@@ -769,6 +779,10 @@
     };
     tagAt(sunLon, innerR - 16, T('כאן נראית השמש'), '#f5c842');
     tagAt(earthLon, innerR - 10, T('המזל שכנגד'), '#b8c8ff');
+    // תווית הירח — סמוך למולד או למילוי היא נופלת על אחת משתי התוויות, ואז
+    // נדחקת פנימה על אותו קו
+    { const near = l => Math.abs(((mLon - l + 540) % 360) - 180) < 22;
+      tagAt(mLon, innerR - (near(sunLon) || near(earthLon) ? 36 : 16), T('כאן נראה הירח'), '#dfe8ff'); }
 
     // ── שורת ההסבר שבראש הבמה (הגופן מוקטן עד שהיא נכנסת ברוחב) ──
     { const txt = T('המזלות עומדים · הארץ מקיפה את השמש בשנה וסובבת סביב עצמה ביממה');

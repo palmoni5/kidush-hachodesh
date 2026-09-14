@@ -331,12 +331,63 @@ window.Sims = (function () {
     return Math.atan2(dy, dx);
   }
 
+  // צבע השמים בכיפה לפי גובה השמש ומקומה: ביום תכלת (כהה בזנית ובהיר באופק),
+  // בלילה שחור, ובין השמשות — זוהר אדמדם באופק בצד השמש (במערב אחר השקיעה,
+  // במזרח לפני הזריחה; ובקיץ ובחורף נוטה צפונה או דרומה עם מקום השמש), והכיפה
+  // מתכהה ככל שמתרחקים ממנו. קירוב חזותי — לא מודל פיזיקלי של פיזור האור.
+  // מצויר בתמונה קטנה (64×64) המוגדלת ומוחלקת אל הכיפה; במטמון לפי מקום השמש.
+  const SKY_N = 64;
+  let _skyCv = null, _skyKey = '';
+  function skyImage(sAlt, sAz) {
+    const key = sAlt.toFixed(1) + '|' + sAz.toFixed(0);
+    if (_skyCv && _skyKey === key) return _skyCv;
+    if (!_skyCv) { _skyCv = document.createElement('canvas'); _skyCv.width = _skyCv.height = SKY_N; }
+    _skyKey = key;
+    const c2 = _skyCv.getContext('2d'), img = c2.createImageData(SKY_N, SKY_N), px = img.data;
+    const D = Math.PI / 180, ss = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const S = [Math.sin(sAz * D) * Math.cos(sAlt * D), Math.cos(sAz * D) * Math.cos(sAlt * D), Math.sin(sAlt * D)];
+    const bright = Math.pow(ss(-18, 5, sAlt), 1.5);         // עוצמת אור היום
+    const tw = Math.exp(-Math.pow((sAlt + 3) / 7, 2));      // עוצמת בין השמשות (שיאה כ-3° מתחת לאופק)
+    const red = ss(3, -6, sAlt);                             // ככל שהשמש שוקעת — הזוהר אדמדם יותר
+    for (let j = 0; j < SKY_N; j++) for (let i = 0; i < SKY_N; i++) {
+      const dx = (i + 0.5) / SKY_N * 2 - 1, dy = (j + 0.5) / SKY_N * 2 - 1;
+      const rr = Math.min(1, Math.hypot(dx, dy)), alt = (1 - rr) * 90 * D, az = Math.atan2(-dx, -dy);
+      const cosG = Math.sin(az) * Math.cos(alt) * S[0] + Math.cos(az) * Math.cos(alt) * S[1] + Math.sin(alt) * S[2];
+      const g = Math.acos(Math.max(-1, Math.min(1, cosG))) / D;   // המרחק מן השמש במעלות
+      const low = Math.pow(rr, 2.5);                               // קרבה לאופק
+      // תכלת היום — כהה בזנית, בהירה ולבנבנה באופק; בין השמשות מתכהה הרחק מן השמש
+      const b = bright * (1 - tw * 0.55 * (1 - Math.exp(-Math.pow(g / 70, 2))));
+      let r = 4 + (40 + 130 * low - 4) * b, gg = 6 + (110 + 95 * low - 6) * b, bb = 14 + (215 + 20 * low - 14) * b;
+      // זוהר השקיעה/הזריחה — צמוד לאופק ובצד השמש
+      const glow = Math.min(0.9, tw * Math.exp(-Math.pow(g / 40, 2)) * Math.pow(rr, 3) * 1.25);
+      const gr = 255, gG = 150 - 80 * red, gB = 70 - 30 * red;
+      r += (gr - r) * glow; gg += (gG - gg) * glow; bb += (gB - bb) * glow;
+      const k = (j * SKY_N + i) * 4;
+      px[k] = r; px[k + 1] = gg; px[k + 2] = bb; px[k + 3] = 255;
+    }
+    c2.putImageData(img, 0, 0);
+    return _skyCv;
+  }
+  // תווית בתוך הכיפה — על רקע כהה, שתהא קריאה על תכלת היום ועל שחור הלילה
+  function skyTag(ctx, txt, x, y) {
+    ctx.font = '9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const w = ctx.measureText(txt).width + 8;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x - w / 2, y - 7, w, 14);
+    ctx.fillStyle = '#e8ecf4'; ctx.fillText(txt, x, y);
+  }
+
   // חלון תצפית השמים: עיגול כיפת השמים (כמו בלשונית כוכבי הלכת) ובו הירח
   // במיקומו הנוכחי ובצורתו הנראית, והשמש להקשר. מרכז העיגול = זניט,
   // השפה = האופק; מזרח משמאל (מבט אל-על, כבלשונית כוכבי הלכת).
   // placeName — שם מקום הצפייה הנבחר, לכותרת החלון.
   function drawMoonSky(ctx, cx, cy, R, pos, day, placeName) {
-    ctx.strokeStyle = cv('--ill-grid'); ctx.lineWidth = 1;
+    if (pos) {                      // צבע השמים לשעה ולמקום
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.clip();
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(skyImage(pos.sun.alt, pos.sun.az), cx - R, cy - R, 2 * R, 2 * R);
+      ctx.restore();
+    }
+    ctx.strokeStyle = 'rgba(220,230,255,0.22)'; ctx.lineWidth = 1;
     for (const alt of [30, 60]) {
       const rr = (90 - alt) / 90 * R;
       ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 2 * Math.PI); ctx.stroke();
@@ -375,9 +426,10 @@ window.Sims = (function () {
       ctx.globalAlpha = 1;
     }
     if (pos.moon.alt <= 0) {
-      ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
-      if (pos.moon.alt > HIDE_ALT) ctx.fillText(T('מתחת לאופק'), pm.x, pm.y + 17);
-      else { ctx.textBaseline = 'middle'; ctx.fillText(T('מתחת לאופק'), cx, cy); }
+      if (pos.moon.alt > HIDE_ALT) {
+        ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
+        ctx.fillText(T('מתחת לאופק'), pm.x, pm.y + 17);
+      } else skyTag(ctx, T('מתחת לאופק'), cx, cy);
     } else if (pos.sun.alt > 0) {
       // הלבנה מעל האופק אך החמה זורחת — באור היום אינה נראית לעין
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
