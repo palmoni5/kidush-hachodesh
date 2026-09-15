@@ -619,8 +619,8 @@ window.Sims = (function () {
   function dayYToDateLabel(dayY) {
     const d = dayYToDate(dayY);
     return window.I18N && window.I18N.active
-      ? T(GREG_MONTHS[d.getUTCMonth()]) + ' ' + d.getUTCDate()
-      : d.getUTCDate() + ' ב' + GREG_MONTHS[d.getUTCMonth()];
+      ? T(GREG_MONTHS[d.getUTCMonth()]) + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear()
+      : d.getUTCDate() + ' ב' + GREG_MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
   }
 
   // ════════════════ מופעי הירח ════════════════
@@ -1520,6 +1520,14 @@ window.Sims = (function () {
       $('y_zen').textContent = fmtNS(dec - phi);
       $('y_season').textContent = T(s.n);
       $('y_date').textContent = dayYToDateLabel(this.dayY);
+      // התאריך העברי לרגע המוצג במקום הנבחר (אחר השקיעה — "אור ל־" היום הבא)
+      if (window.HebrewDate && window.HebrewDate.key) {
+        const heKey = window.HebrewDate.key(inst, this.lat, this.lon);
+        if (this._heKey !== heKey) {
+          this._heKey = heKey;
+          window.HebrewDate(inst, this.lat, this.lon).then(x => { if (x && this._heKey === heKey) $('y_date_he').textContent = x; });
+        }
+      }
       // שעה שמשית אמיתית — מזוית השעה של השמש (חצות אמיתי = 12:00)
       $('y_solar').textContent = fmtH(sn.H / 15 + 12);
       // זריחה/שקיעה/אורך היום/עומק חצות — זמנים אמיתיים (Astronomy Engine,
