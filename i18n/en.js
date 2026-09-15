@@ -195,7 +195,7 @@ window.TRANSLATIONS.en = {
   'הארץ במסלולה סביב השמש': 'Earth in its orbit around the Sun',
   'נטיית כדור הארץ — הארץ במסלולה סביב השמש': 'Earth’s tilt — Earth in its orbit around the Sun',
   'הגלגל הנטוי': 'The tilted wheel',
-  'הארץ בתוך גלגל המזלות': 'Earth inside the zodiac',
+  'הארץ ותנועת השמש בתוך גלגל המזלות': 'Earth and the sun\'s motion within the zodiac',
   'הגלגל הנטוי — הארץ בתוך כדור השמים, כדרך הרמב״ם': 'The tilted wheel — Earth inside the celestial sphere, as the Rambam describes it',
   'הארץ בתוך כדור השמים, במבט מבחוץ, כתמונת חז״ל והרמב״ם: הארץ עומדת במרכז, כדור השמים סובב סביבה על ציר הקטבים ממזרח למערב פעם ביממה, והשמש נודדת בגלגל המזלות הנטוי ממזל למזל — חציו צפונה וחציו דרומה ממשווה השמים. הפקדים ולוח הנתונים משותפים לשלוש החלוניות.':
     'Earth inside the celestial sphere, seen from outside, as Chazal and the Rambam picture it: the Earth stands at the center, the sphere of the heavens turns around it on the polar axis from east to west once a day, and the Sun wanders along the tilted zodiac wheel from sign to sign — half of it north of the celestial equator and half south. The controls and the data panel are shared by all three views.',
