@@ -954,7 +954,7 @@ window.Sims = (function () {
     // hour = השעון האזרחי במקום הנבחר (כולל שעון קיץ). ההמרה לזוית השעה נעשית
     // ב-solarHour(): הפחתת היסט אזור הזמן, הוספת קו האורך המקומי ומשוואת הזמן.
     hour: 12, dayY: 0, lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
-    speed: 2, playing: false, auto: true, viewAz: 90, hintDone: false, _bound: false,
+    speed: 2, playing: false, auto: true, viewAz: 90, viewEl: 20, hintDone: false, _bound: false,
     view: 'sky',              // 'sky' — כיפת הרקיע; 'tilt' — נטיית כדור הארץ (המסלול במלוא הבמה); 'wheel' — הארץ בתוך הגלגל הנטוי
     step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % yearSpan().days; } } },
     // היסט אזור הזמן בשעות; ללא אזור זמן ידוע — הערכה לפי קו האורך
@@ -1143,9 +1143,13 @@ window.Sims = (function () {
       const er = Math.max(18, R * 0.2);                               // כדור הארץ
       const dot3 = (u, w) => u[0]*w[0] + u[1]*w[1] + u[2]*w[2];
       const cross3 = (u, w) => [u[1]*w[2] - u[2]*w[1], u[2]*w[0] - u[0]*w[2], u[0]*w[1] - u[1]*w[0]];
-      // מסגרת המבט: הציר כמעט מאונך על המסך; נקודת המבט מוגבהת ELEV מעל
-      // מישור המשווה, ומסתובבת סביב הציר בגרירה (viewAz; 90 = המרידיאן מלפנים)
-      const ELEV = 20, ps = (this.viewAz - 90) * RAD, ce = Math.cos(ELEV * RAD), se = Math.sin(ELEV * RAD);
+      // מסגרת המבט: נקודת המבט מוגבהת viewEl מעל מישור המשווה (בברירת מחדל
+      // 20° — הציר כמעט מאונך על המסך), ומסתובבת סביב הציר בגרירה לצדדים
+      // (viewAz; 90 = המרידיאן מלפנים). הסימן הפוך מ-(viewAz − 90) כדי שגרירה
+      // ימינה תסיע את פני הכדור ימינה, כבכיפת הרקיע. גרירה מעלה ומטה מטה את
+      // הציר (viewEl, כל זוית — גם מעבר לקוטב), ו"מבט הצופה" מעמיד את הצופה
+      // בראש הכדור (EUP = O) והמבט מאחוריו — השמש נראית מעליו כמו לעיניו.
+      const ELEV = this.viewEl, ps = (90 - this.viewAz) * RAD, ce = Math.cos(ELEV * RAD), se = Math.sin(ELEV * RAD);
       const EV  = [ce * Math.cos(ps), ce * Math.sin(ps), se];
       const EUP = [-se * Math.cos(ps), -se * Math.sin(ps), ce];
       const EX  = [-Math.sin(ps), Math.cos(ps), 0];
@@ -1286,7 +1290,7 @@ window.Sims = (function () {
       ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = cv('--ill-text'); ctx.font = 'bold 13px sans-serif';
       ctx.fillText(T('השמש במזל') + ' ' + T(SIGNS[sunSign]) + ' ' + Math.floor((((lamS % 360) + 360) % 360) % 30) + '°', cx, Y + 10);
       ctx.textBaseline = 'bottom'; ctx.fillStyle = cv('--ill-muted'); ctx.font = '11px sans-serif';
-      ctx.fillText(T('כדור השמים סב סביב ציר הקטבים ממזרח למערב פעם ביממה · הנקודה האדומה — הצופה, והקו המקווקו — אופקו · גררו לסיבוב המבט'), cx, Y + AH - 8);
+      ctx.fillText(T('כדור השמים סב סביב ציר הקטבים ממזרח למערב פעם ביממה · הנקודה האדומה — הצופה, והקו המקווקו — אופקו · גררו לסיבוב המבט ולהטיית הציר'), cx, Y + AH - 8);
       this.hud(v.U, sn);
     },
     // ── חלונית "נטיית כדור הארץ" — איור המסלול במלוא הבמה ──────────────
@@ -1617,7 +1621,16 @@ window.Sims = (function () {
       $('y_auto').onchange = e => this.auto = e.target.checked;
       $('y_rotR').onclick = () => { this.viewAz = (this.viewAz + 10) % 360; };
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };
-      $('y_rot0').onclick = () => { this.viewAz = 90; };
+      $('y_rot0').onclick = () => { this.viewAz = 90; this.viewEl = 20; };
+      // "מבט הצופה" בגלגל הנטוי: הצופה בראש הכדור והמבט מאחוריו, פונה אל
+      // המשווה (בצפון — דרומה, בדרום — צפונה), כך שהמזרח משמאל כבכיפת הרקיע.
+      // בצפון המבט מאחורי המרידיאן (ps = 180°) בגובה 90−φ; בדרום מלפניו
+      // (ps = 0) בגובה שמעבר לקוטב הדרומי — בשניהם EUP = O.
+      $('y_eye').onclick = () => {
+        const f = this.lat * Math.PI / 180;
+        if (this.lat >= 0) { this.viewAz = 270; this.viewEl = 90 - this.lat; }
+        else { this.viewAz = 90; this.viewEl = Math.atan2(-Math.cos(f), Math.sin(f)) * 180 / Math.PI; }
+      };
       // לחצני התקופות — קפיצה אל רגע התקופה האמיתי (שוויון/היפוך), בתאריך
       // ובשעון האזרחיים של המקום הנבחר, כך שהשמש עומדת בדיוק על קו השוויון או
       // ההיפוך. dayY נגזר מהרגע עצמו — לא במיפוי המחזורי של dayYFromDate,
@@ -1660,10 +1673,13 @@ window.Sims = (function () {
         $('yearCanvas').style.cursor = this.view === 'tilt' ? 'default' : 'grab';
         clearFitCache(); window.__invalidate && window.__invalidate();
       });
-      // גרירת העכבר/מגע לסיבוב התצוגה (~0.5° לכל פיקסל) — בכיפת הרקיע ובגלגל הנטוי
-      { const cnv = $('yearCanvas'); let dragX = 0, dragAz = 0, dragging = false; cnv.style.cursor = 'grab';
-        cnv.onpointerdown = e => { if (this.view === 'tilt') return; dragging = true; this.hintDone = true; dragX = e.clientX; dragAz = this.viewAz; cnv.setPointerCapture(e.pointerId); cnv.style.cursor = 'grabbing'; };
-        cnv.onpointermove = e => { if (!dragging) return; this.viewAz = (((dragAz + (e.clientX - dragX) * 0.5) % 360) + 360) % 360; window.__invalidate && window.__invalidate(); };
+      // גרירת העכבר/מגע לסיבוב התצוגה (~0.5° לכל פיקסל) — בכיפת הרקיע ובגלגל הנטוי;
+      // בגלגל הנטוי גרירה מעלה ומטה גם מטה את הציר (גרירה מטה — מבט מלמעלה)
+      { const cnv = $('yearCanvas'); let dragX = 0, dragY = 0, dragAz = 0, dragEl = 0, dragging = false; cnv.style.cursor = 'grab';
+        cnv.onpointerdown = e => { if (this.view === 'tilt') return; dragging = true; this.hintDone = true; dragX = e.clientX; dragY = e.clientY; dragAz = this.viewAz; dragEl = this.viewEl; cnv.setPointerCapture(e.pointerId); cnv.style.cursor = 'grabbing'; };
+        cnv.onpointermove = e => { if (!dragging) return; this.viewAz = (((dragAz + (e.clientX - dragX) * 0.5) % 360) + 360) % 360;
+          if (this.view === 'wheel') this.viewEl = ((((dragEl + (e.clientY - dragY) * 0.5) + 180) % 360) + 360) % 360 - 180;
+          window.__invalidate && window.__invalidate(); };
         cnv.onpointerup = cnv.onpointercancel = () => { dragging = false; cnv.style.cursor = 'grab'; }; }
     },
   };
