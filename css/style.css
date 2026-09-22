@@ -431,7 +431,7 @@ table td:first-child { opacity: 0.7; }
 .lk-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; max-height: 190px; overflow-y: auto; }
 .lk-list button {
   padding: 2px 7px; font: inherit; font-size: 0.78em; cursor: pointer;
-  border: 1px solid var(--color-outline); border-radius: 6px;
+  border: 1px solid var(--color-outline); border-radius: var(--radius-sm);
   background: var(--color-surface-container-high); color: var(--color-on-surface);
 }
 .lk-list button:hover { border-color: var(--color-primary); color: var(--color-primary); }
