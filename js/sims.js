@@ -954,7 +954,7 @@ window.Sims = (function () {
     // hour = השעון האזרחי במקום הנבחר (כולל שעון קיץ). ההמרה לזוית השעה נעשית
     // ב-solarHour(): הפחתת היסט אזור הזמן, הוספת קו האורך המקומי ומשוואת הזמן.
     hour: 12, dayY: 0, lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
-    speed: 2, playing: false, auto: true, viewAz: 90, viewEl: 20, hintDone: false, _bound: false,
+    speed: 2, playing: false, auto: true, viewAz: 90, viewEl: 20, upObs: false, hintDone: false, _bound: false,
     view: 'sky',              // 'sky' — כיפת הרקיע; 'tilt' — נטיית כדור הארץ (המסלול במלוא הבמה); 'wheel' — הארץ בתוך הגלגל הנטוי
     step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % yearSpan().days; } } },
     // היסט אזור הזמן בשעות; ללא אזור זמן ידוע — הערכה לפי קו האורך
@@ -1147,12 +1147,25 @@ window.Sims = (function () {
       // 20° — הציר כמעט מאונך על המסך), ומסתובבת סביב הציר בגרירה לצדדים
       // (viewAz; 90 = המרידיאן מלפנים). הסימן הפוך מ-(viewAz − 90) כדי שגרירה
       // ימינה תסיע את פני הכדור ימינה, כבכיפת הרקיע. גרירה מעלה ומטה מטה את
-      // הציר (viewEl, כל זוית — גם מעבר לקוטב), ו"מבט הצופה" מעמיד את הצופה
-      // בראש הכדור (EUP = O) והמבט מאחוריו — השמש נראית מעליו כמו לעיניו.
+      // הציר (viewEl, כל זוית — גם מעבר לקוטב).
+      //
+      // upObs — "זנית הצופה למעלה": במקום שציר הקטבים יעמוד זקוף על המסך,
+      // מגולגל המבט סביב קו הראייה כך שהזנית של הצופה (O) פונה למעלה — ואז
+      // אופקו מאוזן וציר הקטבים נטוי על המסך כגובה הקוטב שברקיע, שהוא קו
+      // הרוחב: בקו המשווה הציר מאוזן ממש (הקטבים באופק), בירושלים נטוי כ-32°,
+      // ובקוטב זקוף. זו התמונה שרואה העין, והיא שמעמידה את השמש מעל הארץ.
       const ELEV = this.viewEl, ps = (90 - this.viewAz) * RAD, ce = Math.cos(ELEV * RAD), se = Math.sin(ELEV * RAD);
       const EV  = [ce * Math.cos(ps), ce * Math.sin(ps), se];
-      const EUP = [-se * Math.cos(ps), -se * Math.sin(ps), ce];
-      const EX  = [-Math.sin(ps), Math.cos(ps), 0];
+      let EUP = [-se * Math.cos(ps), -se * Math.sin(ps), ce];
+      let EX  = [-Math.sin(ps), Math.cos(ps), 0];                    // EX = EUP × EV
+      const la = this.lat * RAD, O = [Math.cos(la), 0, Math.sin(la)];  // הצופה (ומעליו הזנית)
+      if (this.upObs) {
+        // רכיב הזנית הניצב לקו הראייה הוא ה"מעלה" שבמסך; כשהזנית עומד ממש על
+        // קו הראייה (מבט מן הזנית עצמו) אין לגלגול משמעות ונשארת ברירת המחדל
+        const d = dot3(O, EV), u = [O[0] - d * EV[0], O[1] - d * EV[1], O[2] - d * EV[2]];
+        const m = Math.hypot(u[0], u[1], u[2]);
+        if (m > 1e-6) { EUP = [u[0] / m, u[1] / m, u[2] / m]; EX = cross3(EUP, EV); }
+      }
       const scr = (P, r) => ({ x: cx + r * dot3(P, EX), y: cy - r * dot3(P, EUP) });
       // נקודה ברקיע: זוית שעה ונטייה (מעלות) → וקטור במערכת הארץ
       const sky = (Hd, dd) => { const h = Hd * RAD, d = dd * RAD, cd = Math.cos(d);
@@ -1224,8 +1237,7 @@ window.Sims = (function () {
           ctx.globalAlpha = 1;
         }
       };
-      // ── האופק והזנית של הצופה ──
-      const la = this.lat * RAD, O = [Math.cos(la), 0, Math.sin(la)];   // הצופה (ומעליו הזנית)
+      // ── האופק והזנית של הצופה (O — למעלה במסגרת המבט) ──
       // ארבע רוחות האופק על כדור השמים: מזרח ומערב על משווה השמים (זוית שעה
       // ∓90°), דרום וצפון על המרידיאן — בנטייה φ−90 ו-90−φ
       const horizonPts = [[270, 0, 'מזרח'], [90, 0, 'מערב'], [0, this.lat - 90, 'דרום'], [180, 90 - this.lat, 'צפון']];
@@ -1559,6 +1571,12 @@ window.Sims = (function () {
       const off = ((this.viewAz % 360) + 360) % 360, sgn = off > 180 ? off - 360 : off;
       return T(names[Math.round(f / 45) % 8]) + (sgn ? ` (${sgn > 0 ? '+' : ''}${sgn}°)` : '');
     },
+    _syncEye() {
+      const b = $('y_eye'); if (!b) return;
+      b.classList.toggle('active', this.upObs);
+      b.textContent = T(this.upObs ? '↩ ציר הקטבים למעלה' : '👁 זנית הצופה למעלה');
+    },
+
     sync() {
       $('y_spdL').textContent = this.speed; $('y_hourL').textContent = fmtH(this.hour); $('y_dayL').textContent = Math.floor(this.dayY);
       $('y_azL').textContent = this.faceLabel();
@@ -1619,17 +1637,18 @@ window.Sims = (function () {
       $('y_lat').oninput = e => reClock(() => { this.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); custom(); });
       $('y_lon').oninput = e => reClock(() => { this.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); custom(); });
       $('y_auto').onchange = e => this.auto = e.target.checked;
+      this._syncEye();
       $('y_rotR').onclick = () => { this.viewAz = (this.viewAz + 10) % 360; };
       $('y_rotL').onclick = () => { this.viewAz = (this.viewAz - 10 + 360) % 360; };
-      $('y_rot0').onclick = () => { this.viewAz = 90; this.viewEl = 20; };
-      // "מבט הצופה" בגלגל הנטוי: הצופה בראש הכדור והמבט מאחוריו, פונה אל
-      // המשווה (בצפון — דרומה, בדרום — צפונה), כך שהמזרח משמאל כבכיפת הרקיע.
-      // בצפון המבט מאחורי המרידיאן (ps = 180°) בגובה 90−φ; בדרום מלפניו
-      // (ps = 0) בגובה שמעבר לקוטב הדרומי — בשניהם EUP = O.
+      $('y_rot0').onclick = () => { this.viewAz = 90; this.viewEl = 20; this.upObs = false; this._syncEye(); };
+      // "זנית הצופה למעלה" בגלגל הנטוי — מתג הגלגול (ראו drawWheel). בהדלקתו
+      // מוצב המבט מן המערב אל המזרח (viewAz = 180) ובגובה האופק (viewEl = 0),
+      // שהיא התמונה המוכרת: האופק מאוזן, ציר הקטבים נטוי כקו הרוחב (בקו
+      // המשווה מאוזן ממש), והשמש שמעל האופק עומדת מעל הארץ כמראה העין.
       $('y_eye').onclick = () => {
-        const f = this.lat * Math.PI / 180;
-        if (this.lat >= 0) { this.viewAz = 270; this.viewEl = 90 - this.lat; }
-        else { this.viewAz = 90; this.viewEl = Math.atan2(-Math.cos(f), Math.sin(f)) * 180 / Math.PI; }
+        this.upObs = !this.upObs;
+        if (this.upObs) { this.viewAz = 180; this.viewEl = 0; }
+        this._syncEye();
       };
       // לחצני התקופות — קפיצה אל רגע התקופה האמיתי (שוויון/היפוך), בתאריך
       // ובשעון האזרחיים של המקום הנבחר, כך שהשמש עומדת בדיוק על קו השוויון או
@@ -1946,7 +1965,7 @@ window.Sims = (function () {
 
   // החלפת שפה: מקרא כוכבי הלכת וכרטיס זמני הלוח נבנים באירוע — מרעננים
   planets.onLanguage = function () { if (this.sky) { this.legend(); this.note(); } };
-  year.onLanguage = function () { if (this._bound) loadOtzariaTimes(); };
+  year.onLanguage = function () { if (this._bound) { this._syncEye(); loadOtzariaTimes(); } };
 
   // תוויות הקטבים על גלובוס מסתובב (ליקויים, קו התאריך). proj(lat, lon) → {x, y, vis}.
   // הגלובוסים הללו מסתובבים לא רק סביב צירם, וכשמרכז המבט קרוב לקוטב קשה למי
