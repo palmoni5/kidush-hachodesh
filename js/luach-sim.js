@@ -429,6 +429,57 @@
     w.style.display = msgs.length ? '' : 'none';
   }
 
+  // ── חיפוש לפי סימן השנה ─────────────────────────────────────────────
+  // הסימן נגזר משני ימי ראש השנה בלבד: אורך השנה הוא ההפרש ביניהם, ומט״ו
+  // בניסן עד ראש השנה הבא יש תמיד 163 ימים (ניסן 16, אייר 29, סיון 30, תמוז
+  // 29, אב 30, אלול 29) — ולכן א׳ דפסח קודם ביומיים ליום ראש השנה הבא.
+  // כך נמנעת בניית טבלת השנה כולה לכל שנה בטווח (עד 9,999 שנים).
+  const _simanCache = new Map();
+  function yearKey(y) {
+    let k = _simanCache.get(y);
+    if (!k) {
+      const a = H.roshHashana(y), b = H.roshHashana(y + 1), len = b.abs - a.abs;
+      const pd = (b.dow + 5) % 7;
+      k = { siman: H.siman(a.dow, len, pd), leap: len > 360, rh: a.dow, kind: len % 10, pd };
+      _simanCache.set(y, k);
+    }
+    return k;
+  }
+  // ארבעה-עשר הסימנים — נאספים מן הלוח עצמו (מחזור שלם של 689 שנים מכיל את
+  // כולם) וממוינים: פשוטות ואחריהן מעוברות, ובכל אחת לפי יום ראש השנה
+  let _kviot = null;
+  function kviot() {
+    if (_kviot) return _kviot;
+    const seen = new Map();
+    for (let y = 5000; y < 5689; y++) { const k = yearKey(y); if (!seen.has(k.siman)) seen.set(k.siman, k); }
+    return (_kviot = [...seen.values()].sort((a, b) =>
+      (a.leap - b.leap) || (a.rh - b.rh) || (a.kind - b.kind)));
+  }
+  const find = { siman: null, from: 0, to: 0 };
+  function fillSimanSelect() {
+    const sel = $('lk_siman'), grp = (leap, label) =>
+      `<optgroup label="${T(label)}">` + kviot().filter(k => k.leap === leap).map(k =>
+        `<option value="${k.siman}">${k.siman} — ${T(H.DOW[k.rh])} · ${T(KIND_NAME[k.kind])} · ${T('א׳ דפסח')} ${T(H.DOW[k.pd])}</option>`).join('') +
+      '</optgroup>';
+    sel.innerHTML = grp(false, 'פשוטה') + grp(true, 'מעוברת');
+    sel.value = find.siman;
+  }
+  const KIND_NAME = { 3: 'חסרה', 4: 'כסדרה', 5: 'שלמה' };
+  function renderFind(onYear) {
+    const lo = Math.min(find.from, find.to), hi = Math.max(find.from, find.to);
+    const he = !(window.I18N && window.I18N.active);
+    // מעבר לאלף אחד שם השנה בגימטריה לבדו (תשפ״ה) חוזר בכל אלף — ולכן
+    // מוסיפים אז את אות האלפים (ה׳תשפ״ה)
+    const multi = Math.floor(lo / 1000) !== Math.floor(hi / 1000);
+    const name = y => (multi ? H.hebNum(Math.floor(y / 1000)) : '') + H.hebYearName(y);
+    const ys = [];
+    for (let y = lo; y <= hi; y++) if (yearKey(y).siman === find.siman) ys.push(y);
+    $('lk_count').textContent = `${ys.length} ${T('שנים בסימן')} ${find.siman} ${T('מתוך')} ${hi - lo + 1}`;
+    $('lk_list').innerHTML = ys.map(y =>
+      `<button type="button" data-y="${y}" title="${he ? y : name(y)}">${he ? name(y) : y}</button>`).join('');
+    $('lk_list').onclick = e => { const b = e.target.closest('button[data-y]'); if (b) onYear(+b.dataset.y); };
+  }
+
   // ── מצב האיור ───────────────────────────────────────────────────────
   const sim = {
     playing: false, _bound: false, custom: false,
@@ -470,6 +521,7 @@
       // חלונית המולדות טעונה שנה אמיתית — למולד לועזי ולקיבוץ האסטרונומי
       // (ממיר השעה נשאר גלוי: התאריך שלו עצמאי ואינו תלוי בשנה המוצגת)
       $('l_moladBox').style.display = on ? 'none' : '';
+      $('l_findBox').style.display = on ? 'none' : '';     // התוצאות הן שנים אמיתיות
       $('l_customBtn').textContent = T(on ? '↩ חזרה לשנה אמיתית' : '🧪 שנת מעבדה');
       if (!on) return;
       const pv = $('l_prevLeap'), nx = $('l_nextLeap');
@@ -512,6 +564,19 @@
         this._moladName = null;                    // הבחירה החדשה תיקבע לפי האינדקס
         if (this._t) renderMolad(this._t);
       };
+      // חיפוש לפי סימן השנה — נפתח על סימן השנה הנוכחית, מאה שנה לכל צד
+      find.siman = yearKey(this.year).siman;
+      find.from = Math.max(1, this.year - 100); find.to = Math.min(9999, this.year + 100);
+      $('lk_from').value = find.from; $('lk_to').value = find.to;
+      fillSimanSelect();
+      const refind = this._refind = () => renderFind(setYear);
+      $('lk_siman').onchange = e => { find.siman = e.target.value; refind(); };
+      for (const [id, key] of [['lk_from', 'from'], ['lk_to', 'to']])
+        $(id).onchange = e => {
+          find[key] = Math.max(1, Math.min(9999, (+e.target.value | 0) || find[key]));
+          e.target.value = find[key]; refind();
+        };
+      refind();
       $('l_prev').onclick = () => setYear(this.year - 1);
       $('l_next').onclick = () => setYear(this.year + 1);
       $('l_today').onclick = () => {
@@ -594,6 +659,7 @@
     if (!sim._bound) return;
     sim._sig = null; sim._syncCustom(); sim.draw();
     renderConv();
+    fillSimanSelect(); sim._refind();
   };
 
   window.Sims.luach = sim;

@@ -427,6 +427,14 @@ table td:first-child { opacity: 0.7; }
 .luach-head .lh-molad { font-size: 0.72em; opacity: 0.8; margin-top: 6px; }
 .luach-head .lh-molad b { opacity: 1; font-weight: 600; }
 
+/* חיפוש לפי סימן השנה — רשימת השנים שנמצאו, כל אחת לחיצה אל הלוח */
+.lk-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; max-height: 190px; overflow-y: auto; }
+.lk-list button {
+  padding: 2px 7px; font: inherit; font-size: 0.78em; cursor: pointer;
+  border: 1px solid var(--color-outline); border-radius: 6px;
+  background: var(--color-surface-container-high); color: var(--color-on-surface);
+}
+.lk-list button:hover { border-color: var(--color-primary); color: var(--color-primary); }
 .luach-warn {
   font-size: 0.72em; line-height: 1.6; margin-bottom: 12px;
   border: 1px solid var(--color-outline); border-inline-start-width: 3px;

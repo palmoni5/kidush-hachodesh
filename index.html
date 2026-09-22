@@ -282,6 +282,18 @@
             </div>
           </div>
 
+          <div class="card" id="l_findBox">
+            <h2>חיפוש לפי סימן השנה</h2>
+            <label class="field">סימן השנה<select id="lk_siman"></select></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+              <label class="field">משנה<input type="number" id="lk_from" min="1" max="9999" /></label>
+              <label class="field">עד שנה<input type="number" id="lk_to" min="1" max="9999" /></label>
+            </div>
+            <div class="htxt" id="lk_count" style="margin-top:6px">—</div>
+            <div class="lk-list" id="lk_list"></div>
+            <div class="htxt" style="margin-top:6px">לחיצה על שנה מציגה אותה בלוח.</div>
+          </div>
+
           <div class="card" id="l_customBox" style="display:none">
             <h2>שנת מעבדה</h2>
             <div class="htxt" style="margin-bottom:9px">כאן הנתונים נקבעים ביד, כדי לראות כל דחיה פועלת בנפרד. זו אינה שנה מן הלוח — צירוף שאינו קיים במציאות יסומן באזהרה למעלה.</div>

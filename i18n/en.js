@@ -704,6 +704,8 @@ window.TRANSLATIONS.en = {
   'ג״ט ר״ד': 'GaTaRaD',
   'ב־ט״ו־תקפ״ט': 'BeTUTaKPaT',
   'סימן השנה': 'Year siman', 'א׳ דפסח': 'first day of Pesach',
+  'חיפוש לפי סימן השנה': 'Search by year siman', 'משנה': 'From year', 'עד שנה': 'To year',
+  'שנים בסימן': 'years with siman', 'לחיצה על שנה מציגה אותה בלוח.': 'Click a year to show it in the calendar.',
   'מחזור קטן': 'Minor cycle', 'מחזור גדול': 'Major cycle',
   'מחזור': 'cycle', 'שנה': 'year', 'מתוך': 'of',
   'בחירת שנה': 'Choose a year',
