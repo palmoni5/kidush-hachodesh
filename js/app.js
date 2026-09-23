@@ -129,9 +129,14 @@
   }
 
   // ── רקע איור בהיר/כהה ──
+  // כיתוב שהוחלף בקוד נכתב תמיד בעברית — שהיא מפתח התרגום — ומיד מתורגם
+  // לשפת הממשק. כך גם מעבר שפה מאוחר יותר משחזר את המקור העברי כראוי.
+  function retranslate(el) { try { window.I18N.translateDom(el); } catch (e) {} }
+
   function applyBg(light) {
     document.body.classList.toggle('ill-light', light);
     $('bgBtn').textContent = light ? '🌙 רקע כהה' : '☀ רקע בהיר';
+    retranslate($('bgBtn'));
     if (window.Sims.clearColorCache) window.Sims.clearColorCache();
     invalidate();
   }
@@ -145,11 +150,39 @@
     return false;
   }
 
+  // ── הרחבת האיור: הסתרת לוח הבקרה ──────────────────────────────────
+  // הכפתור שבפס העליון מסתיר את הלוח שבצד, והבמה נמתחת על פני כל הרוחב.
+  // אין סימון כלשהו על הבמה עצמה — החזרת הלוח היא מאותו כפתור או ב-Esc,
+  // כדי שהאיור יישאר נקי לעין. מטמון המידות מתאפס דרך ה-ResizeObserver
+  // שמשגיח על הבמה, ולכן די כאן בשינוי המחלקה.
+  function applyPanel(hidden) {
+    document.body.classList.toggle('panel-hidden', hidden);
+    const b = $('panelBtn');
+    b.textContent = hidden ? '⛶ הצגת הבקרה' : '⛶ הרחבת האיור';
+    retranslate(b);
+    b.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+    invalidate();
+  }
+  async function togglePanel() {
+    const hidden = !document.body.classList.contains('panel-hidden');
+    applyPanel(hidden);
+    try { await Otzaria.call('storage.set', { key: 'panelHidden', value: hidden }); } catch (e) {}
+  }
+  async function loadPanel() {
+    try { const r = await Otzaria.call('storage.get', { key: 'panelHidden' }); if (r && r.success) return !!r.data; } catch (e) {}
+    return false;
+  }
+
   // ── חיווט ראשוני (לא תלוי boot) ──
   $('brandIcon').src = window.ASSETS.moon_icon;
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
   enableTabScroll($('tabs'));
   $('bgBtn').onclick = toggleBg;
+  $('panelBtn').onclick = togglePanel;
+  // Esc מחזיר את לוח הבקרה — מוצא בטוח למי שהסתיר אותו ואינו מוצא את הכפתור
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.body.classList.contains('panel-hidden')) togglePanel();
+  });
 
   // ── חצי הגדלה/הקטנה מותאמים לכל שדות המספר ──
   // (ה-spinner המובנה זעיר ונחתך ב-RTL; כאן עוטפים כל שדה בחצים ברורים)
@@ -313,6 +346,7 @@
     applyTheme(payload.theme);
     applyLocale(payload.app);
     applyBg(await loadBg());
+    applyPanel(await loadPanel());
     const start = await loadLastView();
     // ממתינים לטעינת הגופנים לפני הרינדור הראשון: מדידות הפריסה (גובה ה-HUD וסרגל
     // הלשוניות) חייבות להיעשות לפי המטריקות הסופיות, אחרת reflow מאוחר עם טעינת

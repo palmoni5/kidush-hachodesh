@@ -241,6 +241,12 @@ aside.panel {
   padding: 14px; display: flex; flex-direction: column; gap: 13px;
 }
 
+/* ── הרחבת האיור (הסתרת לוח הבקרה) ─────────────────── */
+/* הכפתור שבפס העליון מסתיר את לוח הבקרה שבצד, והבמה — שהיא flex:1 —
+   נמתחת על פני כל רוחב החלון. אין כאן שום סימון על הבמה עצמה: החזרת
+   הלוח נעשית מאותו כפתור (או במקש Esc), כדי שהאיור יישאר נקי לעין. */
+body.panel-hidden aside.panel { display: none; }
+
 /* ── כרטיסים ───────────────────────────────────────── */
 .card {
   background: var(--color-surface);
@@ -645,6 +651,16 @@ footer {
     border-inline-start: none; border-top: 1px solid var(--color-outline);
     padding: 12px;
   }
+
+  /* האיור על כל המסך: בלי לוח הבקרה אין מה לגלול מתחת לבמה, ולכן חוזרים
+     לפריסה צמודה הממלאת את הגובה הזמין (כמו בטלפון לרוחב) במקום להותיר
+     שטח ריק מתחת לאיור שגובהו קבוע */
+  body.panel-hidden { overflow: hidden; }
+  body.panel-hidden #app { height: 100%; height: 100dvh; }
+  body.panel-hidden main { flex: 1; }
+  body.panel-hidden .view { height: 100%; }
+  body.panel-hidden .stage { flex: 1; height: auto; min-height: 0; max-height: none; }
+  body.panel-hidden .stage.luach-stage { overflow: auto; }
 
   /* הלוח העברי: טבלה ולא איור — גובה לפי התוכן, ו-13 עמודות מתהפכות לשורות */
   .stage.luach-stage {

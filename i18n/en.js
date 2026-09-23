@@ -18,6 +18,8 @@ window.TRANSLATIONS.en = {
   'אור ל': 'Eve of ',
   '☀ רקע בהיר': '☀ Light background',
   '🌙 רקע כהה': '🌙 Dark background',
+  '⛶ הרחבת האיור': '⛶ Expand illustration',
+  '⛶ הצגת הבקרה': '⛶ Show controls',
   '▶ הפעל': '▶ Play',
   '⏸ השהה': '⏸ Pause',
   'מהירות:': 'Speed:',
