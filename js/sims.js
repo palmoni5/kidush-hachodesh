@@ -452,38 +452,61 @@ window.Sims = (function () {
   // (המסלול אליפטי — הארץ איטית ברחקה, וקיץ הצפון ארוך מחורפו): תשרי נופלת
   // כ-4 ימים אחרי רבע שנת שמואל הסכמטי. כשהמנוע אינו זמין — נפילה למחזור
   // הסכמטי (שנת שמואל של 365.25 יום המעוגנת בשוויון האביב של 2000, tek=null).
-  let _span = null;
-  function yearSpan() {
-    if (_span && Date.now() < _span.end) return _span;
+  // המחזור המוצג נקבע ב"שנת עוגן" — השנה הלועזית שבה חלה תקופת ניסן הפותחת
+  // אותו. ברירת המחדל היא המחזור שהרגע הנוכחי בתוכו, והוא מתחלף מאליו בהגיע
+  // תקופת ניסן הבאה (auto); בחירת תאריך או קפיצה לתקופה מעגנים אותו לשנה
+  // שבחרו — בין YEAR_MIN ל-YEAR_MAX. (עד 1.2.10 הוצג המחזור הנוכחי בלבד.)
+  const YEAR_MIN = 1000, YEAR_MAX = 3000;
+  const _spans = Object.create(null);
+  let _anchorY = null, _autoSpan = true;
+  function spanOf(y) {
+    if (_spans[y]) return _spans[y];
     try {
       const AE = window.Astronomy;
-      let y = new Date().getUTCFullYear();
-      if (AE.Seasons(y).mar_equinox.date.getTime() > Date.now()) y--;
       const s = AE.Seasons(y);
       const start = s.mar_equinox.date.getTime();
       const end = AE.Seasons(y + 1).mar_equinox.date.getTime();
       const d = t => (t.date.getTime() - start) / 86400000;
-      return (_span = { start, end, days: (end - start) / 86400000,
-                        tek: [0, d(s.jun_solstice), d(s.sep_equinox), d(s.dec_solstice)] });
+      return (_spans[y] = { y, start, end, days: (end - start) / 86400000,
+                            tek: [0, d(s.jun_solstice), d(s.sep_equinox), d(s.dec_solstice)] });
     } catch (e) {
+      // נפילה סכמטית: מחזור שנת שמואל המעוגן בשוויון 2000, הקרוב לשנת העוגן
       const cyc = A.SOLAR_YEAR * 86400000;
-      const start = SPRING_REF + Math.floor((Date.now() - SPRING_REF) / cyc) * cyc;
-      return { start, end: start + cyc, days: A.SOLAR_YEAR, tek: null };   // לא נשמר — שהמנוע ינוסה שוב
+      const start = SPRING_REF + Math.round((Date.UTC(y, 2, 20, 7, 35) - SPRING_REF) / cyc) * cyc;
+      return { y, start, end: start + cyc, days: A.SOLAR_YEAR, tek: null };   // לא נשמר — שהמנוע ינוסה שוב
     }
   }
-  // יום בשנת החמה (מתקופת ניסן האמיתית) ושעה נוכחית באזור הזמן שנבחר
-  function solarToday(tz) {
-    const now = new Date();
-    const dayY = (now.getTime() - yearSpan().start) / 86400000;
-    const off = tzOffsetHours(tz, now);
-    const hour = off === null ? now.getHours() + now.getMinutes() / 60
-                              : (((now.getTime() / 3600000 + off) % 24) + 24) % 24;
+  // שנת העוגן שמחזורה מכיל את הרגע t
+  function anchorFor(t) {
+    const y = new Date(t).getUTCFullYear();
+    return spanOf(y).start > t ? y - 1 : y;
+  }
+  function setAnchor(y, auto) {
+    _anchorY = Math.max(YEAR_MIN, Math.min(YEAR_MAX, y));
+    _autoSpan = !!auto;
+  }
+  function yearSpan() {
+    if (_anchorY === null || (_autoSpan && Date.now() >= spanOf(_anchorY).end))
+      setAnchor(anchorFor(Date.now()), true);
+    return spanOf(_anchorY);
+  }
+  // רגע נתון → יום בשנת החמה ושעון אזרחי במקום (היסט off שעות). המחזור
+  // המוצג מוחלף לזה שהרגע בתוכו. כשהיום האזרחי המקומי שונה מיום ה-UTC
+  // מוסטים יום ושעה יחדיו — instant() בונה את הרגע מן התאריך ומן השעון, והוא
+  // נשמר במדויק.
+  function placeInstant(t, off, auto) {
+    let hour = ((t / 3600000) % 24 + 24) % 24 + off, shift = 0;
+    if (hour >= 24) { hour -= 24; shift = 1; } else if (hour < 0) { hour += 24; shift = -1; }
+    setAnchor(anchorFor(t), auto);
+    let s = yearSpan(), dayY = (t - s.start) / 86400000 + shift;
+    if (dayY < 0 && s.y > YEAR_MIN) { setAnchor(s.y - 1, auto); s = yearSpan(); dayY = (t - s.start) / 86400000 + shift; }
+    else if (dayY >= s.days && s.y < YEAR_MAX) { setAnchor(s.y + 1, auto); s = yearSpan(); dayY = (t - s.start) / 86400000 + shift; }
     return { dayY, hour };
   }
   // רגע התקופה האמיתי שבמחזור השנה המוצג. i: 0=ניסן (שוויון מרץ), 1=תמוז,
   // 2=תשרי, 3=טבת. null כשהמנוע אינו זמין — ואז הלחצנים נופלים לרבעים הסכמטיים.
-  function tekufaMoment(i) {
-    const s = yearSpan();
+  function tekufaMoment(i, y) {
+    const s = y === undefined ? yearSpan() : spanOf(y);
     return s.tek ? new Date(s.start + s.tek[i] * 86400000) : null;
   }
   // היסט אזור הזמן (שעות) לתאריך נתון — כולל שעון קיץ, מנתוני ה-IANA של הדפדפן.
@@ -599,17 +622,13 @@ window.Sims = (function () {
     const B = 2 * Math.PI * (N - 81) / 364;
     return (9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B)) / 60;
   }
-  // יום בשנת החמה מתאריך (יום+חודש, נדגם בצהרי היום) — בתוך המחזור המוצג.
-  // הלשונית מציגה את שנת החמה הנוכחית (מתקופת ניסן עד תקופת ניסן), ובתוכה
-  // כל יום+חודש נופל פעם אחת — כך שהשנה הלועזית נקבעת מאליה ומוחזרת לתצוגה.
-  // (קודם התקבל גם שדה שנה, ותאריך של שנה אחרת מופה מחזורית אל המחזור הנוכחי
-  // בלי שהמשתמש ידע — שנה שהוקלדה לא באמת חושבה.)
-  function dayYFromDate(M, D) {
-    const s = yearSpan();
-    const y0 = new Date(s.start).getUTCFullYear();
-    let t = Date.UTC(y0, M - 1, D, 12);
-    if (t < s.start) t = Date.UTC(y0 + 1, M - 1, D, 12);
-    return { dayY: (t - s.start) / 86400000, year: new Date(t).getUTCFullYear() };
+  // יום בשנת החמה מתאריך לועזי מלא (נדגם בצהרי היום, UTC) — המחזור המוצג
+  // מוחלף לשנת החמה שהתאריך בתוכה. השנה מוגבלת ל-YEAR_MIN..YEAR_MAX.
+  function dayYFromDate(Y, M, D) {
+    Y = Math.max(YEAR_MIN, Math.min(YEAR_MAX, Math.round(Y)));
+    const t = Date.UTC(Y, M - 1, D, 12);
+    setAnchor(anchorFor(t), false);
+    return { dayY: (t - yearSpan().start) / 86400000, year: Y };
   }
   // תאריך לועזי מיום בשנת החמה המוצגת
   const GREG_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -956,7 +975,49 @@ window.Sims = (function () {
     hour: 12, dayY: 0, lat: 31.78, lon: 35.24, tz: 'Asia/Jerusalem', cityName: 'ירושלים',
     speed: 2, playing: false, auto: true, viewAz: 90, viewEl: 20, upObs: false, hintDone: false, _bound: false,
     view: 'sky',              // 'sky' — כיפת הרקיע; 'tilt' — נטיית כדור הארץ (המסלול במלוא הבמה); 'wheel' — הארץ בתוך הגלגל הנטוי
-    step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.dayY = (this.dayY + 1) % yearSpan().days; } } },
+    step(dt) { if (this.playing) { this.hour += this.speed * dt; if (this.hour >= 24) { this.hour -= 24; if (this.auto) this.nextDay(); } } },
+    // מעבר ליום הבא; בסוף שנת החמה ממשיכים אל המחזור הבא (שמתחיל ברגע שזה
+    // מסתיים), ובגבול YEAR_MAX — חזרה לראש אותו מחזור
+    nextDay() {
+      const s = yearSpan();
+      if (this.dayY + 1 < s.days) { this.dayY += 1; return; }
+      if (s.y < YEAR_MAX) { setAnchor(s.y + 1, _autoSpan); this.dayY = this.dayY + 1 - s.days; }
+      else this.dayY = (this.dayY + 1) % s.days;
+    },
+    // שנת העוגן שלחצני התקופות פועלים בה. כשקפיצה לתקופה הוליכה אל המחזור
+    // הסמוך (תקופה לפי החשבון שקדמה לשוויון או איחרה אחרי הבא) — נשארים
+    // בשנה שממנה קפצו, שלא ידלגו הלחצנים הבאים לשנה אחרת.
+    tekYear() {
+      const r = this._tekRef, y = yearSpan().y;
+      return r && r.spanY === y ? r.y : y;
+    },
+    // שורת ההסבר שתחת לחצני שמואל ורב אדא: הרגע בזמן ירושלים האמצעי,
+    // ומרחקו מן התקופה האמיתית של אותה שנה
+    _tekNote(method, i, t, y) {
+      const el = $('y_tekNote'); if (!el) return;
+      const d = new Date(t + window.HebCal.JLM_MEAN_MS);
+      const pad = n => String(n).padStart(2, '0');
+      const date = window.I18N && window.I18N.active
+        ? T(GREG_MONTHS[d.getUTCMonth()]) + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear()
+        : d.getUTCDate() + ' ב' + GREG_MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+      let txt = T('תקופת') + ' ' + T(['ניסן', 'תמוז', 'תשרי', 'טבת'][i]) + ' ' +
+        T(method === 'ada' ? 'לרב אדא' : 'לשמואל') + ': ' + date + ', ' +
+        pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ' (' + T('זמן ירושלים האמצעי') + ')';
+      const m = tekufaMoment(i, y);
+      if (m) {
+        const diff = (t - m.getTime()) / 3600000, a = Math.abs(diff);
+        const days = Math.floor(a / 24), hrs = Math.round(a - days * 24);
+        txt += ' — ' + days + ' ' + T('ימים') + ' ' + T('ו-') + hrs + ' ' + T('שעות') + ' ' +
+          T(diff >= 0 ? 'אחרי התקופה האמיתית' : 'לפני התקופה האמיתית');
+      }
+      el.textContent = txt;
+    },
+    // קפיצה אל רגע נתון (UTC ms) — בתאריך ובשעון האזרחיים של המקום הנבחר
+    goInstant(t, auto) {
+      const o = tzOffsetHours(this.tz, new Date(t)), off = o === null ? Math.round(this.lon / 15) : o;
+      const r = placeInstant(t, off, auto);
+      this.dayY = r.dayY; this.hour = r.hour;
+    },
     // היסט אזור הזמן בשעות; ללא אזור זמן ידוע — הערכה לפי קו האורך
     tzOff() {
       const o = tzOffsetHours(this.tz, dayYToDate(this.dayY));
@@ -990,7 +1051,7 @@ window.Sims = (function () {
     },
     // זריחה/שקיעה/חצות אמיתיים ליום המוצג — במטמון (חיפושי AE יקרים יחסית)
     riseSet() {
-      const key = Math.floor(this.dayY) + '|' + this.lat + '|' + this.lon + '|' + this.tz;
+      const key = yearSpan().y + '|' + Math.floor(this.dayY) + '|' + this.lat + '|' + this.lon + '|' + this.tz;
       if (this._rsKey === key) return this._rs;
       this._rsKey = key;
       let out = null;
@@ -1593,9 +1654,9 @@ window.Sims = (function () {
     },
     bind() {
       if (this._bound) return; this._bound = true;
-      { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; }   // ברירת מחדל: היום והשעה הנוכחיים
+      this.goInstant(Date.now(), true);   // ברירת מחדל: היום והשעה הנוכחיים
       $('y_play').onclick = e => { this.playing = !this.playing; this.hintDone = true; e.target.textContent = this.playing ? T('⏸ השהה') : T('▶ הפעל'); };
-      $('y_today').onclick = () => { const t = solarToday(this.tz); this.dayY = t.dayY; this.hour = t.hour; this.playing = false; $('y_play').textContent = T('▶ הפעל'); loadOtzariaTimes(); };
+      $('y_today').onclick = () => { this.goInstant(Date.now(), true); this.playing = false; $('y_play').textContent = T('▶ הפעל'); loadOtzariaTimes(); };
       // חצות אמיתי (מעבר המרידיאן, Astronomy Engine) בשעון האזרחי — בירושלים
       // (חורף) ~11:39, ובשעון קיץ ~12:39; לא 12:00 שעל השעון.
       $('y_noon').onclick = () => {
@@ -1612,11 +1673,11 @@ window.Sims = (function () {
       // קביעת היום בשנה לפי תאריך לועזי (כמו בכוכבי הלכת)
       { const d = new Date(); $('y_dd').value = d.getDate(); $('y_mm').value = d.getMonth() + 1; $('y_yy').value = d.getFullYear(); }
       $('y_dateGo').onclick = () => {
-        const M = +$('y_mm').value, D = +$('y_dd').value;
-        if (!M || !D) return;
-        const r = dayYFromDate(M, D);
+        const Y = +$('y_yy').value, M = +$('y_mm').value, D = +$('y_dd').value;
+        if (!Y || !M || !D) return;
+        const r = dayYFromDate(Y, M, D);
         this.dayY = r.dayY;
-        $('y_yy').value = r.year;   // השנה נקבעת מאליה בתוך המחזור המוצג
+        $('y_yy').value = r.year;   // שנה מחוץ לטווח נצמדת לגבולו
         loadOtzariaTimes();   // במצב החדש כרטיס הלוח עוקב אחרי תאריך האיור
       };
       // מיקום הצופה: בחירת עיר קובעת רוחב+אורך; עריכה ידנית מעבירה ל"מותאם אישית"
@@ -1657,18 +1718,25 @@ window.Sims = (function () {
       // את שעת התקופה על תאריך של שנה אחרת. instant() בונה את הרגע מהיום
       // ומהשעון האזרחיים — כשהיום האזרחי המקומי שונה מיום ה-UTC מוסטים יום
       // ושעה יחדיו, והרגע נשמר. data-d (רבעי שנת שמואל) — נפילה בלי המנוע.
-      document.querySelectorAll('#view-year .seg button').forEach((b, i) => b.onclick = () => {
-        const m = tekufaMoment(i);
-        if (m) {
-          const o = tzOffsetHours(this.tz, m), off = o === null ? Math.round(this.lon / 15) : o;
-          let dayY = (m.getTime() - yearSpan().start) / 86400000;
-          let hour = ((m.getTime() / 3600000) % 24 + 24) % 24 + off;
-          if (hour >= 24) { hour -= 24; dayY += 1; }
-          else if (hour < 0) { hour += 24; dayY -= 1; }
-          this.dayY = dayY; this.hour = hour;
-        } else this.dayY = +b.dataset.d;
+      document.querySelectorAll('#y_tekTrue button').forEach((b, i) => b.onclick = () => {
+        const m = tekufaMoment(i, this.tekYear());
+        if (m) this.goInstant(m.getTime(), false);
+        else this.dayY = +b.dataset.d;
         loadOtzariaTimes();   // כרטיס הלוח עוקב אחרי תאריך האיור
       });
+      // תקופת שמואל ותקופת רב אדא (js/hebrew-calendar.js) — של השנה העברית
+      // שתקופת ניסן שלה באביב שנת החמה המוצגת (שנת העוגן ועוד 3760). השורה
+      // שמתחת מראה את הרגע ואת מרחקו מן התקופה האמיתית שכנגדו.
+      for (const [id, method] of [['y_tekShmuel', 'shmuel'], ['y_tekAda', 'ada']])
+        document.querySelectorAll('#' + id + ' button').forEach((b, i) => b.onclick = () => {
+          const H = window.HebCal; if (!H || !H.tekufaParts) return;
+          const y = this.tekYear();
+          const t = H.partsToUTC(H.tekufaParts(method, y + 3760, i));
+          this.goInstant(t, false);
+          this._tekRef = { spanY: yearSpan().y, y };
+          this._tekNote(method, i, t, y);
+          loadOtzariaTimes();
+        });
       // זמני היום מלוח אוצריא — נטענים בכניסה ללשונית, ברענון, בהחלפת עיר
       // בכרטיס, ובקביעת תאריך באיור (במצב החדש הזמנים עוקבים אחרי תאריך האיור)
       // הרענון גם מיישר את העיר עם האפליקציה (כשלא נבחרה עיר אחרת בכרטיס):

@@ -103,6 +103,27 @@ window.HebCal = (function () {
   const dateToAbs = d => ANCHOR_ABS +
     Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - ANCHOR_MS) / 86400000);
 
+  // ── ארבע התקופות — שמואל ורב אדא (רמב״ם קידוש החודש פ״ט–פ״י) ─────────
+  // שתיהן נמנות בחלקים, באותו סרגל של המולדות, ולכן נמדדות כמותן:
+  //  · שמואל (פ״ט ה״ג): תקופת ניסן של שנת היצירה קודם מולד ניסן בז׳ ימים
+  //    ט׳ שעות ותרמ״ב חלקים — היא תחילת ליל רביעי — והשנה שס״ה יום ורביע.
+  //  · רב אדא (פ״י ה״ג): בכל שנה ראשונה של מחזור י״ט תקופת ניסן קודם מולד
+  //    ניסן בט׳ שעות ותרמ״ב חלקים, והשנה שס״ה יום ה׳ שעות תתקצ״ז חלקים ומ״ח
+  //    רגעים — שהיא 235 לבנות חלקי 19 בדיוק. לכן אף היא נוסחה אחת לכל השנים.
+  // tekufaParts(method, y, i): תקופה i (0 ניסן, 1 תמוז, 2 תשרי, 3 טבת) מן
+  // התקופות הנמנות מתקופת ניסן של שנה y — תשרי וטבת שבהן כבר בשנה y+1.
+  // שנת היצירה פשוטה, ולכן ניסן הוא החודש השביעי בה (אינדקס 6).
+  const MOLAD_NISAN_1 = moladOfMonth(1, 6);
+  const TEKUFA_YEAR = { shmuel: 365.25 * P_DAY, ada: 235 * LUNATION / 19 };
+  const TEKUFA_EPOCH = { shmuel: MOLAD_NISAN_1 - (7 * P_DAY + 9 * P_HOUR + 642),
+                         ada: MOLAD_NISAN_1 - (9 * P_HOUR + 642) };
+  const tekufaParts = (method, y, i) => TEKUFA_EPOCH[method] + (y - 1 + i / 4) * TEKUFA_YEAR[method];
+  // חלקים → רגע (UTC ms). שעות הלוח נמנות משש בערב ונקראות כזמן ירושלים
+  // האמצעי (UTC+2:21), כדרך חשבון המולדות (ראו חלונית המולדות בלוח העברי).
+  const JLM_MEAN_MS = (2 * 60 + 21) * 60000;
+  const partsToUTC = x => absToDate(Math.floor(x / P_DAY)).getTime() - 6 * 3600000 +
+    (x - Math.floor(x / P_DAY) * P_DAY) * 10000 / 3 - JLM_MEAN_MS;
+
   // ── גימטריה ─────────────────────────────────────────────────────────
   function hebNum(n) {
     const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
@@ -212,5 +233,6 @@ window.HebCal = (function () {
     roshHashana, roshHashanaAbs, yearLength, monthLengths, siman, cycleOf,
     absToDate, absToLocalDate, dateToAbs, hebNum, hebYearName,
     yearTable, customYear, fromGregorian, formatHebrewDate, nextRoshChodesh,
+    tekufaParts, partsToUTC, JLM_MEAN_MS,
   };
 })();
