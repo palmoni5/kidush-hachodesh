@@ -179,6 +179,7 @@ window.TRANSLATIONS.en = {
     'Moonrise and moonset are shown for the date in the diagram, at the chosen location and on its local clock — for illustration only.',
   'הירח מכדור הארץ': 'The Moon as seen from Earth',
   'הירח בשמים': 'Moon in the sky',
+  'מבט אל-על, הראש לצפון': 'Looking up, head to the north',
   'ביום אינה נראית לעין': 'not visible to the eye by day',
   'אור יום — אינה נראית לעין': 'daylight — not visible to the eye',
   'מיקום בשמים': 'Sky position',

@@ -402,6 +402,10 @@ window.Sims = (function () {
     ctx.fillText(T('מזרח'), cx - R - 14, cy); ctx.fillText(T('מערב'), cx + R + 14, cy);
     ctx.fillStyle = cv('--ill-muted'); ctx.font = '10px sans-serif';
     ctx.fillText(T('הירח בשמים') + ' — ' + T(placeName || 'ירושלים'), cx, cy - R - 22);
+    // מבט מלמטה אל הרקיע הוא תמונת ראי של מפת הארץ — צפון למעלה ומזרח משמאל,
+    // ולא מימין; הכיתוב מונע לקרוא את העיגול כמפה במבט מלמעלה
+    ctx.font = '9px sans-serif';
+    ctx.fillText(T('מבט אל-על, הראש לצפון'), cx, cy + R + 20);
     if (!pos) return;
     const place = o => {
       const rr = (90 - Math.max(o.alt, 0)) / 90 * R, a = o.az * Math.PI / 180;
@@ -433,7 +437,7 @@ window.Sims = (function () {
     } else if (pos.sun.alt > 0) {
       // הלבנה מעל האופק אך החמה זורחת — באור היום אינה נראית לעין
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
-      ctx.fillText(T('אור יום — אינה נראית לעין'), cx, cy + R + 20);
+      ctx.fillText(T('אור יום — אינה נראית לעין'), cx, cy + R + 32);
     }
   }
 
