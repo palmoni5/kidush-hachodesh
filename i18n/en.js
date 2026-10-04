@@ -812,4 +812,60 @@ window.TRANSLATIONS.en = {
     'Levush §428: the day begins six hours after noon — here counted from mean noon, so the day always starts at 17:39 standard time',
   'בשנים רחוקות מזמננו דיוק חישובי הזריחה, השקיעה והחצות פוחת, בעיקר מחמת אי-הוודאות בקצב סיבוב הארץ.':
     'For years far from our own time, the sunrise, sunset and noon calculations are less exact. The main reason: we do not know exactly how fast Earth was spinning back then.',
+  // ── חשבון הרמב״ם (לשונית הלוח העברי; js/rambam-calc.js) ──
+  'חשבון מקום השמש והירח כדרך הרמב״ם':
+    'Rambam’s Calculation of the Sun and Moon',
+  'ליל התאריך העברי':
+    'Evening of the Hebrew date',
+  'דוגמת הרמב״ם (פט״ו ה״ח)':
+    'Rambam’s example (15:8)',
+  'זהו החשבון שבהלכות קידוש החודש פרקים י״ב–ט״ז, כסדרו של הרמב״ם ובמספריו: מקום השמש האמיתי, מקום הירח האמיתי לשעת הראייה, ורוחב הירח. החשבון הוא לתחילת הלילה של התאריך הנבחר, ולירח — לשעת הראייה, כשליש שעה אחר שקיעת החמה (פי״ד ה״ו).':
+    'This is the calculation in Hilchot Kiddush HaChodesh, chapters 12–16, in Rambam’s order and with his numbers: the true place of the sun, the true place of the moon at the time of sighting, and the moon’s latitude. It is made for the beginning of the night of the chosen date, and for the moon — for the time of sighting, about a third of an hour after sunset (14:6).',
+  'המהלכים נלקחים מן הסימנים שמסר הרמב״ם לעשרת אלפים יום, לאלף, לשנה סדורה, למאה, לכ״ט, לעשרה וליום אחד, ומניין הימים נחלק להם כמפורט בשורה שתחתיו. המנות — מטבלאותיו, וכשיש אחדים עם העשרות, לפי היתר שבין שתי המנות (פי״ג ה״ז). בחלוקה אחרת של מניין הימים עשויות לצאת שניות אחרות — "ואל תפנה אל השניות כלל" (פי״ג ה״י). המספר שאחר החץ הוא המסלול במעלות שלמות, כמו שהמנה נלקחת: חלקים פחות משלשים אין פונים אליהם, ושלשים ומעלה נחשבים מעלה (פי״ג ה״ט).':
+    'The motions are taken from the values Rambam gives for 10,000 days, 1,000, a regular year (354), 100, 29, 10 and one day; the number of days is split into these as shown on the line under it. The corrections (manot) come from his tables, and for degrees between the tens — in proportion to the difference between the two neighboring values (13:7). Splitting the days differently can give different seconds — “pay no attention to the seconds at all” (13:10). The number after the arrow is the course in whole degrees, as the correction is looked up: fewer than 30 minutes are dropped, and 30 or more count as a degree (13:9).',
+  'שימו לב:':
+    'Note:',
+  'זהו חשבון שנועד לידיעת הראייה בלבד, וכל קירוב שבו מכוון — "שאין דבר זה מפסיד בידיעת הראיה" (פי״א ה״ה). לכן אין לצפות שיתאים למקומות השמש והירח שבשאר הלשוניות, המחושבים מן האסטרונומיה של זמננו.':
+    ' This calculation was made only to know whether the moon will be seen, and every approximation in it is deliberate — “this does not spoil knowing the sighting” (11:5). So do not expect it to match the places of the sun and moon in the other tabs, which are computed with modern astronomy.',
+  'התיקון לשעת הראייה (פי״ד ה״ה) נקבע כאן לפי מקום השמש האמיתי; וכשמקומה האמצעי נופל בתחום אחר, הדבר מצוין. בדפוסים כתוב שם שמתחילת תאומים עד תחילת אריה מוסיפים ט״ו חלקים; כאן — ל׳ חלקים, כנוסח כתבי היד, שכנגדו גורעים ל׳ חלקים מתחילת קשת עד תחילת דלי. וכן בדוגמאות שבפרקים אלו נפלו בדפוסים כמה טעויות במספרים, ובכתבי היד הם כמו שיוצא כאן.':
+    'The correction for the time of sighting (14:5) is set here by the true place of the sun; when its mean place falls in a different range, this is noted. Printed editions say that from the start of Gemini to the start of Leo one adds 15 minutes; here it is 30, as in the manuscripts — matching the 30 minutes subtracted opposite it, from the start of Sagittarius to the start of Aquarius. In the worked examples of these chapters, too, several numbers are misprinted in the printed editions, and in the manuscripts they are as they come out here.',
+  'מקורות':
+    'Sources',
+  '— רמב״ם הלכות קידוש החודש: העיקר — פי״א הט״ז; השמש — פי״ב–פי״ג; הירח — פי״ד–פט״ו; הראש והרוחב — פט״ז. טעמי החשבונות אינם מבוארים שם — "היא חכמת התקופות והגימטריות שחברו בה חכמי יון ספרים הרבה" (פי״ז הכ״ד).':
+    ' — Rambam, Hilchot Kiddush HaChodesh: the epoch — 11:16; the sun — chapters 12–13; the moon — chapters 14–15; the node and latitude — chapter 16. The reasons for the calculations are not explained there — they belong to “the science of astronomy and geometry, on which the Greek sages wrote many books” (17:24).',
+  'ימים גמורים מן העיקר': 'Whole days from the epoch',
+  'פי״א הט״ז': '11:16',
+  'פי״ד ה״ה': '14:5',
+  'פט״ו ה״א': '15:1',
+  'פט״ו ה״ג': '15:3',
+  'פט״ו ה״ו': '15:6',
+  '(לפני העיקר — גורעין)': '(before the epoch — subtract)',
+  'השמש — פי״ב–פי״ג': 'The sun — chapters 12–13',
+  'אמצע השמש': 'Mean sun',
+  'גובה השמש': 'Sun’s apogee',
+  'מסלול השמש': 'Sun’s course (anomaly)',
+  'מנת המסלול': 'Correction (mana)',
+  'אין לו מנה': 'no correction',
+  'מקום השמש האמיתי': 'True place of the sun',
+  'הירח — פי״ד–פט״ו': 'The moon — chapters 14–15',
+  'אמצע הירח בתחילת הלילה': 'Mean moon at nightfall',
+  'לשעת הראייה': 'For the time of sighting',
+  'כמות שהוא': 'unchanged',
+  'סמוך לגבול: התיקון נקבע כאן לפי מקום השמש האמיתי; לפי מקומה האמצעי היה': 'Near a boundary: the correction here follows the true place of the sun; by its mean place it would be',
+  'אמצע הירח לשעת הראייה': 'Mean moon at the time of sighting',
+  'אמצע המסלול': 'Mean course (anomaly)',
+  'המרחק הכפול': 'Double elongation',
+  'בליל הראייה המרחק הכפול הוא לעולם בין ה׳ לס״ב מעלות (פט״ו ה״ב), והתוספת על אמצע המסלול אינה מבוארת אלא בתחום זה — וזה הלילה אינו ליל ראייה. לכן אין כאן מקום הירח האמיתי ורוחבו; בחרו לילה סמוך לתחילת החודש.': 'On a night of sighting the double elongation is always between 5 and 62 degrees (15:2), and the addition to the mean course is given only in that range — and this night is not a night of sighting. So the true place of the moon and its latitude are not shown; choose a night near the start of the month.',
+  'תוספת על אמצע המסלול': 'Addition to the mean course',
+  'אין מוסיפין': 'nothing added',
+  'המסלול הנכון': 'Corrected course',
+  'מקום הירח האמיתי לשעת הראייה': 'True place of the moon at sighting',
+  'הרוחב — פט״ז': 'Latitude — chapter 16',
+  'מקום הראש': 'Place of the head (ascending node)',
+  'מקום הזנב': 'Place of the tail (descending node)',
+  'מסלול הרוחב': 'Latitude course',
+  'אין לירח רוחב': 'no latitude',
+  'במזל': 'in',
+  // חץ "המסלול במעלות שלמות" — בעברית מצביע שמאלה (המשך הקריאה), באנגלית ימינה
+  '←': '→',
 };

@@ -658,6 +658,7 @@
 
       this.draw();
       renderConv();
+      if (window.RambamCalc) window.RambamCalc.init();
     },
   };
 
@@ -665,6 +666,7 @@
     if (!sim._bound) return;
     sim._sig = null; sim._syncCustom(); sim.draw();
     renderConv();
+    if (window.RambamCalc) window.RambamCalc.render();
     fillSimanSelect(); sim._refind();
   };
 
