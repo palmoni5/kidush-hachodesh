@@ -41,5 +41,19 @@ otzaria pack-plugin .
 dart run tool/plugins/package_plugin.dart <path-to-this-folder>
 ```
 
+## צילומי מסך לחנות
+הוורקר **Store screenshots** (`.github/workflows/screenshots.yml`) רץ רק בהפעלה ידנית מלשונית Actions. הוא עושה את הפעולות האלה:
+1. מוריד את גרסת אוצריא האחרונה ל-Windows. אפשר לבחור תג אחר.
+2. רושם בה את התוסף מהענף הנוכחי.
+3. מצלם את חלון אוצריא בכל אחד מטאבי התוסף, ברזולוציה 1920×1080.
+4. מקמט את הצילומים לתיקייה `screenshots/`, בשמות `01-moon.png` ואילך.
+
+`release.yml` שולח את כל הצילומים שבתיקייה לחנות בכל עדכון גרסה, ומחליף בהם את הגלריה כולה. לכן הם עולים בדחיפה הבאה שמעלה גרסה. כשהתיקייה ריקה, הגלריה בחנות לא משתנה. התיקייה אינה נארזת לתוך קובץ התוסף.
+
+הסקריפטים נמצאים ב-`scripts/store-screenshots/`, ואפשר להריץ אותם גם מקומית:
+```bash
+pwsh scripts/store-screenshots/run.ps1 -AppDir <otzaria-windows> -PluginDir <plugin-copy> -OutDir screenshots
+```
+
 ## רישיון
 איורים חינוכיים לקהילת אוצריא.

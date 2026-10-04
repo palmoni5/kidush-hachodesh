@@ -1,0 +1,9 @@
+# עזר לוורקר צילומי המסך (.github/workflows/screenshots.yml) — כותב העדפות
+# ראשוניות לאוצריא לפני ההפעלה הראשונה. גרסת hive_ce כמו ב-pubspec.lock של
+# אוצריא, שקובץ ה-box ייקרא שם בלי הפתעות.
+name: store_screenshots
+publish_to: none
+environment:
+  sdk: ^3.5.0
+dependencies:
+  hive_ce: 2.20.1

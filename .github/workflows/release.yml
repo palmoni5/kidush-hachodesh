@@ -9,7 +9,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # צילומי המסך שבמאגר (screenshots/*.png, מהוורקר screenshots.yml) מחליפים
+      # את גלריית החנות בכל עדכון גרסה, לפי סדר שמות הקבצים. כשאין צילומים
+      # הגלריה בחנות נשארת כמות שהיא — update-screenshots בלי קבצים מפיל את הפרסום.
+      - id: shots
+        shell: bash
+        run: |
+          files=$(ls screenshots/*.png 2>/dev/null | sort | head -10)
+          { echo 'list<<EOF'; echo "$files"; echo 'EOF'; } >> "$GITHUB_OUTPUT"
+          echo "update=$([ -n "$files" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "${files:-אין צילומי מסך במאגר}"
+
       - uses: Otzaria/otzaria-plugin-validator@v1
         with:
           otzaria-user: ${{ secrets.OTZARIA_USER }}
           otzaria-password: ${{ secrets.OTZARIA_PASSWORD }}
+          screenshots: ${{ steps.shots.outputs.list }}
+          update-screenshots: ${{ steps.shots.outputs.update }}
