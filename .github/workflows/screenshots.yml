@@ -1,18 +1,14 @@
 # צילומי מסך לחנות — הרצה ידנית בלבד (Actions → Store screenshots → Run workflow).
-# מוריד את גרסת אוצריא האחרונה ל-Windows, רושם בה את התוסף מהענף הנוכחי,
-# מצלם את חלון אוצריא בכל אחד מטאבי התוסף, ומקמט את הצילומים ל-screenshots/.
-# release.yml שולח לחנות את כל screenshots/*.png בכל עדכון גרסה, כך שהצילומים
-# יעלו בדחיפה הבאה שמעלה גרסה. הקומיט של הוורקר עצמו אינו מפעיל את release.yml
-# (דחיפה ב-GITHUB_TOKEN אינה מפעילה וורקרים).
+# מריץ את התוסף מהענף הנוכחי ב-Edge ללא ממשק (אותו מנוע כמו WebView2 של
+# אוצריא ב-Windows) עם ערכת ברירת המחדל של אוצריא, מצלם כל אחד מטאבי התוסף,
+# ומקמט את הצילומים ל-screenshots/. release.yml שולח לחנות את כל
+# screenshots/*.png בכל עדכון גרסה, כך שהצילומים יעלו בדחיפה הבאה שמעלה גרסה.
+# הקומיט של הוורקר עצמו אינו מפעיל את release.yml (דחיפה ב-GITHUB_TOKEN אינה
+# מפעילה וורקרים).
 name: Store screenshots
 
 on:
   workflow_dispatch:
-    inputs:
-      otzaria-tag:
-        description: 'תג גרסת אוצריא (ריק = האחרונה, כולל גרסאות Preview)'
-        required: false
-        default: ''
 
 permissions:
   contents: write
@@ -23,8 +19,8 @@ concurrency:
 
 jobs:
   screenshots:
-    runs-on: windows-latest
-    timeout-minutes: 30
+    runs-on: windows-latest   # Edge וגופני Windows — כמו אצל רוב משתמשי אוצריא
+    timeout-minutes: 15
     defaults:
       run:
         shell: pwsh
@@ -34,67 +30,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22   # WebSocket מובנה
-      - uses: dart-lang/setup-dart@v1
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: מסך 1920×1080
-        run: |
-          try { Set-DisplayResolution -Width 1920 -Height 1080 -Force } catch { Write-Warning $_ }
-          Add-Type -AssemblyName System.Windows.Forms
-          Write-Host "רזולוציה: $([System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Size)"
-
-      - name: WebView2 Runtime
-        run: |
-          $key = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
-          if (Test-Path $key) { Write-Host "WebView2 $((Get-ItemProperty $key).pv)"; exit }
-          Invoke-WebRequest https://go.microsoft.com/fwlink/p/?LinkId=2124703 -OutFile "$env:RUNNER_TEMP\wv2.exe"
-          Start-Process "$env:RUNNER_TEMP\wv2.exe" -ArgumentList '/silent','/install' -Wait
-
-      - name: הורדת אוצריא
-        id: otzaria
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.otzaria-tag }}
-        run: |
-          $tag = if ($env:TAG) { $env:TAG } else {
-            gh release list -R Otzaria/otzaria -L 1 --exclude-drafts --json tagName -q '.[0].tagName' }
-          Write-Host "אוצריא $tag"
-          "tag=$tag" >> $env:GITHUB_OUTPUT
-          gh release download $tag -R Otzaria/otzaria -p otzaria-windows.zip -D $env:RUNNER_TEMP
-          Expand-Archive "$env:RUNNER_TEMP\otzaria-windows.zip" "$env:RUNNER_TEMP\otzaria"
-          if (-not (Test-Path "$env:RUNNER_TEMP\otzaria\otzaria.exe")) { throw 'otzaria.exe לא נמצא בארכיון' }
-
-      # עותק נקי של התוסף, בלי כלי הפיתוח והמטא-דאטה — כמו שנארז ל-.otzplugin
-      - name: עותק התוסף
-        run: |
-          robocopy . "$env:RUNNER_TEMP\plugin" /E /XD .git .github .claude .gstack scripts screenshots /NFL /NDL /NJH /NJS
-          if ($LASTEXITCODE -ge 8) { exit 1 } else { exit 0 }
 
       - name: צילום
-        run: |
-          Remove-Item screenshots -Recurse -Force -ErrorAction SilentlyContinue
-          ./scripts/store-screenshots/run.ps1 -AppDir "$env:RUNNER_TEMP\otzaria" -PluginDir "$env:RUNNER_TEMP\plugin" -OutDir "$PWD\screenshots"
+        run: node scripts/store-screenshots/capture.mjs screenshots
 
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: screenshots
-          path: |
-            screenshots/
-            debug-failed.png
-          if-no-files-found: ignore
+          path: screenshots/
 
       - name: קומיט
-        env:
-          TAG: ${{ steps.otzaria.outputs.tag }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898733+github-actions[bot]@users.noreply.github.com'
           git add -A screenshots
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) { Write-Host 'אין שינוי'; exit 0 }
-          git commit -m "צילומי מסך לחנות — אוצריא $env:TAG"
+          git commit -m 'צילומי מסך לחנות'
           git pull --rebase
           git push

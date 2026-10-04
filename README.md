@@ -42,18 +42,15 @@ dart run tool/plugins/package_plugin.dart <path-to-this-folder>
 ```
 
 ## צילומי מסך לחנות
-הוורקר **Store screenshots** (`.github/workflows/screenshots.yml`) רץ רק בהפעלה ידנית מלשונית Actions. הוא עושה את הפעולות האלה:
-1. מוריד את גרסת אוצריא האחרונה ל-Windows. אפשר לבחור תג אחר.
-2. רושם בה את התוסף מהענף הנוכחי.
-3. מצלם את חלון אוצריא בכל אחד מטאבי התוסף, ברזולוציה 1920×1080.
-4. מקמט את הצילומים לתיקייה `screenshots/`, בשמות `01-moon.png` ואילך.
+הוורקר **Store screenshots** (`.github/workflows/screenshots.yml`) רץ רק בהפעלה ידנית מלשונית Actions. הוא מריץ את התוסף מהענף הנוכחי ב-Edge ללא ממשק, שהוא אותו מנוע כמו WebView2 של אוצריא ב-Windows. התוסף מקבל את ערכת הנושא שאוצריא שולחת בהגדרות ברירת המחדל: בהירה, בעברית ומימין לשמאל. הוורקר מצלם כל אחד מהטאבים בגודל 1600×900, ומקמט את הצילומים לתיקייה `screenshots/` בשמות `01-moon.png` ואילך.
 
 `release.yml` שולח את כל הצילומים שבתיקייה לחנות בכל עדכון גרסה, ומחליף בהם את הגלריה כולה. לכן הם עולים בדחיפה הבאה שמעלה גרסה. כשהתיקייה ריקה, הגלריה בחנות לא משתנה. התיקייה אינה נארזת לתוך קובץ התוסף.
 
-הסקריפטים נמצאים ב-`scripts/store-screenshots/`, ואפשר להריץ אותם גם מקומית:
+אפשר להריץ את הצילום גם מקומית. נדרשים Node 22 ו-Edge, או דפדפן Chromium אחר שהנתיב אליו מוגדר במשתנה `BROWSER`:
 ```bash
-pwsh scripts/store-screenshots/run.ps1 -AppDir <otzaria-windows> -PluginDir <plugin-copy> -OutDir screenshots
+node scripts/store-screenshots/capture.mjs
 ```
+כשאוצריא משנה את ערכת ברירת המחדל שלה, צריך לעדכן את ערכי הצבע ב-`capture.mjs`.
 
 ## רישיון
 איורים חינוכיים לקהילת אוצריא.

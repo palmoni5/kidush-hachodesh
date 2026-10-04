@@ -8,7 +8,3 @@ Thumbs.db
 
 # כלי פיתוח
 .claude/
-
-# תוצרי dart של scripts/store-screenshots
-.dart_tool/
-scripts/store-screenshots/pubspec.lock
