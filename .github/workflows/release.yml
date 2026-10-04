@@ -16,7 +16,9 @@ jobs:
       - id: shots
         shell: bash
         run: |
-          files=$(ls screenshots/*.png 2>/dev/null | sort | head -10)
+          shopt -s nullglob   # בלי צילומים: רשימה ריקה ולא כשל של ls
+          shots=(screenshots/*.png)
+          files=$(printf '%s\n' "${shots[@]}" | sort | head -10)
           { echo 'list<<EOF'; echo "$files"; echo 'EOF'; } >> "$GITHUB_OUTPUT"
           echo "update=$([ -n "$files" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "${files:-אין צילומי מסך במאגר}"
