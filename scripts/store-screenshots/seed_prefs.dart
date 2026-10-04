@@ -3,6 +3,8 @@
 //   tour_status — הסיור המודרך נפתח מעצמו כשהמפתח ריק (lib/tour/bloc/tour_cubit.dart)
 //   ad_popup_dont_show_again — חלון הקידום שקופץ 5 שניות אחרי העלייה
 //   key-software-and-book-updates-enabled — בלי בדיקת עדכונים ופס ההודעה שלה
+//   key-settings-language — עברית, גם כשמערכת ההפעלה באנגלית (כמו בשרתי
+//     GitHub): ברירת המחדל 'system' הייתה מציגה גם את אוצריא וגם את התוסף באנגלית
 // רץ לפני ההפעלה הראשונה, כשה-box עדיין ריק: box שהאפליקציה כבר כתבה בו עלול
 // להכיל ערכים מטיפוסים שאין לנו adapter עבורם.
 import 'dart:io';
@@ -18,6 +20,7 @@ Future<void> main(List<String> args) async {
     'tour_status': 'skipped',
     'ad_popup_dont_show_again': true,
     'key-software-and-book-updates-enabled': false,
+    'key-settings-language': 'he',
   });
   await box.close();
   stdout.writeln('✓ העדפות נכתבו ל-$root');

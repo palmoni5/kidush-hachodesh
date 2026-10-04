@@ -77,7 +77,8 @@ if ($LASTEXITCODE) { throw 'רישום התוסף נכשל' }
 
 # 4
 Write-Host '— הפעלה שנייה'
-$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9222'
+# פורט 0: הדפדפן בוחר פורט פנוי ורושם אותו ב-DevToolsActivePort (capture.mjs)
+$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=0'
 Start-Process $exe -WorkingDirectory $AppDir | Out-Null
 Wait-MainWindow
 & (Join-Path $here 'capture-window.ps1') -Out x -NoCapture   # מסך מלא לפני שהתוכן נפרש
@@ -86,9 +87,12 @@ Start-Sleep 20   # טעינת התוספים מסתיימת לפני שהקיש�
 # 5 — עד שלושה ניסיונות: קישור שהגיע לפני שהתוספים נטענו פותח טאב ריק או הודעת "לא זמין"
 for ($try = 1; ; $try++) {
   Open-Plugin
-  node (Join-Path $here 'capture.mjs') $OutDir 9222
+  node (Join-Path $here 'capture.mjs') $OutDir (Join-Path $dataRoot 'webview2')
   if ($LASTEXITCODE -eq 0) { break }
   if ($try -ge 3) {
+    Get-CimInstance Win32_Process -Filter "name='msedgewebview2.exe'" |
+      Where-Object CommandLine -notmatch '--type=' | ForEach-Object { Write-Host "WebView2: $($_.CommandLine)" }
+    Get-ChildItem (Join-Path $dataRoot 'webview2') -Recurse -Depth 2 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.FullName)" }
     & (Join-Path $here 'capture-window.ps1') -Out (Join-Path $OutDir '..\debug-failed.png')
     throw 'דף התוסף לא נמצא אחרי שלושה ניסיונות'
   }
