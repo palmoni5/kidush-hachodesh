@@ -429,11 +429,13 @@ window.Sims = (function () {
       drawPhase(ctx, pm.x, pm.y, 9, day, skyLitAngle(pos, R));   // הצד המואר אל השמש
       ctx.globalAlpha = 1;
     }
+    // הכיתוב נוקב בשם הירח — השמש מצוירת באותה כיפה, ו"מתחת לאופק" סתם
+    // נקרא כאילו נאמר עליה (משוב משתמשים: "ב-2 אחה"צ השמש מתחת לאופק")
     if (pos.moon.alt <= 0) {
       if (pos.moon.alt > HIDE_ALT) {
         ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
-        ctx.fillText(T('מתחת לאופק'), pm.x, pm.y + 17);
-      } else skyTag(ctx, T('מתחת לאופק'), cx, cy);
+        ctx.fillText(T('הירח מתחת לאופק'), pm.x, pm.y + 17);
+      } else skyTag(ctx, T('הירח מתחת לאופק'), cx, cy);
     } else if (pos.sun.alt > 0) {
       // הלבנה מעל האופק אך החמה זורחת — באור היום אינה נראית לעין
       ctx.fillStyle = cv('--ill-muted'); ctx.font = '9px sans-serif';
