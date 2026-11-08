@@ -457,7 +457,7 @@ window.TRANSLATIONS.en = {
   'שבעת כוכבי הלכת משמשים בשעות היממה על הסדר': 'The seven planets serve the hours of the day in the order',
   'שצ״ם חנכ״ל': 'ShaTZaM ChaNKaL',
   '— שבתאי, צדק, מאדים, חמה, נוגה, כוכב, לבנה — וחוזר חלילה. שעה ראשונה של יום ראשון היא לחמה, ומכיוון שיממה בת עשרים וארבע שעות והכוכבים שבעה (24 = 3×7+3), מתקדם שר השעה הראשונה בשלושה בכל יום — ומכאן שמות ימי השבוע בלשונות אוה״ע ושר לכל יום: א׳ חמה, ב׳ לבנה, ג׳ מאדים, ד׳ כוכב, ה׳ צדק, ו׳ נוגה, שבת שבתאי.':
-    '— Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon — and then the order starts again. The first hour of Sunday belongs to the Sun. A day has 24 hours, and there are seven planets. Since 24 = 3×7+3, the ruler of the first hour moves ahead by three each day. That is where the weekday names in other languages come from, and each day has its own ruler: Sun. Sun, Mon. Moon, Tue. Mars, Wed. Mercury, Thu. Jupiter, Fri. Venus, Shabbos Saturn.',
+    '— Saturn (שבתאי), Jupiter (צדק), Mars (מאדים), Sun (חמה), Venus (נוגה), Mercury (כוכב), Moon (לבנה) — and then the order starts again. The first hour of Sunday belongs to the Sun. A day has 24 hours, and there are seven planets. Since 24 = 3×7+3, the ruler of the first hour moves ahead by three each day. That is where the weekday names in other languages come from, and each day has its own ruler: Sun. Sun, Mon. Moon, Tue. Mars, Wed. Mercury, Thu. Jupiter, Fri. Venus, Shabbos Saturn.',
   'ראו עירובין נ״ו ע״א ורש״י שם ד״ה ואין תקופה, בשם רבי שבתי דונולו הרופא.':
     'See Eruvin 56a and Rashi there s.v. ve-ein tekufah, citing R. Shabsai Donolo the physician.',
   'ש=שבתאי · צ=צדק · מ=מאדים · ח=חמה · נ=נוגה · כ=כוכב · ל=לבנה':

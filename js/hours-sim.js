@@ -10,6 +10,8 @@
   const AE = window.Astronomy;
   const $ = id => document.getElementById(id);
   const T = s => (window.I18N ? window.I18N.t(s) : s);
+  // שם כוכב הלכת: בממשק לועזי — השם המתורגם והשם העברי לצדו (חמה, נוגה וכו׳)
+  const TP = he => { const t = T(he); return t !== he ? `${t} (${he})` : he; };
 
   const PLANETS = [
     { he: 'שבתאי', ab: 'ש', color: '#b0a060' },
@@ -147,7 +149,7 @@
       ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = txt;
       ctx.fillText(T(DOW_S[d]), W - pad, y + rowH / 2 - 6);
       ctx.font = '10px sans-serif'; ctx.fillStyle = dayRuler(d).color;
-      ctx.fillText(T(dayRuler(d).he), W - pad, y + rowH / 2 + 7);
+      ctx.fillText(TP(dayRuler(d).he), W - pad, y + rowH / 2 + 7);
       ctx.textAlign = 'center';
     }
 
@@ -163,7 +165,11 @@
           const full = cw >= 44 && rowH >= 26;
           ctx.fillStyle = 'rgba(20,18,10,0.85)';
           ctx.font = `${Math.max(9, Math.min(14, full ? cw * 0.24 : Math.min(cw * 0.55, rowH * 0.5)))}px sans-serif`;
-          ctx.fillText(full ? T(p.he) : T(p.ab), xx + cw / 2, yy + rowH / 2);
+          const tr = T(p.he);
+          if (full && tr !== p.he && rowH >= 34) {      // ממשק לועזי: שם תרגום ומתחתיו השם העברי
+            ctx.fillText(tr, xx + cw / 2, yy + rowH / 2 - 6);
+            ctx.fillText(p.he, xx + cw / 2, yy + rowH / 2 + 7);
+          } else ctx.fillText(full ? tr : T(p.ab), xx + cw / 2, yy + rowH / 2);
         }
       }
     }
@@ -203,9 +209,9 @@
       $('h_dow').textContent = T(DOW[s.d]) + (s.day ? T(' — ביום') : T(' — בלילה'));
       $('h_seasonal').textContent = T('שעה') + ' ' + ((s.n % 12) + 1) + (s.day ? T(' של היום') : T(' של הלילה')) +
         (s.approx ? '' : ' (' + (s.len * 60).toFixed(0) + ' ' + T('דק׳') + ')');
-      $('h_ruler').textContent = T('שר השעה') + ' — ' + T(p.he);
+      $('h_ruler').textContent = T('שר השעה') + ' — ' + TP(p.he);
       $('h_ruler').style.color = p.color;
-      $('h_dayruler').textContent = T(dayRuler(s.d).he);
+      $('h_dayruler').textContent = TP(dayRuler(s.d).he);
       const he = $('h_date_he');
       if (he && window.HebrewDate) window.HebrewDate(this.date, this.lat, this.lon).then(x => { he.textContent = x; });
     },
@@ -214,7 +220,7 @@
       const t = tekufot(hy);
       $('h_tekufot').innerHTML = t.map(r =>
         `<tr><td>${T('תקופת')} ${T(r.nm)}</td><td>${tekufaDay(r.d, r.h)}, ${fmtTekufaHour(r.h)}</td>` +
-        `<td style="color:${r.ruler.color};font-weight:600">${T(r.ruler.he)}</td></tr>`).join('');
+        `<td style="color:${r.ruler.color};font-weight:600">${TP(r.ruler.he)}</td></tr>`).join('');
     },
 
     _syncDate() {
