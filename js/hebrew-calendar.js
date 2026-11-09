@@ -227,8 +227,11 @@ window.HebCal = (function () {
     return null;
   }
 
+  // גבול עליון לשנה העברית בכל התוסף: ו׳ אלפים לבריאת העולם
+  const MAX_YEAR = 6000;
+
   return {
-    P_HOUR, P_DAY, LUNATION, DOW, MONTHS_PLAIN, MONTHS_LEAP,
+    MAX_YEAR, P_HOUR, P_DAY, LUNATION, DOW, MONTHS_PLAIN, MONTHS_LEAP,
     isLeap, monthsInYear, moladTishrei, moladOfMonth, partsOf,
     roshHashana, roshHashanaAbs, yearLength, monthLengths, siman, cycleOf,
     absToDate, absToLocalDate, dateToAbs, hebNum, hebYearName,

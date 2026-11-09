@@ -920,7 +920,7 @@
       $('z_today').onclick  = () => { this.date = new Date(); this.playing = false; $('z_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('z_speed').oninput  = e => { this.speed = this.speeds[this.unit] = +e.target.value; $('z_spdL').textContent = this._spdTxt(); };
       $('z_go').onclick     = () => {
-        const y = +$('z_year').value, m = +$('z_month').value, d = +$('z_day').value;
+        const y = Math.min(2240, +$('z_year').value), m = +$('z_month').value, d = +$('z_day').value;
         const hh = +$('z_hh').value || 0, mi = +$('z_mi').value || 0;
         this.date = new Date(y, m - 1, d, hh, mi, 0);
         this.playing = false; $('z_play').textContent = T('▶ הפעל');

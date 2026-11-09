@@ -240,7 +240,7 @@
       $('h_now').onclick = () => { this.date = new Date(); this.playing = false; $('h_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('h_speed').oninput = e => { this.speed = +e.target.value; $('h_spdL').textContent = (+e.target.value).toFixed(1); };
       $('h_go').onclick = () => {
-        const y = +$('h_year').value, m = +$('h_month').value, d = +$('h_day').value;
+        const y = Math.min(2240, +$('h_year').value), m = +$('h_month').value, d = +$('h_day').value;
         if (!y || !m || !d) return;
         this.date = new Date(y, m - 1, d, +$('h_hh').value || 0, +$('h_mi').value || 0, 0);
         this.playing = false; $('h_play').textContent = T('▶ הפעל');

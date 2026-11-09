@@ -221,7 +221,7 @@
     epochAbs = H.yearTable(4938).months[monthIdx(4938, 'ניסן')].startAbs + 2;   // ג׳ ניסן ד׳תתקל״ח
     state.mi = monthIdx(4938, 'אייר');
     $('rc_year').onchange = e => {
-      state.hy = Math.max(1, Math.min(9999, +e.target.value || state.hy));
+      state.hy = Math.max(1, Math.min(H.MAX_YEAR, +e.target.value || state.hy));
       render();
     };
     $('rc_month').onchange = e => { state.mi = +e.target.value; render(); };

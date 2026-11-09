@@ -444,7 +444,7 @@
       $('d_now').onclick = () => { this.date = new Date(); this.playing = false; $('d_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('d_speed').oninput = e => { this.speed = +e.target.value; $('d_spdL').textContent = (+e.target.value).toFixed(1); };
       $('d_go').onclick = () => {
-        const y = +$('d_yy').value, m = +$('d_mm').value, d = +$('d_dd').value;
+        const y = Math.min(2240, +$('d_yy').value), m = +$('d_mm').value, d = +$('d_dd').value;
         if (!y || !m || !d) return;
         this.date = new Date(y, m - 1, d, +$('d_hh').value || 0, +$('d_mi').value || 0, 0);
         this.playing = false; $('d_play').textContent = T('▶ הפעל');

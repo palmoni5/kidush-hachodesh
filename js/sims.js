@@ -462,7 +462,7 @@ window.Sims = (function () {
   // אותו. ברירת המחדל היא המחזור שהרגע הנוכחי בתוכו, והוא מתחלף מאליו בהגיע
   // תקופת ניסן הבאה (auto); בחירת תאריך או קפיצה לתקופה מעגנים אותו לשנה
   // שבחרו — בין YEAR_MIN ל-YEAR_MAX. (עד 1.2.10 הוצג המחזור הנוכחי בלבד.)
-  const YEAR_MIN = 1000, YEAR_MAX = 3000;
+  const YEAR_MIN = 1000, YEAR_MAX = 2240;   // 2240 — שנת ה׳ו׳ אלפים (תשרי 6000 ≈ ספטמבר 2239)
   const _spans = Object.create(null);
   let _anchorY = null, _autoSpan = true;
   function spanOf(y) {
@@ -905,7 +905,7 @@ window.Sims = (function () {
       $('m_lat').oninput = e => { this.loc.lat = Math.max(-89, Math.min(89, +e.target.value || 0)); mCustom(); };
       $('m_lon').oninput = e => { this.loc.lon = Math.max(-180, Math.min(180, +e.target.value || 0)); mCustom(); };
       $('m_go').onclick = () => {
-        const y = +$('m_yy').value, m = +$('m_mm').value, d = +$('m_dd').value;
+        const y = Math.min(2240, +$('m_yy').value), m = +$('m_mm').value, d = +$('m_dd').value;
         if (!y || !m || !d) return;
         this.t = new Date(y, m - 1, d, +$('m_hh').value || 0, +$('m_mi').value || 0, 0).getTime();
         stop();
@@ -1955,7 +1955,7 @@ window.Sims = (function () {
     // צריכה את ההיסט של הרגע המבוקש עצמו, שאינו ידוע עדיין — לכן ההיסט מוערך
     // על הקריאה כ-UTC ומעודן פעם אחת; די בכך גם על גבולות שעון הקיץ.
     inputToUTC() {
-      const Y = +$('p_year').value, M = +$('p_month').value, D = +$('p_day').value, h = +$('p_hour').value, mi = +$('p_min').value;
+      const Y = Math.min(2240, +$('p_year').value), M = +$('p_month').value, D = +$('p_day').value, h = +$('p_hour').value, mi = +$('p_min').value;
       const wall = Date.UTC(Y, M - 1, D, h, mi, 0);
       const off = this.tzOffAt(new Date(wall));
       const off2 = this.tzOffAt(new Date(wall - off * 3600000));

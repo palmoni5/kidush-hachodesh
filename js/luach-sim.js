@@ -561,7 +561,7 @@
 
       const redraw = () => this.draw();
       const setYear = y => {
-        this.year = Math.max(1, Math.min(9999, y | 0));
+        this.year = Math.max(1, Math.min(H.MAX_YEAR, y | 0));
         this._syncYear(); redraw();
       };
       $('l_year').onchange = e => setYear(+e.target.value || this.year);
@@ -572,14 +572,14 @@
       };
       // חיפוש לפי סימן השנה — נפתח על סימן השנה הנוכחית, מאה שנה לכל צד
       find.siman = yearKey(this.year).siman;
-      find.from = Math.max(1, this.year - 100); find.to = Math.min(9999, this.year + 100);
+      find.from = Math.max(1, this.year - 100); find.to = Math.min(H.MAX_YEAR, this.year + 100);
       $('lk_from').value = find.from; $('lk_to').value = find.to;
       fillSimanSelect();
       const refind = this._refind = () => renderFind(setYear);
       $('lk_siman').onchange = e => { find.siman = e.target.value; refind(); };
       for (const [id, key] of [['lk_from', 'from'], ['lk_to', 'to']])
         $(id).onchange = e => {
-          find[key] = Math.max(1, Math.min(9999, (+e.target.value | 0) || find[key]));
+          find[key] = Math.max(1, Math.min(H.MAX_YEAR, (+e.target.value | 0) || find[key]));
           e.target.value = find[key]; refind();
         };
       refind();
@@ -641,7 +641,7 @@
       }
       $('lc_dir').onchange = e => { conv.dir = e.target.value; renderConv(); };
       $('lc_year').onchange = e => {
-        conv.hy = Math.max(1, Math.min(9999, +e.target.value || conv.hy));
+        conv.hy = Math.max(1, Math.min(H.MAX_YEAR, +e.target.value || conv.hy));
         e.target.value = conv.hy;
         renderConv();
       };

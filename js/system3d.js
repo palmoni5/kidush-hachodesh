@@ -644,7 +644,7 @@
       $('s_today').onclick = () => { this.date = new Date(); this.playing = false; $('s_play').textContent = T('▶ הפעל'); this._syncDate(); };
       $('s_speed').oninput = e => { this.speed = +e.target.value; $('s_spdL').textContent = (+e.target.value).toFixed(1); };
       $('s_go').onclick = () => {
-        const y = +$('s_year').value, m = +$('s_month').value, d = +$('s_day').value;
+        const y = Math.min(2240, +$('s_year').value), m = +$('s_month').value, d = +$('s_day').value;
         if (y && m && d) { this.date = new Date(y, m - 1, d, 12, 0, 0); this.playing = false; $('s_play').textContent = T('▶ הפעל'); }
       };
       document.querySelectorAll('#view-system3d .segmented button').forEach(b => { b.onclick = () => this._setMode(b.dataset.cam); });
