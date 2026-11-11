@@ -1160,7 +1160,7 @@
       if (this.mode === 'lunar') place = this.lloc;
       else if (this.mode === 'solar') {
         const c = IL_CITIES[this.viewLoc];
-        place = c ? { name: c.name, lat: c.lat, lon: c.lon, tz: 'Asia/Jerusalem' }
+        place = c ? { name: c.name, lat: c.lat, lon: c.lon, tz: c.tz !== undefined ? c.tz : 'Asia/Jerusalem' }
           : this._peakLoc ? { name: 'מקום שיא הליקוי', lat: this._peakLoc.lat, lon: this._peakLoc.lon, tz: null } : null;
       } else if (loc) place = { name: 'מרכז הצל', lat: loc.lat, lon: loc.lon, tz: null };
       const S = window.Sims, elk = $('e_locClock');
@@ -1363,6 +1363,67 @@
           }).catch(() => {});
         } catch (er) {}
       }
+      // ערי הלוח של אוצריא (calendar.getCities) — נוספות לבוררי מקום הצופה, ועיר
+      // הלוח הנבחרת באפליקציה היא ברירת המחדל כל עוד המשתמש לא בחר מקום בעצמו.
+      // רק עיר שהאפליקציה מוסרת עבורה קואורדינטות נכנסת (אחרת אין ממה לחשב).
+      (async () => {
+        try {
+          if (typeof Otzaria === 'undefined') return;
+          const g = async (m, a) => { const r = await Otzaria.call(m, a || {}); return r && r.success ? r.data : null; };
+          const raw = await g('calendar.getCities');
+          if (!Array.isArray(raw)) return;
+          const pick = (c, ks) => { for (const k of ks) { const v = c[k]; if (v !== undefined && v !== null && v !== '' && isFinite(+v)) return +v; } return null; };
+          const cities = [];
+          for (const c of raw) {
+            if (!c || !c.name) continue;
+            const lat = pick(c, ['lat', 'latitude']), lon = pick(c, ['lon', 'lng', 'long', 'longitude']);
+            if (lat === null || lon === null || Math.abs(lat) > 89 || Math.abs(lon) > 180) continue;
+            cities.push({ name: c.name, country: c.country || '', lat, lon, tz: c.tz || c.timeZone || c.timezone || c.timeZoneId || null });
+          }
+          if (!cities.length) return;
+          const cur = await g('settings.get', { key: 'key-selected-city' });
+          const home = cities.find(c => c.name === cur) || null;
+          // ליקוי חמה: הערים נוספות לבורר (תחת מפתח app:שם), והעיר הנבחרת — בראשו
+          for (const c of cities) IL_CITIES['app:' + c.name] = { name: c.name, lat: c.lat, lon: c.lon, tz: c.tz || null };
+          const addTo = (sel, valueOf) => {
+            if (!sel) return;
+            const groups = {};
+            for (const c of cities) (groups[c.country || 'ערי אוצריא'] = groups[c.country || 'ערי אוצריא'] || []).push(c);
+            for (const [gr, arr] of Object.entries(groups)) {
+              const og = document.createElement('optgroup'); og.label = gr;
+              for (const c of arr) {
+                const o = document.createElement('option');
+                o.value = valueOf(c); o.textContent = c.name;
+                if (c.tz) o.dataset.tz = c.tz;
+                og.appendChild(o);
+              }
+              // לפני "מותאם אישית" שבסוף הרשימה (בורר המקום בליקוי לבנה)
+              const last = sel.options[sel.options.length - 1];
+              if (sel === lp && last && !last.value) sel.insertBefore(og, last); else sel.appendChild(og);
+            }
+          };
+          addTo(lp, c => c.lat + ',' + c.lon);
+          addTo(locSel, c => 'app:' + c.name);
+          // ברירת מחדל — עיר הלוח, אלא אם נשמרה בחירה קודמת של המשתמש
+          const saved = await g('storage.get', { key: 'eclLunarLoc' });
+          if (home && !saved && lp) {
+            this.lloc = { lat: home.lat, lon: home.lon, tz: home.tz, name: home.name };
+            $('e_llat').value = home.lat; $('e_llon').value = home.lon;
+            const opt = [...lp.options].find(x => x.value === home.lat + ',' + home.lon);
+            if (opt) lp.value = opt.value;
+            this._lobsKey = null;
+          } else if (saved && lp) {
+            // הבחירה השמורה יכולה להיות עיר שנוספה זה עתה — יישור הבורר
+            try {
+              const o = JSON.parse(saved), opt = [...lp.options].find(x => x.value === o.lat + ',' + o.lon);
+              if (opt) lp.value = opt.value;
+            } catch (er) {}
+          }
+          const savedV = await g('storage.get', { key: 'eclViewLoc' });
+          if (savedV && IL_CITIES[savedV] && locSel) { locSel.value = savedV; this.viewLoc = savedV; }
+          window.__invalidate && window.__invalidate();
+        } catch (er) {}
+      })();
       $('e_dsim').onchange = e => {
         this.distOn = e.target.checked;
         $('e_dist').disabled = !this.distOn;
